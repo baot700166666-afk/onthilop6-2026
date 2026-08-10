@@ -457,6 +457,36 @@
         <h2 style="color:white;font-size:24px;margin-bottom:6px;">👩‍🏫 Giáo viên: <span id="teacherHeaderName">--</span></h2>
         <div style="font-weight:600;font-size:14px;">Cập nhật báo cáo hàng ngày cho học sinh: <strong id="teacherStudentName">--</strong></div>
       </div>
+      <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:16px 20px;border-radius:14px;border:3px solid #86efac;margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;font-size:18px;color:#166534;">📥 Chấm điểm hàng loạt cho cả lớp (Excel)</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-weight:700;color:#166534;font-size:13px;">📅 Ngày chấm:</label>
+            <input type="date" id="bulkDate" style="width:100%;padding:10px;border:2px solid #86efac;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
+          </div>
+          <div>
+            <label style="font-weight:700;color:#166534;font-size:13px;">📚 Môn học:</label>
+            <select id="bulkSubject" style="width:100%;padding:10px;border:2px solid #86efac;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
+              <option>Toán</option><option>Tiếng Việt</option><option>Tiếng Anh</option>
+              <option>Khoa học</option><option>Lịch sử - Địa lý</option><option>Tin học</option>
+              <option>Đạo đức</option><option>Mỹ thuật</option><option>Âm nhạc</option>
+              <option>Thể dục</option><option>Khác</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <label class="btn btn-success" style="cursor:pointer;margin:0;padding:12px 18px;font-size:14px;">
+            📥 Chọn file Excel/CSV
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleBulkImport(event)" style="display:none;">
+          </label>
+          <button class="btn" onclick="downloadBulkTemplate()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 0 #0369a1;padding:12px 18px;font-size:14px;">📄 Tải file mẫu</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#166534;font-weight:600;">
+          💡 <strong>File chỉ cần 3 cột:</strong> Tên học sinh | Điểm (1-10) | Nhận xét<br>
+          📌 Tất cả các dòng sẽ được chấm cùng <strong>ngày</strong> + <strong>môn</strong> đã chọn ở trên
+        </div>
+      </div>
+      <div id="bulkPreview" style="display:none;"></div>
       <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:16px 20px;border-radius:14px;border:3px solid #fbbf24;margin-bottom:16px;">
         <h3 style="margin-bottom:8px;font-size:18px;color:#92400e;">🎯 Danh sách học sinh - Bấm chọn bé để chấm điểm</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
@@ -1997,6 +2027,8 @@ function renderTeacher() {
   const dg = document.getElementById('stGridDate');
   if (dg && !dg.value) dg.value = new Date().toISOString().slice(0,10);
   renderStudentGrid();
+  const bd = document.getElementById('bulkDate');
+  if (bd && !bd.value) bd.value = new Date().toISOString().slice(0,10);
 
   // Render existing reports (by this teacher)
   const list = document.getElementById('teacherReportList');
@@ -2020,6 +2052,154 @@ function renderTeacher() {
       '<button onclick="deleteTeacherReport(\'' + r.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-top:6px;">🗑️ Xóa</button>' +
       '</div>';
   }).join('');
+}
+
+// ========== BULK IMPORT ĐIỂM ==========
+function downloadBulkTemplate() {
+  const today = new Date().toISOString().slice(0,10);
+  loadStudents();
+  const data = [['Tên học sinh', 'Điểm (1-10)', 'Nhận xét']];
+  if (students.length > 0) {
+    students.slice(0,3).forEach((s,i) => {
+      data.push([s.name, i===0?9.0:(i===1?7.5:8.5), i===0?'Học tốt, tiếp thu nhanh':'Ổn định, cần luyện thêm']);
+    });
+  } else {
+    data.push(['Thành Lâm', 9.0, 'Học tốt, tiếp thu nhanh']);
+    data.push(['Minh An', 7.5, 'Cần luyện thêm phần phân số']);
+    data.push(['Bảo Ngọc', 8.5, 'Chăm chỉ, tiến bộ']);
+  }
+  if (typeof XLSX === 'undefined') {
+    const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'}), 'cham-diem-mau.csv');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:22},{wch:12},{wch:45}];
+  XLSX.utils.book_append_sheet(wb, ws, 'ChamDiem');
+  XLSX.writeFile(wb, 'cham-diem-mau.xlsx');
+}
+
+function handleBulkImport(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const bulkDate = document.getElementById('bulkDate').value;
+  const bulkSubject = document.getElementById('bulkSubject').value;
+  if (!bulkDate) { alert('Chọn NGÀY chấm trước khi upload file!'); evt.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      let rows = [];
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.csv')) {
+        const text = new TextDecoder('utf-8').decode(e.target.result);
+        rows = parseCSV(text);
+      } else {
+        if (typeof XLSX === 'undefined') { alert('Thư viện XLSX chưa tải. Dùng CSV thử.'); return; }
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      }
+      if (!rows || rows.length < 2) { alert('File trống!'); return; }
+      loadStudents();
+      const parsed = [];
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0] || String(r[0]).trim() === '') continue;
+        const name = String(r[0]).trim();
+        const score = parseFloat(String(r[1]).replace(',','.'));
+        const notes = String(r[2]||'').trim();
+        // Match student by name (case-insensitive)
+        const student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+        parsed.push({
+          rowIdx: i,
+          name,
+          student,
+          score: isNaN(score) ? null : score,
+          notes,
+          date: bulkDate,
+          subject: bulkSubject
+        });
+      }
+      if (parsed.length === 0) { alert('Không đọc được dòng nào từ file!'); return; }
+      showBulkPreview(parsed);
+    } catch (err) {
+      alert('❌ Lỗi đọc file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  evt.target.value = '';
+}
+
+function showBulkPreview(parsed) {
+  const el = document.getElementById('bulkPreview');
+  const validCount = parsed.filter(p => p.student && p.score !== null && p.score >= 1 && p.score <= 10).length;
+  const invalidCount = parsed.length - validCount;
+  let html = '<div style="background:#fef3c7;padding:16px 20px;border-radius:14px;border:3px solid #fbbf24;margin-bottom:14px;">';
+  html += '<h3 style="margin-bottom:10px;color:#92400e;">👁️ Xem trước bảng điểm</h3>';
+  html += '<div style="margin-bottom:10px;font-weight:700;">✅ Hợp lệ: <span style="color:#059669;">' + validCount + '</span> — ⚠️ Có vấn đề: <span style="color:#dc2626;">' + invalidCount + '</span></div>';
+  html += '<div style="max-height:400px;overflow-y:auto;background:white;padding:8px;border-radius:8px;">';
+  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;position:sticky;top:0;"><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:center;">Điểm</th><th style="padding:6px;text-align:left;">Nhận xét</th><th style="padding:6px;text-align:center;">Trạng thái</th></tr></thead><tbody>';
+  parsed.forEach(p => {
+    let status = '';
+    let rowStyle = '';
+    if (!p.student) { status = '<span style="color:#dc2626;">❌ Không tìm thấy HS</span>'; rowStyle = 'background:#fee2e2;'; }
+    else if (p.score === null || isNaN(p.score)) { status = '<span style="color:#dc2626;">❌ Điểm sai</span>'; rowStyle = 'background:#fee2e2;'; }
+    else if (p.score < 1 || p.score > 10) { status = '<span style="color:#dc2626;">❌ Điểm ngoài 1-10</span>'; rowStyle = 'background:#fee2e2;'; }
+    else { status = '<span style="color:#059669;font-weight:700;">✅ OK</span>'; }
+    const scoreColor = p.score >= 8 ? '#10b981' : p.score >= 6.5 ? '#0ea5e9' : p.score >= 5 ? '#f59e0b' : '#ef4444';
+    html += '<tr style="border-bottom:1px solid #e9d5ff;' + rowStyle + '">';
+    html += '<td style="padding:6px;">' + escapeHtml(p.name) + '</td>';
+    html += '<td style="padding:6px;text-align:center;font-weight:700;color:' + (p.score !== null ? scoreColor : '#dc2626') + ';">' + (p.score !== null ? p.score : '--') + '</td>';
+    html += '<td style="padding:6px;">' + escapeHtml(p.notes || '(không có)') + '</td>';
+    html += '<td style="padding:6px;text-align:center;">' + status + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  const dtStr = new Date(parsed[0].date).toLocaleDateString('vi-VN');
+  html += '<div style="margin-top:12px;padding:10px;background:#e0e7ff;border-radius:8px;font-size:13px;"><strong>Sẽ chấm:</strong> 📅 ' + dtStr + ' • 📚 <strong>' + escapeHtml(parsed[0].subject) + '</strong> cho ' + validCount + ' học sinh</div>';
+  html += '<div style="margin-top:12px;display:flex;gap:10px;">';
+  html += '<button class="btn btn-success" onclick="confirmBulkImport()">✅ Xác nhận chấm ' + validCount + ' điểm</button>';
+  html += '<button class="btn btn-secondary" onclick="cancelBulkImport()">❌ Huỷ</button>';
+  html += '</div></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+  window._bulkPending = parsed;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function confirmBulkImport() {
+  const list = window._bulkPending || [];
+  const valid = list.filter(p => p.student && p.score !== null && p.score >= 1 && p.score <= 10);
+  if (valid.length === 0) { alert('Không có dòng nào hợp lệ!'); return; }
+  loadTeacherReports();
+  valid.forEach(p => {
+    teacherReports.push({
+      id: 'br_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      studentId: p.student.id,
+      studentName: p.student.name,
+      parentName: p.student.parentName,
+      date: p.date,
+      teacher: (teacherInfo && teacherInfo.name) || 'Giáo viên',
+      subject: p.subject,
+      score: p.score,
+      eval: p.notes,
+      createdAt: new Date().toISOString()
+    });
+  });
+  saveTeacherReports();
+  window._bulkPending = null;
+  document.getElementById('bulkPreview').style.display = 'none';
+  document.getElementById('bulkPreview').innerHTML = '';
+  alert('✅ Đã chấm điểm hàng loạt cho ' + valid.length + ' học sinh! Phụ huynh sẽ nhận được thông báo khi đăng nhập.');
+  renderTeacher();
+}
+
+function cancelBulkImport() {
+  window._bulkPending = null;
+  const el = document.getElementById('bulkPreview');
+  el.style.display = 'none'; el.innerHTML = '';
 }
 
 function renderStudentGrid() {
