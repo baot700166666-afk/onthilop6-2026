@@ -268,9 +268,14 @@
     <div class="login-form">
       <div id="childForm">
         <label>👶 Tên của con:</label>
-        <input type="text" id="childName" placeholder="Ví dụ: Bảo, Minh, Nhi..." maxlength="30">
-        <label>🎂 Ngày sinh:</label>
-        <input type="date" id="childDOB">
+        <input type="text" id="childName" placeholder="Ví dụ: Bảo, Minh, Nhi..." maxlength="30" oninput="checkChildAccount()">
+        <label>🔑 Mật khẩu:</label>
+        <input type="password" id="childPass" placeholder="Mật khẩu do con tự đặt" maxlength="30" onkeypress="if(event.key==='Enter')doChildLogin()">
+        <div id="childPass2Wrap" style="display:none;">
+          <label>🔁 Nhập lại mật khẩu (chỉ lần đầu):</label>
+          <input type="password" id="childPass2" placeholder="Xác nhận mật khẩu" maxlength="30" onkeypress="if(event.key==='Enter')doChildLogin()">
+        </div>
+        <div id="childStatus" style="font-size:12px;color:var(--muted);margin-top:8px;font-weight:600;">💡 Con nhập tên trước để hệ thống kiểm tra</div>
         <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
       </div>
       <div id="studentForm" style="display:none;">
@@ -1134,12 +1139,61 @@ function selectRole(r) {
   });
 }
 
+// Danh sách tài khoản "Con tự học" (name → hashed pass thời gian)
+function loadChildAccounts() {
+  const s = localStorage.getItem('hoccungbe_child_accounts');
+  return s ? JSON.parse(s) : {};
+}
+function saveChildAccounts(accs) {
+  localStorage.setItem('hoccungbe_child_accounts', JSON.stringify(accs));
+}
+
+function checkChildAccount() {
+  const name = document.getElementById('childName').value.trim();
+  const wrap = document.getElementById('childPass2Wrap');
+  const status = document.getElementById('childStatus');
+  if (!name) {
+    wrap.style.display = 'none';
+    status.textContent = '💡 Con nhập tên trước để hệ thống kiểm tra';
+    status.style.color = 'var(--muted)';
+    return;
+  }
+  const accs = loadChildAccounts();
+  const key = name.toLowerCase();
+  if (accs[key]) {
+    // Đã có → chỉ cần pass
+    wrap.style.display = 'none';
+    status.innerHTML = '✅ <strong>Chào ' + escapeHtml(name) + '!</strong> Nhập mật khẩu để vào học.';
+    status.style.color = '#059669';
+  } else {
+    // Chưa có → tạo mới, cần nhập pass 2 lần
+    wrap.style.display = 'block';
+    status.innerHTML = '🆕 Chào <strong>' + escapeHtml(name) + '</strong>! Đây là lần đầu con vào. Hãy đặt mật khẩu (nhập 2 lần).';
+    status.style.color = '#0284c7';
+  }
+}
+
 function doChildLogin() {
   const name = document.getElementById('childName').value.trim();
-  const dob = document.getElementById('childDOB').value;
+  const pass = document.getElementById('childPass').value;
+  const pass2 = document.getElementById('childPass2').value;
   if (!name) { alert('Con nhập tên trước nhé!'); return; }
-  if (!dob) { alert('Con chọn ngày sinh nhé!'); return; }
-  currentUser = { role: 'child', name, dob, loginAt: new Date().toISOString() };
+  if (!pass) { alert('Con nhập mật khẩu nhé!'); return; }
+  if (pass.length < 3) { alert('Mật khẩu phải dài ít nhất 3 ký tự!'); return; }
+  const accs = loadChildAccounts();
+  const key = name.toLowerCase();
+  if (accs[key]) {
+    // Đăng nhập
+    if (accs[key].pass !== pass) { alert('❌ Sai mật khẩu! Nếu con quên, nhờ bố mẹ giúp reset.'); return; }
+  } else {
+    // Đăng ký mới - cần pass2
+    if (!pass2) { alert('Con nhập lại mật khẩu để xác nhận!'); return; }
+    if (pass !== pass2) { alert('❌ Mật khẩu 2 lần không khớp! Con nhập lại nhé.'); return; }
+    accs[key] = { name, pass, createdAt: new Date().toISOString() };
+    saveChildAccounts(accs);
+    alert('✅ Tạo tài khoản thành công! Từ nay con dùng tên + mật khẩu này để vào học.');
+  }
+  currentUser = { role: 'child', name: accs[key].name, loginAt: new Date().toISOString() };
   localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
   isAdmin = false;
   currentRole = 'child';
