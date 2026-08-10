@@ -261,7 +261,7 @@
 <div class="container">
   <header>
     <div><h1>Học cùng bé</h1><div class="student" id="headerSubtitle">🚀 Cùng nhau chinh phục kỳ thi vào lớp 6 nào!</div></div>
-    <div id="userBadge" style="display:flex;gap:8px;align-items:center;"></div>
+    <div id="userBadge" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;position:relative;z-index:100;"></div>
   </header>
   <nav>
     <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
@@ -897,11 +897,12 @@ function hideLoginScreen() { document.getElementById('loginScreen').style.displa
 function showLoginScreen() { document.getElementById('loginScreen').style.display = 'flex'; }
 
 function logout() {
-  if (!confirm('Đăng xuất khỏi app?')) return;
+  if (!confirm('Bạn có chắc muốn đăng xuất?')) return;
   isAdmin = false;
-  currentUser = null;
+  currentRole = null;
   sessionStorage.removeItem('hoccungbe_admin');
-  // Keep child profile so name still remembered next time
+  sessionStorage.removeItem('hoccungbe_role');
+  // Giữ profile con để lần sau vào không phải nhập tên lại
   location.reload();
 }
 
@@ -930,7 +931,7 @@ function updateUserBadge() {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
   }
-  html += '<button onclick="logout()" style="background:#e5e7eb;color:#374151;border:none;padding:6px 12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;">🚪 Đăng xuất</button>';
+  html += '<button onclick="logout()" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;padding:10px 18px;border-radius:14px;font-weight:700;cursor:pointer;font-size:14px;font-family:Quicksand;box-shadow:0 3px 0 #b91c1c;position:relative;z-index:100;">🚪 Đăng xuất</button>';
   el.innerHTML = html;
 
   // Show/hide role-specific nav buttons
