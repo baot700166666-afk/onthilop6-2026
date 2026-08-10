@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --primary: #6366f1; --primary-dark: #4f46e5;
@@ -379,10 +380,26 @@
     <div class="card">
       <div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
         <h2 style="color:white;font-size:24px;margin-bottom:6px;">🧑‍🎓 Quản lý danh sách học sinh</h2>
-        <div style="font-weight:600;font-size:14px;">Thêm/sửa/xóa học sinh và liên kết với phụ huynh</div>
+        <div style="font-weight:600;font-size:14px;">Thêm/sửa/xóa học sinh và liên kết với phụ huynh. Cô giáo hoặc Admin đều quản lý được.</div>
       </div>
       <div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);padding:20px;border-radius:14px;border:3px solid #f9a8d4;margin-bottom:16px;">
-        <h3 style="margin-bottom:12px;font-size:18px;color:#9d174d;" id="studentFormTitle">➕ Thêm học sinh mới</h3>
+        <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:16px 20px;border-radius:14px;border:3px solid #86efac;margin-bottom:14px;">
+        <h3 style="margin-bottom:10px;font-size:18px;color:#166534;">📥 Nhập/Xuất danh sách từ file</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <label class="btn btn-success" style="cursor:pointer;margin:0;padding:12px 18px;font-size:14px;">
+            📥 Import Excel/CSV
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="handleImportFile(event)" style="display:none;">
+          </label>
+          <button class="btn" onclick="downloadTemplate()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 0 #0369a1;padding:12px 18px;font-size:14px;">📄 Tải file mẫu (Excel)</button>
+          <button class="btn btn-secondary" onclick="exportStudents()" style="padding:12px 18px;font-size:14px;">📤 Xuất danh sách</button>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#166534;font-weight:600;">
+          💡 <strong>Cột trong file:</strong> Tên học sinh | Ngày sinh | Tên phụ huynh | Mật khẩu PH | SĐT PH<br>
+          📝 <strong>Ngày sinh:</strong> dd/mm/yyyy (VD: 15/05/2014) hoặc yyyy-mm-dd
+        </div>
+      </div>
+      <div id="importPreview" style="display:none;"></div>
+      <h3 style="margin-bottom:12px;font-size:18px;color:#9d174d;" id="studentFormTitle">➕ Thêm từng học sinh</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div>
             <label style="font-weight:700;color:var(--muted);font-size:13px;">🧑 Tên học sinh:</label>
@@ -1134,7 +1151,7 @@ function updateUserBadge() {
   if (parentBtn) parentBtn.style.display = (currentRole === 'parent') ? 'inline-block' : 'none';
   if (adminDashBtn) adminDashBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
   const studentBtn = document.getElementById('studentMgmtBtn');
-  if (studentBtn) studentBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
+  if (studentBtn) studentBtn.style.display = (currentRole === 'admin' || currentRole === 'teacher') ? 'inline-block' : 'none';
   if (teacherBtn) teacherBtn.style.display = (currentRole === 'teacher') ? 'inline-block' : 'none';
   if (dailyBtn) dailyBtn.style.display = (currentRole === 'parent' || currentRole === 'teacher') ? 'inline-block' : 'none';
 
@@ -1716,6 +1733,205 @@ function saveStudents() {
 function getStudentById(id) {
   loadStudents();
   return students.find(s => s.id === id);
+}
+
+// ========== EXCEL IMPORT/EXPORT ==========
+function downloadTemplate() {
+  const ws_data = [
+    ['Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH'],
+    ['Thành Lâm', '15/05/2014', 'Nguyễn Thành Trung', 'lam2014', '0912345678'],
+    ['Minh An', '20/08/2014', 'Trần Văn Hùng', 'an2014', '0987654321'],
+    ['Bảo Ngọc', '10/03/2014', 'Lê Thị Hoa', 'ngoc2014', '0901234567']
+  ];
+  if (typeof XLSX === 'undefined') {
+    // Fallback: CSV
+    const csv = ws_data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+    downloadBlob(blob, 'danh-sach-hoc-sinh-mau.csv');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh');
+  XLSX.writeFile(wb, 'danh-sach-hoc-sinh-mau.xlsx');
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+function exportStudents() {
+  loadStudents();
+  if (students.length === 0) { alert('Chưa có học sinh nào để xuất!'); return; }
+  const data = [['Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH']];
+  students.forEach(s => {
+    const dob = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : '';
+    data.push([s.name||'', dob, s.parentName||'', s.parentPass||'', s.parentPhone||'']);
+  });
+  if (typeof XLSX === 'undefined') {
+    const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'}), 'danh-sach-hoc-sinh.csv');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh');
+  XLSX.writeFile(wb, 'danh-sach-hoc-sinh-' + new Date().toISOString().slice(0,10) + '.xlsx');
+}
+
+function handleImportFile(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      let rows = [];
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.csv')) {
+        const text = new TextDecoder('utf-8').decode(e.target.result);
+        rows = parseCSV(text);
+      } else {
+        if (typeof XLSX === 'undefined') { alert('Thư viện XLSX chưa tải xong. Vui lòng thử lại sau vài giây hoặc dùng file CSV.'); return; }
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      }
+      if (!rows || rows.length < 2) { alert('File trống hoặc không đúng định dạng!'); return; }
+      // Bỏ hàng tiêu đề
+      const header = rows[0].map(h => String(h).toLowerCase().trim());
+      const parsed = [];
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r[0] || String(r[0]).trim() === '') continue;
+        parsed.push({
+          name: String(r[0]||'').trim(),
+          dob: parseDate(r[1]),
+          parentName: String(r[2]||'').trim(),
+          parentPass: String(r[3]||'').trim(),
+          parentPhone: String(r[4]||'').trim()
+        });
+      }
+      if (parsed.length === 0) { alert('Không đọc được học sinh nào từ file.'); return; }
+      showImportPreview(parsed);
+    } catch (err) {
+      alert('❌ Lỗi đọc file: ' + err.message);
+    }
+  };
+  if (file.name.toLowerCase().endsWith('.csv')) reader.readAsArrayBuffer(file);
+  else reader.readAsArrayBuffer(file);
+  // Reset input để có thể upload lại cùng file
+  evt.target.value = '';
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cur = [];
+  let curField = '';
+  let inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuote) {
+      if (c === '"' && text[i+1] === '"') { curField += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else curField += c;
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { cur.push(curField); curField = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (curField !== '' || cur.length > 0) { cur.push(curField); rows.push(cur); cur = []; curField = ''; }
+        if (c === '\r' && text[i+1] === '\n') i++;
+      } else curField += c;
+    }
+  }
+  if (curField !== '' || cur.length > 0) { cur.push(curField); rows.push(cur); }
+  return rows;
+}
+
+function parseDate(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  // dd/mm/yyyy
+  let m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  // yyyy-mm-dd
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
+  // Excel serial date
+  if (!isNaN(parseFloat(s))) {
+    const n = parseFloat(s);
+    if (n > 25000 && n < 60000) {
+      // Excel epoch: 1899-12-30
+      const d = new Date((n - 25569) * 86400000);
+      return d.toISOString().slice(0,10);
+    }
+  }
+  return '';
+}
+
+function showImportPreview(parsed) {
+  const el = document.getElementById('importPreview');
+  const dupNames = parsed.filter(p => students.some(s => s.name.toLowerCase() === p.name.toLowerCase()));
+  const newCount = parsed.length - dupNames.length;
+  let html = '<div style="background:#fef3c7;padding:16px 20px;border-radius:14px;border:3px solid #fbbf24;margin-bottom:14px;">';
+  html += '<h3 style="margin-bottom:10px;color:#92400e;">👁️ Xem trước (' + parsed.length + ' học sinh)</h3>';
+  if (dupNames.length > 0) {
+    html += '<div style="margin-bottom:10px;color:#b91c1c;font-weight:700;font-size:14px;">⚠️ Có ' + dupNames.length + ' học sinh trùng tên trong danh sách cũ (sẽ được thêm mới, không ghi đè)</div>';
+  }
+  html += '<div style="max-height:300px;overflow-y:auto;background:white;padding:8px;border-radius:8px;">';
+  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;"><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:left;">Ngày sinh</th><th style="padding:6px;text-align:left;">PH</th><th style="padding:6px;text-align:left;">Pass</th><th style="padding:6px;text-align:left;">SĐT</th></tr></thead><tbody>';
+  parsed.forEach((p,i) => {
+    const dupClass = students.some(s => s.name.toLowerCase() === p.name.toLowerCase()) ? 'background:#fee2e2;' : '';
+    const dob = p.dob ? new Date(p.dob).toLocaleDateString('vi-VN') : '<span style="color:red;">(sai định dạng)</span>';
+    html += '<tr style="border-bottom:1px solid #e9d5ff;' + dupClass + '"><td style="padding:6px;">' + escapeHtml(p.name) + '</td><td style="padding:6px;">' + dob + '</td><td style="padding:6px;">' + escapeHtml(p.parentName||'') + '</td><td style="padding:6px;"><code>' + escapeHtml(p.parentPass||'') + '</code></td><td style="padding:6px;">' + escapeHtml(p.parentPhone||'') + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:12px;display:flex;gap:10px;">';
+  html += '<button class="btn btn-success" onclick="confirmImport()">✅ Xác nhận thêm ' + parsed.length + ' học sinh</button>';
+  html += '<button class="btn btn-secondary" onclick="cancelImport()">❌ Huỷ</button>';
+  html += '</div></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+  window._importPending = parsed;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function confirmImport() {
+  const list = window._importPending || [];
+  if (list.length === 0) return;
+  loadStudents();
+  let added = 0;
+  list.forEach(p => {
+    if (!p.name) return;
+    students.push({
+      id: 'st_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      name: p.name,
+      dob: p.dob || '',
+      parentName: p.parentName || '',
+      parentPass: p.parentPass || '',
+      parentPhone: p.parentPhone || '',
+      createdAt: new Date().toISOString()
+    });
+    added++;
+  });
+  saveStudents();
+  window._importPending = null;
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('importPreview').innerHTML = '';
+  alert('✅ Đã import ' + added + ' học sinh!');
+  renderStudents();
+}
+
+function cancelImport() {
+  window._importPending = null;
+  const el = document.getElementById('importPreview');
+  el.style.display = 'none'; el.innerHTML = '';
 }
 
 function renderStudents() {
