@@ -190,6 +190,19 @@
   .rep-chart-bar .bar-fill { width: 100%; background: linear-gradient(180deg, #10b981, #14b8a6); border-radius: 6px 6px 0 0; min-height: 4px; transition: all 0.3s; position: relative; }
   .rep-chart-bar .bar-num { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: #059669; }
   .rep-chart-bar .bar-label { font-size: 11px; color: var(--muted); font-weight: 700; }
+  /* Student grid for teacher */
+  .st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+  .st-card { padding: 12px 10px; border-radius: 12px; border: 3px solid #e2e8f0; background: white; cursor: pointer; transition: all 0.2s; text-align: center; position: relative; }
+  .st-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 4px 0 #d1d5db; }
+  .st-card.done { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: #10b981; box-shadow: 0 3px 0 #059669; }
+  .st-card.done::after { content: '✅'; position: absolute; top: -8px; right: -6px; font-size: 22px; }
+  .st-card.selected { border-color: #ec4899 !important; box-shadow: 0 4px 0 #db2777 !important; transform: scale(1.05); }
+  .st-card .st-name { font-weight: 800; font-family: 'Baloo 2', cursive; font-size: 15px; color: var(--text); line-height: 1.2; }
+  .st-card .st-parent { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+  .st-card .st-count { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; margin-top: 6px; }
+  .st-card.done .st-count { background: #059669; color: white; }
+  .st-legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+  .st-legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: middle; }
   /* Answers library */
   .ans-subj-btn { padding: 12px 10px; text-align: center; cursor: pointer; border-radius: 12px; font-weight: 700; border: 2px solid #e9d5ff; background: white; transition: all 0.2s; font-size: 13px; }
   .ans-subj-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -435,6 +448,26 @@
         <h2 style="color:white;font-size:24px;margin-bottom:6px;">👩‍🏫 Giáo viên: <span id="teacherHeaderName">--</span></h2>
         <div style="font-weight:600;font-size:14px;">Cập nhật báo cáo hàng ngày cho học sinh: <strong id="teacherStudentName">--</strong></div>
       </div>
+      <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:16px 20px;border-radius:14px;border:3px solid #fbbf24;margin-bottom:16px;">
+        <h3 style="margin-bottom:8px;font-size:18px;color:#92400e;">🎯 Danh sách học sinh - Bấm chọn bé để chấm điểm</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <label style="font-weight:700;font-size:13px;color:#92400e;">📅 Lọc theo ngày:</label>
+          <input type="date" id="stGridDate" onchange="renderStudentGrid()" style="padding:8px 12px;border:2px solid #fbbf24;border-radius:10px;font-family:Quicksand;font-weight:600;">
+          <label style="font-weight:700;font-size:13px;color:#92400e;">📚 Môn:</label>
+          <select id="stGridSubject" onchange="renderStudentGrid()" style="padding:8px 12px;border:2px solid #fbbf24;border-radius:10px;font-family:Quicksand;font-weight:600;">
+            <option value="">Tất cả môn</option>
+            <option>Toán</option><option>Tiếng Việt</option><option>Tiếng Anh</option>
+            <option>Khoa học</option><option>Lịch sử - Địa lý</option><option>Tin học</option>
+            <option>Đạo đức</option><option>Mỹ thuật</option><option>Âm nhạc</option><option>Thể dục</option><option>Khác</option>
+          </select>
+        </div>
+        <div class="st-legend">
+          <span><span class="st-legend-dot" style="background:#a7f3d0;"></span>Đã chấm điểm ngày này</span>
+          <span><span class="st-legend-dot" style="background:white;border:2px solid #e2e8f0;"></span>Chưa chấm</span>
+          <span><span class="st-legend-dot" style="background:#ec4899;"></span>Đang chọn</span>
+        </div>
+        <div id="studentGrid" class="st-grid"></div>
+      </div>
       <div style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);padding:20px;border-radius:14px;border:3px solid #7dd3fc;margin-bottom:16px;">
         <h3 style="margin-bottom:12px;font-size:18px;color:#075985;">📝 Chấm điểm - Đánh giá học sinh</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -508,9 +541,7 @@
         <h2 style="color:white;font-size:24px;margin-bottom:8px;">👨‍👩‍👧 Phụ huynh: <span id="parentName">Chưa cập nhật</span></h2>
         <div style="font-weight:600;font-size:15px;">🧑‍🎓 Học sinh: <span id="parentChildName">Chưa có</span> — 🎂 Ngày sinh: <span id="parentChildDOB">--</span></div>
       </div>
-      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;box-shadow:0 3px 0 #9333ea;" onclick="loadDemoData()">🎬 Tạo báo cáo DEMO (Thành Lâm)</button>
-      </div>
+      <div style="margin-bottom:12px;color:var(--muted);font-size:13px;font-weight:600;font-style:italic;">📌 Đây là báo cáo do <strong>cô giáo chủ nhiệm</strong> đánh giá bé <strong>trên lớp học</strong>. Không liên quan đến việc bé tự học trên app.</div>
       <div id="parentReportBody"></div>
     </div>
   </div>
@@ -539,7 +570,8 @@
   </div>
   <div id="view-stats" class="hidden">
     <div class="card">
-      <h2 style="margin-bottom: 18px; font-size: 26px;">📊 Báo cáo tiến độ <span id="statsChildName" style="color:var(--primary);"></span></h2>
+      <h2 style="margin-bottom: 8px; font-size: 26px;">📊 Tiến độ tự học trên app <span id="statsChildName" style="color:var(--primary);"></span></h2>
+      <div style="margin-bottom:16px;color:var(--muted);font-size:13px;font-weight:600;font-style:italic;">📌 Đây là kết quả bé tự làm bài trên app. Không liên quan đến điểm của cô giáo trên lớp.</div>
       <div id="parentReport" style="margin-bottom:20px;"></div>
       <div class="grid grid-2">
         <div><h3 style="margin-bottom: 14px; font-size: 20px;">📚 Theo môn học</h3><div id="statsBySubject"></div></div>
@@ -1560,159 +1592,65 @@ function renderParentReport() {
   loadTeacherReports();
   loadStudents();
   document.getElementById('parentName').textContent = parentInfo ? parentInfo.name : 'Chưa cập nhật';
-  // Filter reports for this parent's child
   const myStudent = currentUser && currentUser.studentId ? getStudentById(currentUser.studentId) : null;
   const myReports = myStudent ? teacherReports.filter(r => r.studentId === myStudent.id) : (parentInfo ? teacherReports.filter(r => r.parentName === parentInfo.name) : []);
   if (currentUser) {
     document.getElementById('parentChildName').textContent = currentUser.name || '--';
     document.getElementById('parentChildDOB').textContent = currentUser.dob ? new Date(currentUser.dob).toLocaleDateString('vi-VN') : '--';
   }
-  // Inject teacher reports notification at top
-  const notifyEl = document.getElementById('parentReportBody');
-
   const body = document.getElementById('parentReportBody');
-  if (history.length === 0) {
-    body.innerHTML = '<div class="empty-state">📊<br><br>Chưa có dữ liệu học tập.<br>Bấm "🎬 Xem báo cáo DEMO" để xem bản mẫu.</div>';
+  if (myReports.length === 0) {
+    body.innerHTML = '<div class="empty-state" style="padding:40px 20px;">📋<br><br><strong>Chưa có đánh giá từ giáo viên chủ nhiệm</strong><br><br>Khi cô giáo chấm điểm/gửi báo cáo cho bé sẽ hiển thị ở đây.</div>';
     return;
   }
 
-  // ==== METRICS ====
-  const total = history.length;
-  const totalQ = history.reduce((s,h)=>s+h.total, 0);
-  const totalCorrect = history.reduce((s,h)=>s+h.correct, 0);
-  const avg = Math.round(history.reduce((s,h)=>s+h.percent,0)/total);
-  const best = Math.max(...history.map(h=>h.percent));
-  const totalTime = history.reduce((s,h)=>s+(h.time||0), 0);
-  const totalMinutes = Math.round(totalTime/60);
-  const streak = computeStreak();
-  const uniqueDays = new Set(history.map(h => h.date.slice(0,10))).size;
-
-  // ==== 30-DAY CHART ====
-  const dayCount = {};
-  const dayScore = {};
-  for(let i=29; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); const k = d.toISOString().slice(0,10); dayCount[k] = 0; dayScore[k] = []; }
-  history.forEach(h => { const d = h.date.slice(0,10); if (d in dayCount) { dayCount[d]++; dayScore[d].push(h.percent); } });
-  const maxCount = Math.max(...Object.values(dayCount), 1);
-
-  // ==== SUBJECT BREAKDOWN ====
-  const bySubj = {};
-  history.forEach(h => {
-    if (!bySubj[h.subject]) bySubj[h.subject] = {t:0,c:0,n:0};
-    bySubj[h.subject].t += h.total; bySubj[h.subject].c += h.correct; bySubj[h.subject].n++;
+  // Tổng quan điểm
+  const bySubject = {};
+  myReports.forEach(r => {
+    if (!r.subject) return;
+    if (!bySubject[r.subject]) bySubject[r.subject] = [];
+    bySubject[r.subject].push(r.score || 0);
   });
-
-  // ==== TOPICS WEAK ====
-  const byTopic = {};
-  history.forEach(h => (h.details||[]).forEach(d => {
-    if (!d.topic) return;
-    if (!byTopic[d.topic]) byTopic[d.topic] = {t:0,c:0};
-    byTopic[d.topic].t++;
-    if (d.isCorrect) byTopic[d.topic].c++;
-  }));
-  const weakTopics = Object.entries(byTopic).filter(([_,d])=>d.t>=3).sort((a,b) => (a[1].c/a[1].t) - (b[1].c/b[1].t)).slice(0,5);
-  const strongTopics = Object.entries(byTopic).filter(([_,d])=>d.t>=3).sort((a,b) => (b[1].c/b[1].t) - (a[1].c/a[1].t)).slice(0,5);
-
-  // ==== RECENT DAYS DETAIL (last 7 days) ====
-  const recentDays = {};
-  history.slice().reverse().forEach(h => {
-    const d = h.date.slice(0,10);
-    if (!recentDays[d]) recentDays[d] = [];
-    recentDays[d].push(h);
-  });
-  const last7Days = Object.entries(recentDays).slice(0, 7);
+  const overall = myReports.filter(r=>r.score).reduce((a,r)=>a+r.score,0) / Math.max(1, myReports.filter(r=>r.score).length);
 
   let html = '';
+  // Tổng quan
+  html += '<h3 style="font-size:20px;margin-bottom:12px;">📊 Tổng quan điểm trên lớp</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">';
+  html += '<div class="rep-metric"><div class="val">' + myReports.length + '</div><div class="lbl">📝 Số báo cáo</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#f59e0b;">' + overall.toFixed(1) + '</div><div class="lbl">🎯 Điểm TB</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#ec4899;">' + Object.keys(bySubject).length + '</div><div class="lbl">📚 Số môn</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + (myReports[0] && myReports[0].teacher ? '👩‍🏫' : '--') + '</div><div class="lbl" style="color:#92400e;">GVCN</div></div>';
+  html += '</div>';
 
-  // Teacher reports (highlight)
-  if (myReports.length > 0) {
-    html += '<div style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);padding:18px;border-radius:14px;border:3px solid #c4b5fd;margin-bottom:20px;">';
-    html += '<h3 style="font-size:20px;margin-bottom:12px;color:#6d28d9;">📬 Báo cáo mới nhất từ giáo viên (' + myReports.length + ')</h3>';
-    myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0, 5).forEach(r => {
-      const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
-      const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'numeric', year:'numeric'});
-      html += '<div style="background:white;padding:12px 14px;border-radius:10px;margin-bottom:8px;border-left:4px solid #a855f7;">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">';
-      html += '<div><strong style="color:#6d28d9;">👩‍🏫 ' + escapeHtml(r.teacher) + '</strong> — ' + escapeHtml(r.subject||'') + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
-      html += '<div style="background:' + scoreColor + ';color:white;padding:6px 14px;border-radius:10px;font-family:Baloo 2;font-size:20px;font-weight:800;">' + (r.score||'--') + '</div>';
-      html += '</div>';
-      if (r.content) html += '<div style="font-size:13px;margin-top:4px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
-      if (r.homework) html += '<div style="font-size:13px;margin-top:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
-      if (r.eval) html += '<div style="font-size:13px;margin-top:4px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
-      html += '</div>';
+  // Điểm theo môn (progress bars)
+  if (Object.keys(bySubject).length > 0) {
+    html += '<h3 style="font-size:18px;margin:20px 0 10px;">📚 Điểm trung bình theo môn</h3>';
+    html += '<div style="background:white;padding:16px;border-radius:12px;border:2px solid #e9d5ff;">';
+    Object.entries(bySubject).forEach(([subj, scores]) => {
+      const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+      const pct = avg * 10;
+      const color = avg >= 8 ? '#10b981' : avg >= 6.5 ? '#0ea5e9' : avg >= 5 ? '#f59e0b' : '#ef4444';
+      html += '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px;font-size:14px;">' +
+        '<span>' + escapeHtml(subj) + '</span><span style="color:' + color + ';">Điểm TB: ' + avg.toFixed(1) + ' (' + scores.length + ' lần)</span></div>' +
+        '<div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:' + pct + '%;background:linear-gradient(90deg,' + color + ',' + color + ');"></div></div></div>';
     });
-    if (myReports.length > 5) html += '<div style="text-align:center;color:var(--muted);font-weight:600;font-size:13px;">... và ' + (myReports.length-5) + ' báo cáo cũ hơn. Xem đầy đủ ở tab "📅 Báo cáo ngày"</div>';
     html += '</div>';
   }
 
-  // Metrics grid
-  html += '<h3 style="font-size:20px;margin-bottom:12px;">📊 Tổng quan 30 ngày</h3>';
-  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">';
-  html += '<div class="rep-metric"><div class="val">' + uniqueDays + '</div><div class="lbl">📅 Ngày học</div></div>';
-  html += '<div class="rep-metric"><div class="val">' + total + '</div><div class="lbl">📝 Lượt làm bài</div></div>';
-  html += '<div class="rep-metric"><div class="val">' + totalQ + '</div><div class="lbl">✏️ Tổng số câu</div></div>';
-  html += '<div class="rep-metric"><div class="val" style="color:#f59e0b;">' + avg + '%</div><div class="lbl">🎯 Điểm TB</div></div>';
-  html += '<div class="rep-metric"><div class="val" style="color:#ec4899;">' + best + '%</div><div class="lbl">🏆 Cao nhất</div></div>';
-  html += '<div class="rep-metric"><div class="val" style="color:#f97316;">🔥' + streak + '</div><div class="lbl">Ngày liên tiếp</div></div>';
-  html += '<div class="rep-metric"><div class="val" style="color:#6366f1;">' + totalMinutes + '</div><div class="lbl">⏱️ Phút học</div></div>';
-  html += '</div>';
-
-  // Activity chart 30 days
-  html += '<h3 style="font-size:18px;margin-bottom:10px;">📈 Hoạt động 30 ngày qua</h3>';
-  html += '<div class="rep-chart-bar">';
-  Object.entries(dayCount).forEach(([d,c]) => {
-    const h = c > 0 ? Math.max(10, (c/maxCount)*80) : 3;
-    const dt = new Date(d);
-    const label = dt.getDate() + '/' + (dt.getMonth()+1);
-    html += '<div class="bar-col"><div class="bar-fill" style="height:' + h + 'px;">' + (c > 0 ? '<span class="bar-num">' + c + '</span>' : '') + '</div><div class="bar-label">' + label + '</div></div>';
-  });
-  html += '</div>';
-
-  // Subject breakdown
-  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📚 Kết quả theo môn</h3>';
-  html += '<div style="background:white;padding:16px;border-radius:12px;border:2px solid #e9d5ff;">';
-  Object.entries(bySubj).sort((a,b)=>b[1].n-a[1].n).forEach(([s,d]) => {
-    const pct = d.t ? Math.round(d.c/d.t*100) : 0;
-    html += '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px;font-size:14px;">' +
-      '<span>' + (SUBJECT_NAMES[s]||s) + '</span><span>' + pct + '% (' + d.n + ' bài / ' + d.t + ' câu)</span></div>' +
-      '<div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
-  });
-  html += '</div>';
-
-  // Strong/Weak topics
-  html += '<div class="grid grid-2" style="margin-top:20px;">';
-  html += '<div><h3 style="font-size:18px;margin-bottom:10px;color:#10b981;">💪 Chủ đề mạnh</h3><div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);padding:14px;border-radius:12px;border:2px solid #86efac;">';
-  if (strongTopics.length) strongTopics.forEach(([t,d]) => {
-    const p = Math.round(d.c/d.t*100);
-    html += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:600;font-size:14px;"><span>✅ ' + escapeHtml(t) + '</span><span style="color:#059669;">' + p + '%</span></div>';
-  });
-  else html += '<div style="color:var(--muted);text-align:center;font-weight:600;">Chưa có đủ dữ liệu</div>';
-  html += '</div></div>';
-
-  html += '<div><h3 style="font-size:18px;margin-bottom:10px;color:#ef4444;">⚠️ Chủ đề cần cải thiện</h3><div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);padding:14px;border-radius:12px;border:2px solid #fca5a5;">';
-  if (weakTopics.length) weakTopics.forEach(([t,d]) => {
-    const p = Math.round(d.c/d.t*100);
-    html += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:600;font-size:14px;"><span>📌 ' + escapeHtml(t) + '</span><span style="color:#dc2626;">' + p + '%</span></div>';
-  });
-  else html += '<div style="color:var(--muted);text-align:center;font-weight:600;">Chưa có đủ dữ liệu</div>';
-  html += '</div></div>';
-  html += '</div>';
-
-  // Recent 7 days detail
-  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📅 Chi tiết 7 ngày gần nhất</h3>';
-  last7Days.forEach(([d, sessions]) => {
-    const dt = new Date(d);
-    const dayStr = dt.toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-    const totalQ = sessions.reduce((s,h)=>s+h.total, 0);
-    const totalC = sessions.reduce((s,h)=>s+h.correct, 0);
-    const avgPct = Math.round(sessions.reduce((s,h)=>s+h.percent,0)/sessions.length);
-    const totalMin = Math.round(sessions.reduce((s,h)=>s+(h.time||0),0)/60);
-    html += '<div class="rep-day">';
-    html += '<div class="rep-day-hdr"><div class="rep-day-date">📆 ' + dayStr + '</div>';
-    html += '<div style="font-size:13px;color:var(--muted);font-weight:700;">' + sessions.length + ' lượt • ' + totalC + '/' + totalQ + ' đúng • ' + avgPct + '% • ⏱️ ' + totalMin + ' phút</div></div>';
-    sessions.forEach(h => {
-      const time = new Date(h.date).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
-      html += '<div class="rep-session"><span>🕐 ' + time + ' — ' + (SUBJECT_NAMES[h.subject]||h.subject) + ' - ' + (h.topic||'Tổng hợp') + '</span><span style="font-weight:700;color:' + (h.percent>=70?'#10b981':(h.percent>=50?'#f59e0b':'#ef4444')) + ';">' + h.correct + '/' + h.total + ' (' + h.percent + '%)</span></div>';
-    });
+  // Danh sách chi tiết các báo cáo
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📬 Chi tiết đánh giá từ cô giáo</h3>';
+  myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(r => {
+    const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
+    const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'numeric', year:'numeric'});
+    html += '<div style="background:white;padding:14px 16px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;border-left:5px solid #a855f7;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:6px;">';
+    html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <strong>' + escapeHtml(r.subject||'--') + '</strong><br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
+    if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 16px;border-radius:12px;font-family:Baloo 2;font-size:22px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
+    html += '</div>';
+    if (r.content) html += '<div style="font-size:14px;margin-top:4px;padding:6px 10px;background:#f5f3ff;border-radius:6px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
+    if (r.homework) html += '<div style="font-size:14px;margin-top:4px;background:#fef3c7;padding:6px 10px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
+    if (r.eval) html += '<div style="font-size:14px;margin-top:4px;background:#dbeafe;padding:6px 10px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
     html += '</div>';
   });
 
@@ -2046,6 +1984,10 @@ function renderTeacher() {
   } else {
     sel.innerHTML = students.map(s => '<option value="' + s.id + '">' + escapeHtml(s.name) + ' — 👨‍👩‍👧 ' + escapeHtml(s.parentName || '(chưa có PH)') + '</option>').join('');
   }
+  // Set default date filter to today
+  const dg = document.getElementById('stGridDate');
+  if (dg && !dg.value) dg.value = new Date().toISOString().slice(0,10);
+  renderStudentGrid();
 
   // Render existing reports (by this teacher)
   const list = document.getElementById('teacherReportList');
@@ -2069,6 +2011,52 @@ function renderTeacher() {
       '<button onclick="deleteTeacherReport(\'' + r.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-top:6px;">🗑️ Xóa</button>' +
       '</div>';
   }).join('');
+}
+
+function renderStudentGrid() {
+  loadStudents();
+  loadTeacherReports();
+  const grid = document.getElementById('studentGrid');
+  if (!grid) return;
+  const dateFilter = (document.getElementById('stGridDate') || {}).value || new Date().toISOString().slice(0,10);
+  const subjFilter = (document.getElementById('stGridSubject') || {}).value || '';
+  if (students.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="padding:20px;">👶<br>Chưa có học sinh. Vào tab <strong>🧑‍🎓 Học sinh</strong> để thêm.</div>';
+    return;
+  }
+  // Đếm số báo cáo cho mỗi student và check đã chấm ngày filter chưa
+  const currentSelectedId = document.getElementById('reportStudent') ? document.getElementById('reportStudent').value : '';
+  grid.innerHTML = students.map(s => {
+    const myReports = teacherReports.filter(r => r.studentId === s.id);
+    const total = myReports.length;
+    const doneOnDate = myReports.some(r => r.date === dateFilter && (!subjFilter || r.subject === subjFilter));
+    const classes = ['st-card'];
+    if (doneOnDate) classes.push('done');
+    if (s.id === currentSelectedId) classes.push('selected');
+    return '<div class="' + classes.join(' ') + '" onclick="pickStudent(\'' + s.id + '\')">' +
+      '<div class="st-name">' + escapeHtml(s.name) + '</div>' +
+      '<div class="st-parent">👨‍👩‍👧 ' + escapeHtml(s.parentName||'--') + '</div>' +
+      '<div class="st-count">' + (doneOnDate ? '✓ Đã chấm' : (total > 0 ? total + ' báo cáo' : 'Chưa có BC')) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function pickStudent(id) {
+  const sel = document.getElementById('reportStudent');
+  if (sel) sel.value = id;
+  const student = getStudentById(id);
+  if (student) {
+    // Cuộn xuống form
+    document.getElementById('reportContent').scrollIntoView({behavior:'smooth', block:'center'});
+    // Copy date filter to form
+    const df = document.getElementById('stGridDate');
+    const rd = document.getElementById('reportDate');
+    if (df && df.value && rd) rd.value = df.value;
+    const sf = document.getElementById('stGridSubject');
+    const rs = document.getElementById('reportSubject');
+    if (sf && sf.value && rs) rs.value = sf.value;
+  }
+  renderStudentGrid(); // update selected highlight
 }
 
 function submitTeacherReport() {
@@ -2095,6 +2083,7 @@ function submitTeacherReport() {
   teacherReports.push(r);
   saveTeacherReports();
   alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  renderStudentGrid();
   document.getElementById('reportContent').value = '';
   document.getElementById('reportHomework').value = '';
   document.getElementById('reportEval').value = '';
@@ -2131,6 +2120,7 @@ function submitQuickEval() {
   teacherReports.push(r);
   saveTeacherReports();
   alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  renderStudentGrid();
   document.getElementById('dqEval').value = '';
   renderDailyReport();
 }
@@ -2165,64 +2155,47 @@ function renderDailyReport() {
   } else if (quickEl) {
     quickEl.style.display = 'none';
   }
-  // Filter reports for parent's child
+
+  // Lọc báo cáo GV theo phụ huynh (nếu là PH) hoặc theo GV (nếu là GV)
   let filteredReports = teacherReports;
   if (currentRole === 'parent') {
     const myStudent = currentUser && currentUser.studentId ? getStudentById(currentUser.studentId) : null;
     filteredReports = myStudent ? teacherReports.filter(r => r.studentId === myStudent.id) : (parentInfo ? teacherReports.filter(r => r.parentName === parentInfo.name) : []);
   }
-  // Combine teacher reports + child quiz activity per day
+  // Nhóm theo ngày
   const byDate = {};
   filteredReports.forEach(r => {
     const d = r.date;
-    if (!byDate[d]) byDate[d] = { teacherReports: [], quizzes: [] };
-    byDate[d].teacherReports.push(r);
-  });
-  history.forEach(h => {
-    const d = h.date.slice(0,10);
-    if (!byDate[d]) byDate[d] = { teacherReports: [], quizzes: [] };
-    byDate[d].quizzes.push(h);
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(r);
   });
   const dates = Object.keys(byDate).sort().reverse().slice(0, 30);
   if (dates.length === 0) {
-    body.innerHTML = '<div class="empty-state">📅<br><br>Chưa có dữ liệu. Giáo viên chưa nhập báo cáo và bé chưa làm bài.</div>';
+    body.innerHTML = '<div class="empty-state" style="padding:40px 20px;">📅<br><br>Chưa có báo cáo nào. ' + (currentRole === 'teacher' ? 'Điền form phía trên để gửi báo cáo đầu tiên.' : 'Chờ giáo viên chủ nhiệm gửi báo cáo.') + '</div>';
     return;
   }
   let html = '';
+  html += '<div style="margin-bottom:10px;color:var(--muted);font-size:13px;font-weight:600;font-style:italic;">📌 Đây là đánh giá của giáo viên chủ nhiệm cho việc học <strong>trên lớp</strong> của bé.</div>';
   dates.forEach(d => {
     const dt = new Date(d);
     const dayStr = dt.toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-    const info = byDate[d];
+    const reports = byDate[d];
     html += '<div style="background:white;padding:16px 20px;border-radius:14px;border:3px solid #e9d5ff;margin-bottom:14px;box-shadow:0 3px 0 #e9d5ff;">';
-    html += '<h3 style="color:var(--primary-dark);margin-bottom:12px;font-size:17px;">📆 ' + dayStr + '</h3>';
-    // Teacher reports
-    if (info.teacherReports.length) {
-      info.teacherReports.forEach(r => {
-        const stars = '⭐'.repeat(Number(r.star)||3);
-        html += '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);padding:12px 14px;border-radius:10px;margin-bottom:8px;border-left:4px solid #a855f7;">';
-        html += '<div style="font-weight:700;color:#6d28d9;margin-bottom:6px;">👩‍🏫 ' + escapeHtml(r.teacher) + ' &nbsp;•&nbsp; ' + stars + '</div>';
-        if (r.subject) html += '<div style="font-size:14px;margin-bottom:4px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>';
-        if (r.content) html += '<div style="font-size:14px;margin-bottom:4px;"><strong>📖 Đã học:</strong> ' + escapeHtml(r.content) + '</div>';
-        if (r.homework) html += '<div style="font-size:14px;margin-bottom:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
-        if (r.eval) html += '<div style="font-size:14px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
-        html += '</div>';
-      });
-    }
-    // Quiz activity
-    if (info.quizzes.length) {
-      html += '<div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);padding:12px 14px;border-radius:10px;border-left:4px solid #10b981;">';
-      html += '<div style="font-weight:700;color:#059669;margin-bottom:6px;">👶 Bé tự làm bài trên app:</div>';
-      const totalQ = info.quizzes.reduce((s,h)=>s+h.total,0);
-      const totalC = info.quizzes.reduce((s,h)=>s+h.correct,0);
-      const avgP = Math.round(info.quizzes.reduce((s,h)=>s+h.percent,0)/info.quizzes.length);
-      html += '<div style="font-size:14px;">📊 ' + info.quizzes.length + ' lượt • ' + totalC + '/' + totalQ + ' câu đúng • TB ' + avgP + '%</div>';
-      info.quizzes.forEach(h => {
-        const time = new Date(h.date).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
-        const color = h.percent>=70?'#10b981':(h.percent>=50?'#f59e0b':'#ef4444');
-        html += '<div style="font-size:13px;padding:4px 8px;background:white;border-radius:6px;margin-top:4px;">🕐 ' + time + ' — ' + (SUBJECT_NAMES[h.subject]||h.subject) + ' - ' + (h.topic||'Tổng hợp') + ' — <strong style="color:' + color + ';">' + h.correct + '/' + h.total + ' (' + h.percent + '%)</strong></div>';
-      });
+    html += '<h3 style="color:var(--primary-dark);margin-bottom:12px;font-size:17px;">📆 ' + dayStr + ' <span style="font-size:13px;color:var(--muted);font-weight:600;">(' + reports.length + ' báo cáo)</span></h3>';
+    reports.forEach(r => {
+      const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
+      html += '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);padding:12px 14px;border-radius:10px;margin-bottom:8px;border-left:4px solid #a855f7;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:6px;">';
+      html += '<div><strong style="color:#6d28d9;">👩‍🏫 ' + escapeHtml(r.teacher||'GV') + '</strong>';
+      if (currentRole !== 'parent' && r.studentName) html += ' — 🧑‍🎓 ' + escapeHtml(r.studentName);
+      html += ' — ' + escapeHtml(r.subject||'') + '</div>';
+      if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:6px 14px;border-radius:10px;font-family:Baloo 2;font-size:18px;font-weight:800;min-width:50px;text-align:center;">' + r.score + '</div>';
       html += '</div>';
-    }
+      if (r.content) html += '<div style="font-size:13px;margin-top:4px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
+      if (r.homework) html += '<div style="font-size:13px;margin-top:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
+      if (r.eval) html += '<div style="font-size:13px;margin-top:4px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+      html += '</div>';
+    });
     html += '</div>';
   });
   body.innerHTML = html;
