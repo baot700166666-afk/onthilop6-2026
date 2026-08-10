@@ -1173,8 +1173,8 @@ function updateUserBadge() {
     html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
   } else if (currentRole === 'teacher') {
     html += '<div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #7c3aed;">👩‍🏫 ' + escapeHtml((teacherInfo && teacherInfo.name) || 'Giáo viên') + '</div>';
-    if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
-    if (sub) sub.textContent = '👩‍🏫 Cập nhật báo cáo cho ' + ((currentUser && currentUser.name) || 'học sinh');
+    loadStudents();
+    if (sub) sub.textContent = '👩‍🏫 Cập nhật báo cáo cho ' + students.length + ' học sinh trong hệ thống';
     html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
   } else if (currentRole === 'child' && currentUser) {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
