@@ -314,6 +314,7 @@
   </header>
   <nav>
     <button class="nav-btn" id="myScoresBtn" data-view="myScores" style="display:none;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border-color:#be185d;box-shadow:0 3px 0 #be185d;">🌟 Xem điểm của tôi</button>
+    <button class="nav-btn" id="dataBtn" data-view="data" style="display:none;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border-color:#020617;box-shadow:0 3px 0 #020617;">📊 DATA</button>
     <button class="nav-btn" id="vinschoolBtn" data-view="vinschool" style="display:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border-color:#1d4ed8;box-shadow:0 3px 0 #1d4ed8;">🎓 Tài liệu Vinschool</button>
     <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
@@ -602,6 +603,15 @@
       <div id="adminDashBody"></div>
     </div>
   </div>
+  <div id="view-data" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">📊 DATA - Kho dữ liệu hệ thống</h2>
+        <div style="font-weight:600;font-size:14px;">Xem/xuất/quản lý toàn bộ dữ liệu (chỉ tài khoản được cấp quyền)</div>
+      </div>
+      <div id="dataBody"></div>
+    </div>
+  </div>
   <div id="view-myScores" class="hidden">
     <div class="card">
       <div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
@@ -632,8 +642,11 @@
             <input type="text" id="vsTitle" placeholder="VD: Bài tập chương 1..." style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
           </div>
         </div>
-        <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">🔗 Link (URL hoặc mô tả):</label>
-        <input type="text" id="vsLink" placeholder="https://... hoặc mô tả tài liệu" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+        <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">🔗 Link URL (nếu có, để trống nếu upload file):</label>
+        <input type="text" id="vsLink" placeholder="https://drive.google.com/... hoặc để trống" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+        <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">📎 HOẶC upload file trực tiếp (PDF, DOC, ảnh - tối đa 3MB):</label>
+        <input type="file" id="vsFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;background:white;">
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;">💡 File nhỏ (< 3MB) sẽ được lưu ngay trong app. File lớn nên dùng link Google Drive.</div>
         <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">📝 Mô tả (tuỳ chọn):</label>
         <textarea id="vsDesc" placeholder="Nội dung tài liệu..." style="width:100%;min-height:50px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
         <button class="btn btn-success" style="margin-top:10px;" onclick="addVinschoolMaterial()">💾 Thêm tài liệu</button>
@@ -1337,10 +1350,13 @@ function updateUserBadge() {
   const vinschoolBtn = document.getElementById('vinschoolBtn');
   if (myScoresBtn) myScoresBtn.style.display = (currentRole === 'student' || currentRole === 'child') ? 'inline-block' : 'none';
   if (vinschoolBtn) vinschoolBtn.style.display = (currentRole === 'student' || currentRole === 'child' || currentRole === 'parent' || currentRole === 'teacher' || currentRole === 'admin') ? 'inline-block' : 'none';
+  const dataBtn = document.getElementById('dataBtn');
+  if (dataBtn) dataBtn.style.display = hasDataAccess() ? 'inline-block' : 'none';
   if (currentRole === 'student') {
-    // Ẩn hết trừ myScores + vinschool
+    // Ẩn hết trừ myScores + vinschool (và data nếu có quyền)
     defaultBtns.forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
     ['manage','parent','adminDash','answers','teacher','daily','students'].forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
+    // DATA button vẫn hiện nếu student có quyền (handled ở trên)
   }
 }
 
@@ -1658,6 +1674,163 @@ function renderAdminDash() {
   body.innerHTML = html;
 }
 
+// ========== DATA ACCESS CONTROL ==========
+let dataWhitelist = []; // list of {role, name, addedBy, at}
+function loadWhitelist() {
+  const s = localStorage.getItem('hoccungbe_data_wl');
+  dataWhitelist = s ? JSON.parse(s) : [];
+}
+function saveWhitelist() {
+  localStorage.setItem('hoccungbe_data_wl', JSON.stringify(dataWhitelist));
+}
+
+function hasDataAccess() {
+  if (currentRole === 'admin') return true; // admin luôn có quyền
+  loadWhitelist();
+  const currentName = getCurrentIdentityName();
+  if (!currentName) return false;
+  return dataWhitelist.some(w => (w.role === currentRole || w.role === 'any') && w.name.toLowerCase() === currentName.toLowerCase());
+}
+
+function getCurrentIdentityName() {
+  if (currentRole === 'teacher') return (teacherInfo && teacherInfo.name) || null;
+  if (currentRole === 'parent') return (parentInfo && parentInfo.name) || null;
+  if (currentRole === 'student' || currentRole === 'child') return currentUser && currentUser.name;
+  if (currentRole === 'admin') return 'admin';
+  return null;
+}
+
+function renderData() {
+  if (!hasDataAccess()) {
+    document.getElementById('dataBody').innerHTML = '<div class="empty-state" style="padding:40px 20px;">🔒<br><br><strong>Bạn không có quyền truy cập DATA</strong><br><br>Liên hệ Admin để được cấp quyền.</div>';
+    return;
+  }
+  loadStudents(); loadTeacherReports(); loadVinschool(); loadWhitelist();
+  const body = document.getElementById('dataBody');
+  let html = '';
+
+  // 1. Overview
+  html += '<h3 style="font-size:20px;margin-bottom:12px;">📈 Tổng quan số liệu</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#1e293b,#334155);border-color:#0f172a;"><div class="val" style="color:#f1f5f9;background:none;-webkit-text-fill-color:#f1f5f9;">' + students.length + '</div><div class="lbl" style="color:#cbd5e1;">🧑‍🎓 Học sinh</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#831843,#9d174d);border-color:#500724;"><div class="val" style="color:#fce7f3;background:none;-webkit-text-fill-color:#fce7f3;">' + teacherReports.length + '</div><div class="lbl" style="color:#fbcfe8;">📋 Báo cáo GV</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#78350f,#92400e);border-color:#451a03;"><div class="val" style="color:#fef3c7;background:none;-webkit-text-fill-color:#fef3c7;">' + vinschoolMaterials.length + '</div><div class="lbl" style="color:#fde68a;">🎓 Tài liệu Vinschool</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#1e40af,#1d4ed8;border-color:#172554;"><div class="val" style="color:#dbeafe;background:none;-webkit-text-fill-color:#dbeafe;">' + history.length + '</div><div class="lbl" style="color:#bfdbfe;">📝 Lượt tự học</div></div>';
+  html += '</div>';
+
+  // 2. Whitelist management (chỉ admin)
+  if (currentRole === 'admin') {
+    html += '<h3 style="font-size:18px;margin:20px 0 10px;">🔑 Quản lý quyền truy cập DATA</h3>';
+    html += '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);padding:16px 20px;border-radius:14px;border:3px solid #c4b5fd;margin-bottom:16px;">';
+    html += '<div style="display:grid;grid-template-columns:1fr 2fr auto;gap:10px;align-items:end;">';
+    html += '<div><label style="font-weight:700;font-size:13px;color:var(--muted);">Vai trò:</label><select id="wlRole" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"><option value="teacher">Giáo viên</option><option value="parent">Phụ huynh</option><option value="student">Học sinh</option><option value="any">Bất kỳ</option></select></div>';
+    html += '<div><label style="font-weight:700;font-size:13px;color:var(--muted);">Tên (chính xác):</label><input type="text" id="wlName" placeholder="VD: cô Hương / Nguyễn Thành Trung..." style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></div>';
+    html += '<button class="btn btn-success" onclick="addWhitelist()" style="padding:10px 16px;">➕ Cấp quyền</button>';
+    html += '</div>';
+    if (dataWhitelist.length === 0) {
+      html += '<div style="margin-top:12px;padding:10px;background:white;border-radius:8px;color:var(--muted);font-weight:600;text-align:center;">Chưa có ai được cấp quyền (ngoài Admin).</div>';
+    } else {
+      html += '<div style="margin-top:12px;background:white;padding:10px;border-radius:8px;"><h4 style="font-size:14px;margin-bottom:8px;">Danh sách được cấp quyền:</h4>';
+      dataWhitelist.forEach((w, i) => {
+        const roleLabel = w.role === 'teacher' ? '👩‍🏫 GV' : w.role === 'parent' ? '👨‍👩‍👧 PH' : w.role === 'student' ? '🧑‍🎓 HS' : '🎭 Bất kỳ';
+        html += '<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #e9d5ff;"><span><strong>' + roleLabel + '</strong> ' + escapeHtml(w.name) + '</span><button onclick="removeWhitelist(' + i + ')" style="background:#fee2e2;color:#991b1b;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">🗑️</button></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // 3. Data explorer (all data types)
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">💾 Xuất & Sao lưu dữ liệu</h3>';
+  html += '<div style="background:white;padding:16px;border-radius:12px;border:2px solid #e2e8f0;margin-bottom:16px;">';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
+  html += '<button class="btn" onclick="exportAllData()" style="background:linear-gradient(135deg,#059669,#047857);">💾 Xuất TOÀN BỘ dữ liệu (JSON)</button>';
+  html += '<button class="btn" onclick="importAllData()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">📥 Import dữ liệu (JSON)</button>';
+  html += '<button class="btn" onclick="exportStudents()">📤 Xuất DS học sinh</button>';
+  html += '<button class="btn" onclick="exportReportsExcel()">📤 Xuất tất cả báo cáo</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // 4. Preview raw data
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">🗂️ Xem trước dữ liệu (5 mẫu đầu)</h3>';
+  const preview = {
+    students: students.slice(0,5),
+    teacherReports: teacherReports.slice(0,5),
+    vinschool: vinschoolMaterials.slice(0,5),
+    passwords: {parent: getParentPass() === PARENT_PASS ? '(mặc định)' : '(đã đổi)', teacher: getTeacherPass() === TEACHER_PASS ? '(mặc định)' : '(đã đổi)', admin: getAdminPass() === ADMIN_PASS ? '(mặc định)' : '(đã đổi)'}
+  };
+  html += '<pre style="background:#0f172a;color:#94a3b8;padding:14px;border-radius:10px;font-size:11px;overflow:auto;max-height:400px;font-family:monospace;">' + escapeHtml(JSON.stringify(preview, null, 2)) + '</pre>';
+
+  body.innerHTML = html;
+}
+
+function addWhitelist() {
+  const role = document.getElementById('wlRole').value;
+  const name = document.getElementById('wlName').value.trim();
+  if (!name) { alert('Nhập tên!'); return; }
+  loadWhitelist();
+  if (dataWhitelist.some(w => w.role === role && w.name.toLowerCase() === name.toLowerCase())) {
+    alert('Người này đã có quyền rồi!'); return;
+  }
+  dataWhitelist.push({role, name, addedBy: 'admin', at: new Date().toISOString()});
+  saveWhitelist();
+  document.getElementById('wlName').value = '';
+  alert('✅ Đã cấp quyền DATA cho: ' + name);
+  renderData();
+  updateUserBadge();
+}
+
+function removeWhitelist(i) {
+  if (!confirm('Thu hồi quyền của người này?')) return;
+  loadWhitelist();
+  dataWhitelist.splice(i, 1);
+  saveWhitelist();
+  renderData();
+  updateUserBadge();
+}
+
+function exportAllData() {
+  const allData = {
+    students: JSON.parse(localStorage.getItem('hoccungbe_students')||'[]'),
+    teacherReports: JSON.parse(localStorage.getItem('hoccungbe_teacher_reports')||'[]'),
+    vinschool: JSON.parse(localStorage.getItem('hoccungbe_vinschool')||'[]'),
+    whitelist: JSON.parse(localStorage.getItem('hoccungbe_data_wl')||'[]'),
+    quizHistory: JSON.parse(localStorage.getItem('hoccungbe_history')||'[]'),
+    exportedAt: new Date().toISOString(),
+    exportedBy: getCurrentIdentityName() + ' (' + currentRole + ')'
+  };
+  const blob = new Blob([JSON.stringify(allData, null, 2)], {type:'application/json'});
+  downloadBlob(blob, 'hoccungbe-backup-' + new Date().toISOString().slice(0,10) + '.json');
+}
+
+function importAllData() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json';
+  inp.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!confirm('⚠️ Import sẽ GHI ĐÈ toàn bộ dữ liệu hiện tại!\n\nTiếp tục?')) return;
+        if (data.students) localStorage.setItem('hoccungbe_students', JSON.stringify(data.students));
+        if (data.teacherReports) localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(data.teacherReports));
+        if (data.vinschool) localStorage.setItem('hoccungbe_vinschool', JSON.stringify(data.vinschool));
+        if (data.whitelist) localStorage.setItem('hoccungbe_data_wl', JSON.stringify(data.whitelist));
+        if (data.quizHistory) localStorage.setItem('hoccungbe_history', JSON.stringify(data.quizHistory));
+        alert('✅ Import thành công! App sẽ reload để cập nhật dữ liệu.');
+        location.reload();
+      } catch (err) {
+        alert('❌ File không hợp lệ: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
 // ========== HỌC SINH XEM ĐIỂM ==========
 function renderMyScores() {
   loadTeacherReports();
@@ -1754,10 +1927,20 @@ function renderVinschool() {
       html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">';
       html += '<div style="flex:1;"><strong style="color:#1e40af;font-size:15px;">📄 ' + escapeHtml(m.title) + '</strong>';
       if (m.desc) html += '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + escapeHtml(m.desc) + '</div>';
-      if (m.link) {
-        if (m.link.startsWith('http')) html += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;margin-top:6px;background:#3b82f6;color:white;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">🔗 Mở tài liệu</a>';
-        else html += '<div style="margin-top:6px;padding:6px 10px;background:#f0f9ff;border-radius:6px;font-size:13px;">🔗 ' + escapeHtml(m.link) + '</div>';
+      // Buttons for file (upload) và link
+      let btnHtml = '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">';
+      if (m.file && m.file.data) {
+        const fileSize = m.file.size ? (m.file.size / 1024).toFixed(0) + ' KB' : '';
+        btnHtml += '<button onclick="viewVinschoolFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">👁️ Xem trực tiếp</button>';
+        btnHtml += '<button onclick="downloadVinschoolFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">💾 Tải về máy</button>';
+        btnHtml += '<span style="align-self:center;font-size:12px;color:var(--muted);font-weight:600;">📎 ' + escapeHtml(m.file.name) + ' (' + fileSize + ')</span>';
       }
+      if (m.link) {
+        if (m.link.startsWith('http')) btnHtml += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;background:#8b5cf6;color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">🔗 Mở link</a>';
+        else btnHtml += '<div style="padding:8px 12px;background:#f0f9ff;border-radius:8px;font-size:13px;">🔗 ' + escapeHtml(m.link) + '</div>';
+      }
+      btnHtml += '</div>';
+      html += btnHtml;
       html += '</div>';
       if (currentRole === 'teacher' || currentRole === 'admin') {
         html += '<button onclick="deleteVinschoolMaterial(\'' + m.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">🗑️</button>';
@@ -1773,20 +1956,76 @@ function addVinschoolMaterial() {
   const title = document.getElementById('vsTitle').value.trim();
   const link = document.getElementById('vsLink').value.trim();
   const desc = document.getElementById('vsDesc').value.trim();
+  const fileInput = document.getElementById('vsFile');
+  const file = fileInput.files[0];
   if (!title) { alert('Nhập tiêu đề!'); return; }
+  if (!link && !file) { alert('Nhập link hoặc chọn file!'); return; }
+
+  function saveEntry(fileData) {
+    loadVinschool();
+    vinschoolMaterials.push({
+      id: 'vs_' + Date.now() + Math.random().toString(36).slice(2,6),
+      subject, title, link, desc,
+      file: fileData,
+      addedBy: (teacherInfo && teacherInfo.name) || 'Admin',
+      createdAt: new Date().toISOString()
+    });
+    saveVinschool();
+    document.getElementById('vsTitle').value = '';
+    document.getElementById('vsLink').value = '';
+    document.getElementById('vsDesc').value = '';
+    fileInput.value = '';
+    alert('✅ Đã thêm tài liệu!');
+    renderVinschool();
+  }
+
+  if (file) {
+    if (file.size > 3 * 1024 * 1024) {
+      alert('❌ File > 3MB! Vui lòng dùng file nhỏ hơn hoặc dán link Google Drive.'); return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      saveEntry({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: e.target.result // base64 data URL
+      });
+    };
+    reader.onerror = function() { alert('❌ Lỗi đọc file!'); };
+    reader.readAsDataURL(file);
+  } else {
+    saveEntry(null);
+  }
+}
+
+function viewVinschoolFile(id) {
   loadVinschool();
-  vinschoolMaterials.push({
-    id: 'vs_' + Date.now() + Math.random().toString(36).slice(2,6),
-    subject, title, link, desc,
-    addedBy: (teacherInfo && teacherInfo.name) || 'Admin',
-    createdAt: new Date().toISOString()
-  });
-  saveVinschool();
-  document.getElementById('vsTitle').value = '';
-  document.getElementById('vsLink').value = '';
-  document.getElementById('vsDesc').value = '';
-  alert('✅ Đã thêm tài liệu!');
-  renderVinschool();
+  const m = vinschoolMaterials.find(x => x.id === id);
+  if (!m || !m.file || !m.file.data) { alert('Không có file để xem!'); return; }
+  // Open in new tab
+  const w = window.open('', '_blank');
+  if (m.file.type.startsWith('image/')) {
+    w.document.write('<html><head><title>' + escapeHtml(m.title) + '</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="' + m.file.data + '" style="max-width:100%;max-height:100vh;"></body></html>');
+  } else if (m.file.type === 'application/pdf') {
+    w.document.write('<html><head><title>' + escapeHtml(m.title) + '</title></head><body style="margin:0;"><embed src="' + m.file.data + '" type="application/pdf" style="width:100%;height:100vh;"></body></html>');
+  } else {
+    // Non-viewable → auto download
+    downloadVinschoolFile(id);
+    w.close();
+  }
+}
+
+function downloadVinschoolFile(id) {
+  loadVinschool();
+  const m = vinschoolMaterials.find(x => x.id === id);
+  if (!m || !m.file || !m.file.data) { alert('Không có file để tải!'); return; }
+  const a = document.createElement('a');
+  a.href = m.file.data;
+  a.download = m.file.name || (m.title + '.dat');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function deleteVinschoolMaterial(id) {
@@ -3082,6 +3321,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
     else if (v === 'students') { showView('students'); renderStudents(); }
+    else if (v === 'data') { showView('data'); renderData(); }
     else if (v === 'myScores') { showView('myScores'); renderMyScores(); }
     else if (v === 'vinschool') { showView('vinschool'); renderVinschool(); }
     else if (v === 'teacher') { showView('teacher'); renderTeacher(); }
