@@ -414,8 +414,8 @@
           </label>
           <button class="btn" onclick="downloadTemplate()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 0 #0369a1;padding:12px 18px;font-size:14px;">📄 Tải file mẫu (Excel)</button>
           <button class="btn btn-secondary" onclick="exportStudents()" style="padding:12px 18px;font-size:14px;">📤 Xuất danh sách</button>
-          <button class="btn" onclick="resetAllStudents()" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 4px 0 #b91c1c;padding:12px 18px;font-size:14px;">🗑️ Reset toàn bộ</button>
-        </div>
+          </div>
+        <div style="margin-top:8px;font-size:12px;color:#166534;font-weight:600;">💡 Nút <strong>Reset</strong> đã chuyển sang tab <strong>👩‍🏫 Giáo viên</strong> (ô đỏ đầu trang).</div>
         <div style="margin-top:10px;font-size:12px;color:#166534;font-weight:600;">
           💡 <strong>Cột trong file:</strong> Mã HS | Tên HS | Ngày sinh | Tên PH | Mật khẩu PH | SĐT PH<br>💡 <strong>Mã HS</strong>: nếu trùng với HS cũ → sẽ cập nhật (không tạo mới). Bỏ trống → tự sinh HS001, HS002...<br>
           📝 <strong>Ngày sinh:</strong> dd/mm/yyyy (VD: 15/05/2014) hoặc yyyy-mm-dd
@@ -462,6 +462,15 @@
         <h2 style="color:white;font-size:24px;margin-bottom:6px;">👩‍🏫 Giáo viên: <span id="teacherHeaderName">--</span></h2>
         <div style="font-weight:600;font-size:14px;">Cập nhật báo cáo hàng ngày cho học sinh: <strong id="teacherStudentName">--</strong></div>
       </div>
+      <div style="background:linear-gradient(135deg,#fee2e2,#fecaca);padding:14px 18px;border-radius:14px;border:3px solid #f87171;margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;font-size:16px;color:#991b1b;">🛠️ Công cụ quản lý dữ liệu (chỉ cô giáo dùng)</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="resetMyReports()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 3px 0 #d97706;padding:10px 14px;font-size:13px;">🗑️ Xóa báo cáo của tôi</button>
+          <button class="btn" onclick="resetAllReports()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;box-shadow:0 3px 0 #c2410c;padding:10px 14px;font-size:13px;">🗑️ Xóa TẤT CẢ báo cáo</button>
+          <button class="btn" onclick="resetAllStudents()" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 3px 0 #b91c1c;padding:10px 14px;font-size:13px;">💥 Reset toàn bộ (HS + báo cáo)</button>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:#7f1d1d;font-weight:600;">💡 Học sinh &amp; phụ huynh KHÔNG có quyền xóa gì. Chỉ giáo viên/admin dùng chức năng này.</div>
+      </div>
       <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:16px 20px;border-radius:14px;border:3px solid #86efac;margin-bottom:16px;">
         <h3 style="margin-bottom:10px;font-size:18px;color:#166534;">📥 Chấm điểm hàng loạt cho cả lớp (Excel)</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -484,11 +493,12 @@
             📥 Chọn file Excel/CSV
             <input type="file" accept=".xlsx,.xls,.csv" onchange="handleBulkImport(event)" style="display:none;">
           </label>
-          <button class="btn" onclick="downloadBulkTemplate()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 0 #0369a1;padding:12px 18px;font-size:14px;">📄 Tải file mẫu</button>
+          <button class="btn" onclick="downloadBulkTemplate()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 0 #0369a1;padding:12px 18px;font-size:14px;">📄 Tải file chấm điểm (có sẵn tên lớp)</button>
         </div>
         <div style="margin-top:10px;font-size:12px;color:#166534;font-weight:600;">
           💡 <strong>File chỉ cần 3 cột:</strong> Tên học sinh | Điểm (1-10) | Nhận xét<br>
-          📌 Tất cả các dòng sẽ được chấm cùng <strong>ngày</strong> + <strong>môn</strong> đã chọn ở trên
+          📌 Tất cả các dòng sẽ được chấm cùng <strong>ngày</strong> + <strong>môn</strong> đã chọn ở trên<br>
+          🎯 <strong>Bấm "Tải file chấm điểm"</strong> sẽ tự động lấy TẤT CẢ tên học sinh trong danh sách của bạn → mở Excel điền cột Điểm + Nhận xét → upload lại
         </div>
       </div>
       <div id="bulkPreview" style="display:none;"></div>
@@ -1972,20 +1982,53 @@ function renderStudents() {
   }).join('');
 }
 
+function resetMyReports() {
+  const teacherName = (teacherInfo && teacherInfo.name) || null;
+  if (!teacherName) { alert('Chưa xác định tên giáo viên!'); return; }
+  loadTeacherReports();
+  const my = teacherReports.filter(r => r.teacher === teacherName);
+  if (my.length === 0) { alert('Bạn chưa có báo cáo nào để xóa.'); return; }
+  if (!confirm('⚠️ Xóa TẤT CẢ ' + my.length + ' báo cáo do "' + teacherName + '" tạo?\n\nCác báo cáo của giáo viên khác vẫn giữ nguyên.\n\nKhông thể hoàn tác!')) return;
+  const pw = prompt('🔒 Nhập mật khẩu giáo viên để xác nhận:');
+  if (pw !== getTeacherPass()) { alert('❌ Sai mật khẩu!'); return; }
+  teacherReports = teacherReports.filter(r => r.teacher !== teacherName);
+  saveTeacherReports();
+  alert('✅ Đã xóa ' + my.length + ' báo cáo!');
+  renderTeacher();
+}
+
+function resetAllReports() {
+  loadTeacherReports();
+  if (teacherReports.length === 0) { alert('Chưa có báo cáo nào để xóa.'); return; }
+  if (!confirm('⚠️ CẢNH BÁO: Xóa TẤT CẢ báo cáo giáo viên trong hệ thống (' + teacherReports.length + ' báo cáo, kể cả của giáo viên khác)?\n\nDanh sách học sinh vẫn giữ.\n\nKhông thể hoàn tác!')) return;
+  const pw = prompt('🔒 Nhập mật khẩu giáo viên để xác nhận:');
+  if (pw !== getTeacherPass()) { alert('❌ Sai mật khẩu!'); return; }
+  const n = teacherReports.length;
+  teacherReports = [];
+  saveTeacherReports();
+  alert('✅ Đã xóa toàn bộ ' + n + ' báo cáo!');
+  renderTeacher();
+}
+
 function resetAllStudents() {
-  const s1 = confirm('⚠️ CẢNH BÁO: Bạn sắp XÓA TOÀN BỘ:\n\n' +
-    '• Danh sách học sinh\n' +
-    '• Tất cả báo cáo giáo viên\n\n' +
-    'Hành động này KHÔNG THỂ HOÀN TÁC.\n\nBạn có chắc muốn tiếp tục?');
-  if (!s1) return;
-  const s2 = prompt('🔒 Để xác nhận, hãy gõ chính xác: XOA');
-  if (s2 !== 'XOA') { alert('❌ Không đúng. Đã hủy.'); return; }
+  loadStudents(); loadTeacherReports();
+  const sCount = students.length;
+  const rCount = teacherReports.length;
+  if (!confirm('💥 CẢNH BÁO CAO: Sẽ XÓA:\n\n' +
+    '• ' + sCount + ' học sinh\n' +
+    '• ' + rCount + ' báo cáo giáo viên\n\n' +
+    'KHÔNG THỂ HOÀN TÁC!\n\nTiếp tục?')) return;
+  const pw = prompt('🔒 Nhập mật khẩu giáo viên để xác nhận:');
+  if (pw !== getTeacherPass()) { alert('❌ Sai mật khẩu!'); return; }
+  const s2 = prompt('🔒 Gõ chính xác chữ: XOAHET');
+  if (s2 !== 'XOAHET') { alert('❌ Không đúng. Đã hủy.'); return; }
   localStorage.removeItem('hoccungbe_students');
   localStorage.removeItem('hoccungbe_teacher_reports');
   students = [];
   teacherReports = [];
-  alert('✅ Đã reset toàn bộ danh sách học sinh và báo cáo!');
-  renderStudents();
+  alert('✅ Đã reset toàn bộ ' + sCount + ' học sinh và ' + rCount + ' báo cáo!');
+  if (typeof renderTeacher === 'function') renderTeacher();
+  if (typeof renderStudents === 'function') renderStudents();
 }
 
 function saveStudent() {
@@ -2104,14 +2147,17 @@ function renderTeacher() {
 
 // ========== BULK IMPORT ĐIỂM ==========
 function downloadBulkTemplate() {
-  const today = new Date().toISOString().slice(0,10);
   loadStudents();
+  const bulkDate = (document.getElementById('bulkDate') || {}).value || new Date().toISOString().slice(0,10);
+  const bulkSubject = (document.getElementById('bulkSubject') || {}).value || 'Toán';
   const data = [['Tên học sinh', 'Điểm (1-10)', 'Nhận xét']];
   if (students.length > 0) {
-    students.slice(0,3).forEach((s,i) => {
-      data.push([s.name, i===0?9.0:(i===1?7.5:8.5), i===0?'Học tốt, tiếp thu nhanh':'Ổn định, cần luyện thêm']);
+    // Lấy TẤT CẢ học sinh, cột điểm + nhận xét để trống cho cô điền
+    students.forEach(s => {
+      data.push([s.name, '', '']);
     });
   } else {
+    // Nếu chưa có HS trong hệ thống, dùng dữ liệu demo
     data.push(['Thành Lâm', 9.0, 'Học tốt, tiếp thu nhanh']);
     data.push(['Minh An', 7.5, 'Cần luyện thêm phần phân số']);
     data.push(['Bảo Ngọc', 8.5, 'Chăm chỉ, tiến bộ']);
@@ -2125,7 +2171,7 @@ function downloadBulkTemplate() {
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = [{wch:22},{wch:12},{wch:45}];
   XLSX.utils.book_append_sheet(wb, ws, 'ChamDiem');
-  XLSX.writeFile(wb, 'cham-diem-mau.xlsx');
+  XLSX.writeFile(wb, 'cham-diem_' + bulkSubject.replace(/[^a-zA-Z0-9]/g,'') + '_' + bulkDate + '.xlsx');
 }
 
 function handleBulkImport(evt) {
