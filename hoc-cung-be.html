@@ -250,7 +250,10 @@
     <div class="subtitle">Chào mừng đến với ứng dụng ôn thi vào lớp 6!</div>
     <div class="login-role" style="grid-template-columns:1fr 1fr;">
       <div class="login-role-btn active" id="roleChild" onclick="selectRole('child')">
-        <span class="emoji">👦</span>Con vào học
+        <span class="emoji">👦</span>Con tự học
+      </div>
+      <div class="login-role-btn" id="roleStudent" onclick="selectRole('student')">
+        <span class="emoji">🧑‍🎓</span>Học sinh xem điểm
       </div>
       <div class="login-role-btn" id="roleParent" onclick="selectRole('parent')">
         <span class="emoji">👨‍👩‍👧</span>Phụ huynh
@@ -269,6 +272,14 @@
         <label>🎂 Ngày sinh:</label>
         <input type="date" id="childDOB">
         <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
+      </div>
+      <div id="studentForm" style="display:none;">
+        <label>🧑‍🎓 Tên học sinh:</label>
+        <input type="text" id="studentNameIn" placeholder="Tên (như trong danh sách lớp)" maxlength="50">
+        <label>🔑 Mật khẩu:</label>
+        <input type="password" id="studentPassIn" placeholder="Mật khẩu (do cô/PH cung cấp)" onkeypress="if(event.key==='Enter')doStudentLogin()">
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Dùng mật khẩu phụ huynh (cô giáo cung cấp) hoặc <code>hocsinh</code></div>
+        <button class="btn login-submit" style="background:linear-gradient(135deg,#ec4899,#db2777);box-shadow:0 4px 0 #be185d;" onclick="doStudentLogin()">🎯 Xem điểm của tôi</button>
       </div>
       <div id="parentForm" style="display:none;">
         <label>👨‍👩‍👧 Tên phụ huynh:</label>
@@ -302,6 +313,8 @@
     <div id="userBadge" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;position:relative;z-index:100;"></div>
   </header>
   <nav>
+    <button class="nav-btn" id="myScoresBtn" data-view="myScores" style="display:none;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border-color:#be185d;box-shadow:0 3px 0 #be185d;">🌟 Xem điểm của tôi</button>
+    <button class="nav-btn" id="vinschoolBtn" data-view="vinschool" style="display:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border-color:#1d4ed8;box-shadow:0 3px 0 #1d4ed8;">🎓 Tài liệu Vinschool</button>
     <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
@@ -471,6 +484,16 @@
         </div>
         <div style="margin-top:8px;font-size:12px;color:#7f1d1d;font-weight:600;">💡 Học sinh &amp; phụ huynh KHÔNG có quyền xóa gì. Chỉ giáo viên/admin dùng chức năng này.</div>
       </div>
+      <div style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);padding:16px 20px;border-radius:14px;border:3px solid #a5b4fc;margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;font-size:18px;color:#3730a3;">📊 Báo cáo tổng hợp theo tuần / tháng</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <button class="btn" onclick="showStarRanking()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 3px 0 #d97706;padding:10px 14px;font-size:14px;">🌟 Bảng xếp hạng sao tuần</button>
+          <button class="btn" onclick="showPeriodReport('week')" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;box-shadow:0 3px 0 #4338ca;padding:10px 14px;font-size:14px;">📅 Báo cáo tuần (7 ngày)</button>
+          <button class="btn" onclick="showPeriodReport('month')" style="background:linear-gradient(135deg,#a855f7,#9333ea);color:white;box-shadow:0 3px 0 #7e22ce;padding:10px 14px;font-size:14px;">📆 Báo cáo tháng (30 ngày)</button>
+          <button class="btn" onclick="exportReportsExcel()" style="background:linear-gradient(135deg,#10b981,#059669);color:white;box-shadow:0 3px 0 #047857;padding:10px 14px;font-size:14px;">💾 Xuất Excel tất cả báo cáo</button>
+        </div>
+        <div id="periodReportBox" style="display:none;margin-top:12px;"></div>
+      </div>
       <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:16px 20px;border-radius:14px;border:3px solid #86efac;margin-bottom:16px;">
         <h3 style="margin-bottom:10px;font-size:18px;color:#166534;">📥 Chấm điểm hàng loạt cho cả lớp (Excel)</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -481,10 +504,8 @@
           <div>
             <label style="font-weight:700;color:#166534;font-size:13px;">📚 Môn học:</label>
             <select id="bulkSubject" style="width:100%;padding:10px;border:2px solid #86efac;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
-              <option>Toán</option><option>Tiếng Việt</option><option>Tiếng Anh</option>
-              <option>Khoa học</option><option>Lịch sử - Địa lý</option><option>Tin học</option>
-              <option>Đạo đức</option><option>Mỹ thuật</option><option>Âm nhạc</option>
-              <option>Thể dục</option><option>Khác</option>
+              <option>Toán</option><option>Tiếng Việt</option>
+              <option>Khoa học</option><option>Lịch sử và Địa lý</option>
             </select>
           </div>
         </div>
@@ -510,9 +531,8 @@
           <label style="font-weight:700;font-size:13px;color:#92400e;">📚 Môn:</label>
           <select id="stGridSubject" onchange="renderStudentGrid()" style="padding:8px 12px;border:2px solid #fbbf24;border-radius:10px;font-family:Quicksand;font-weight:600;">
             <option value="">Tất cả môn</option>
-            <option>Toán</option><option>Tiếng Việt</option><option>Tiếng Anh</option>
-            <option>Khoa học</option><option>Lịch sử - Địa lý</option><option>Tin học</option>
-            <option>Đạo đức</option><option>Mỹ thuật</option><option>Âm nhạc</option><option>Thể dục</option><option>Khác</option>
+            <option>Toán</option><option>Tiếng Việt</option>
+            <option>Khoa học</option><option>Lịch sử và Địa lý</option>
           </select>
         </div>
         <div class="st-legend">
@@ -538,15 +558,8 @@
             <select id="reportSubject" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
               <option value="Toán">📊 Toán</option>
               <option value="Tiếng Việt">📖 Tiếng Việt</option>
-              <option value="Tiếng Anh">🔤 Tiếng Anh</option>
               <option value="Khoa học">🔬 Khoa học</option>
-              <option value="Lịch sử - Địa lý">🌏 Lịch sử - Địa lý</option>
-              <option value="Tin học">💻 Tin học</option>
-              <option value="Đạo đức">💖 Đạo đức</option>
-              <option value="Mỹ thuật">🎨 Mỹ thuật</option>
-              <option value="Âm nhạc">🎵 Âm nhạc</option>
-              <option value="Thể dục">⚽ Thể dục</option>
-              <option value="Khác">📝 Khác</option>
+              <option value="Lịch sử và Địa lý">🌏 Lịch sử và Địa lý</option>
             </select>
           </div>
           <div>
@@ -587,6 +600,44 @@
         <div style="font-weight:600;font-size:14px;">Toàn cảnh ngân hàng câu hỏi + hoạt động sử dụng app</div>
       </div>
       <div id="adminDashBody"></div>
+    </div>
+  </div>
+  <div id="view-myScores" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">🌟 Điểm & Sao của <span id="myName">bé</span></h2>
+        <div style="font-weight:600;font-size:14px;">Xem điểm cô giáo chấm và số sao bạn đã đạt được</div>
+      </div>
+      <div id="myScoresBody"></div>
+    </div>
+  </div>
+  <div id="view-vinschool" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">🎓 Tài liệu học tại Vinschool</h2>
+        <div style="font-weight:600;font-size:14px;">Tài liệu các bộ môn theo chương trình Vinschool</div>
+      </div>
+      <div id="vinschoolBody"></div>
+      <div id="vinschoolAdmin" style="display:none;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);padding:16px 20px;border-radius:14px;border:3px solid #7dd3fc;margin-top:16px;">
+        <h3 style="font-size:16px;margin-bottom:10px;color:#075985;">➕ Thêm tài liệu (chỉ Admin/GV)</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-weight:700;font-size:13px;color:var(--muted);">📚 Môn:</label>
+            <select id="vsSubject" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
+              <option>Toán</option><option>Tiếng Việt</option><option>Khoa học</option><option>Lịch sử và Địa lý</option><option>Tiếng Anh</option><option>Kỹ năng sống</option><option>Khác</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-weight:700;font-size:13px;color:var(--muted);">🏷️ Tiêu đề:</label>
+            <input type="text" id="vsTitle" placeholder="VD: Bài tập chương 1..." style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+        </div>
+        <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">🔗 Link (URL hoặc mô tả):</label>
+        <input type="text" id="vsLink" placeholder="https://... hoặc mô tả tài liệu" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+        <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">📝 Mô tả (tuỳ chọn):</label>
+        <textarea id="vsDesc" placeholder="Nội dung tài liệu..." style="width:100%;min-height:50px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
+        <button class="btn btn-success" style="margin-top:10px;" onclick="addVinschoolMaterial()">💾 Thêm tài liệu</button>
+      </div>
     </div>
   </div>
   <div id="view-parent" class="hidden">
@@ -1054,6 +1105,7 @@ let selectedRole = 'child';
 
 const PARENT_PASS = 'phuhuynh';
 const TEACHER_PASS = 'giaovien';
+const STUDENT_PASS = 'hocsinh';
 let teacherInfo = null;
 function loadTeacherInfo(){ const s=localStorage.getItem('hoccungbe_teacher'); if(s) teacherInfo=JSON.parse(s); }
 function saveTeacherInfo(){ if(teacherInfo) localStorage.setItem('hoccungbe_teacher',JSON.stringify(teacherInfo)); }
@@ -1061,7 +1113,7 @@ let currentRole = 'child'; // 'child' | 'parent' | 'admin'
 
 function selectRole(r) {
   selectedRole = r;
-  ['child','parent','teacher','admin'].forEach(x => {
+  ['child','student','parent','teacher','admin'].forEach(x => {
     const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
     if (btn) btn.classList.toggle('active', r === x);
     const form = document.getElementById(x + 'Form');
@@ -1122,6 +1174,32 @@ function doParentLogin() {
   updateUserBadge();
   showView('parent');
   renderParentReport();
+}
+
+function doStudentLogin() {
+  const name = document.getElementById('studentNameIn').value.trim();
+  const pw = document.getElementById('studentPassIn').value;
+  if (!name) { alert('Nhập tên học sinh nhé!'); return; }
+  loadStudents();
+  // Tìm học sinh theo tên
+  const student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if (!student) { alert('❌ Không tìm thấy tên bạn trong danh sách lớp! Kiểm tra lại tên hoặc nhờ cô giáo thêm.'); return; }
+  // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
+  let passOk = false;
+  if (student.parentPass && pw === student.parentPass) passOk = true;
+  else if (pw === STUDENT_PASS) passOk = true;
+  else if (pw === getParentPass()) passOk = true;
+  if (!passOk) { alert('❌ Mật khẩu sai! Dùng mật khẩu do cô/PH cấp hoặc mật khẩu chung: hocsinh'); return; }
+  currentUser = { role: 'child', name: student.name, dob: student.dob, studentId: student.id, loginAt: new Date().toISOString() };
+  localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
+  currentRole = 'student';
+  isAdmin = false;
+  sessionStorage.setItem('hoccungbe_role', 'student');
+  sessionStorage.removeItem('hoccungbe_admin');
+  hideLoginScreen();
+  updateUserBadge();
+  showView('myScores');
+  renderMyScores();
 }
 
 function doAdminLogin() {
@@ -1221,6 +1299,9 @@ function updateUserBadge() {
     loadStudents();
     if (sub) sub.textContent = '👩‍🏫 Cập nhật báo cáo cho ' + students.length + ' học sinh trong hệ thống';
     html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
+  } else if (currentRole === 'student' && currentUser) {
+    html += '<div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #be185d;">🧑‍🎓 ' + escapeHtml(currentUser.name) + '</div>';
+    if (sub) sub.textContent = '🌟 Xem điểm & phần thưởng của ' + currentUser.name;
   } else if (currentRole === 'child' && currentUser) {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
@@ -1251,6 +1332,16 @@ function updateUserBadge() {
     const b = document.querySelector('[data-view="' + v + '"]');
     if (b) b.style.display = (currentRole === 'teacher') ? 'none' : 'inline-block';
   });
+  // Nếu là student xem điểm: chỉ hiện Xem điểm + Vinschool
+  const myScoresBtn = document.getElementById('myScoresBtn');
+  const vinschoolBtn = document.getElementById('vinschoolBtn');
+  if (myScoresBtn) myScoresBtn.style.display = (currentRole === 'student' || currentRole === 'child') ? 'inline-block' : 'none';
+  if (vinschoolBtn) vinschoolBtn.style.display = (currentRole === 'student' || currentRole === 'child' || currentRole === 'parent' || currentRole === 'teacher' || currentRole === 'admin') ? 'inline-block' : 'none';
+  if (currentRole === 'student') {
+    // Ẩn hết trừ myScores + vinschool
+    defaultBtns.forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
+    ['manage','parent','adminDash','answers','teacher','daily','students'].forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
+  }
 }
 
 function checkAdmin() {
@@ -1567,6 +1658,145 @@ function renderAdminDash() {
   body.innerHTML = html;
 }
 
+// ========== HỌC SINH XEM ĐIỂM ==========
+function renderMyScores() {
+  loadTeacherReports();
+  loadStudents();
+  const myStudent = currentUser && currentUser.studentId ? getStudentById(currentUser.studentId) : null;
+  const myReports = myStudent ? teacherReports.filter(r => r.studentId === myStudent.id) : (currentUser ? teacherReports.filter(r => r.studentName && r.studentName.toLowerCase() === currentUser.name.toLowerCase()) : []);
+  document.getElementById('myName').textContent = currentUser ? currentUser.name : 'bé';
+  const body = document.getElementById('myScoresBody');
+  if (myReports.length === 0) {
+    body.innerHTML = '<div class="empty-state" style="padding:40px 20px;">🌟<br><br>Chưa có điểm nào. Cố lên nhé!<br>Khi cô giáo chấm điểm sẽ hiển thị ở đây.</div>';
+    return;
+  }
+  const bySubject = {};
+  let totalStars = 0;
+  myReports.forEach(r => {
+    if (r.subject && r.score) {
+      if (!bySubject[r.subject]) bySubject[r.subject] = [];
+      bySubject[r.subject].push(r.score);
+    }
+    totalStars += scoreToStars(r.score);
+  });
+  const overall = myReports.filter(r=>r.score).reduce((a,r)=>a+r.score,0) / Math.max(1, myReports.filter(r=>r.score).length);
+
+  let html = '';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + totalStars + ' 🌟</div><div class="lbl" style="color:#92400e;">Tổng sao</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#f59e0b;">' + overall.toFixed(1) + '</div><div class="lbl">Điểm TB</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-color:#f472b6;"><div class="val" style="color:#be185d;">' + myReports.length + '</div><div class="lbl" style="color:#9d174d;">Số điểm</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#60a5fa;"><div class="val" style="color:#2563eb;">' + Object.keys(bySubject).length + '</div><div class="lbl" style="color:#1e40af;">Số môn</div></div>';
+  html += '</div>';
+
+  // Điểm theo môn
+  html += '<h3 style="font-size:18px;margin:14px 0 10px;">📚 Điểm trung bình từng môn</h3>';
+  html += '<div style="background:white;padding:14px;border-radius:12px;border:2px solid #e9d5ff;">';
+  Object.entries(bySubject).forEach(([subj, scores]) => {
+    const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+    const pct = avg * 10;
+    const color = avg >= 8 ? '#10b981' : avg >= 6.5 ? '#0ea5e9' : avg >= 5 ? '#f59e0b' : '#ef4444';
+    const subjStars = scores.reduce((sum,s) => sum + scoreToStars(s), 0);
+    html += '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px;font-size:14px;">' +
+      '<span>' + (SUBJECT_ICONS[subj]||'') + ' ' + escapeHtml(subj) + '</span><span style="color:' + color + ';">Điểm TB: ' + avg.toFixed(1) + (subjStars>0 ? ' • ' + subjStars + ' 🌟' : '') + '</span></div>' +
+      '<div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+  });
+  html += '</div>';
+
+  // Chi tiết các điểm
+  html += '<h3 style="font-size:18px;margin:14px 0 10px;">📬 Chi tiết các điểm cô giáo chấm</h3>';
+  myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0, 30).forEach(r => {
+    const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
+    const dt = new Date(r.date).toLocaleDateString('vi-VN');
+    const stars = scoreToStars(r.score);
+    html += '<div style="background:white;padding:12px 14px;border-radius:10px;border:2px solid #e9d5ff;margin-bottom:8px;border-left:4px solid #ec4899;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">';
+    html += '<div><strong>' + (SUBJECT_ICONS[r.subject]||'') + ' ' + escapeHtml(r.subject||'') + '</strong>' + (stars>0 ? ' <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:800;">' + starsText(stars) + '</span>' : '') + '<br><small style="color:var(--muted);font-weight:600;">👩‍🏫 ' + escapeHtml(r.teacher||'') + ' • 📅 ' + dt + '</small></div>';
+    if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
+    html += '</div>';
+    if (r.eval) html += '<div style="font-size:13px;margin-top:8px;background:#dbeafe;padding:6px 10px;border-radius:6px;"><strong>💬 Cô nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+// ========== TÀI LIỆU VINSCHOOL ==========
+let vinschoolMaterials = [];
+function loadVinschool() {
+  const s = localStorage.getItem('hoccungbe_vinschool');
+  vinschoolMaterials = s ? JSON.parse(s) : [];
+}
+function saveVinschool() {
+  localStorage.setItem('hoccungbe_vinschool', JSON.stringify(vinschoolMaterials));
+}
+
+function renderVinschool() {
+  loadVinschool();
+  const body = document.getElementById('vinschoolBody');
+  const adminEl = document.getElementById('vinschoolAdmin');
+  // Only teacher/admin can add
+  if (adminEl) adminEl.style.display = (currentRole === 'teacher' || currentRole === 'admin') ? 'block' : 'none';
+
+  if (vinschoolMaterials.length === 0) {
+    body.innerHTML = '<div class="empty-state" style="padding:30px 20px;">📚<br><br>Chưa có tài liệu nào.<br>' + (currentRole === 'teacher' || currentRole === 'admin' ? 'Dùng form phía dưới để thêm.' : 'Chờ giáo viên/admin đăng tài liệu.') + '</div>';
+    return;
+  }
+  const bySubject = {};
+  vinschoolMaterials.forEach(m => {
+    if (!bySubject[m.subject]) bySubject[m.subject] = [];
+    bySubject[m.subject].push(m);
+  });
+  let html = '';
+  Object.entries(bySubject).forEach(([subj, mats]) => {
+    html += '<h3 style="font-family:Baloo 2;font-size:20px;color:var(--primary-dark);margin:16px 0 10px;padding:10px 14px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:10px;border-left:6px solid #2563eb;">' + (SUBJECT_ICONS[subj]||'📚') + ' ' + escapeHtml(subj) + ' (' + mats.length + ' tài liệu)</h3>';
+    mats.forEach(m => {
+      html += '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #dbeafe;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">';
+      html += '<div style="flex:1;"><strong style="color:#1e40af;font-size:15px;">📄 ' + escapeHtml(m.title) + '</strong>';
+      if (m.desc) html += '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + escapeHtml(m.desc) + '</div>';
+      if (m.link) {
+        if (m.link.startsWith('http')) html += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;margin-top:6px;background:#3b82f6;color:white;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">🔗 Mở tài liệu</a>';
+        else html += '<div style="margin-top:6px;padding:6px 10px;background:#f0f9ff;border-radius:6px;font-size:13px;">🔗 ' + escapeHtml(m.link) + '</div>';
+      }
+      html += '</div>';
+      if (currentRole === 'teacher' || currentRole === 'admin') {
+        html += '<button onclick="deleteVinschoolMaterial(\'' + m.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">🗑️</button>';
+      }
+      html += '</div></div>';
+    });
+  });
+  body.innerHTML = html;
+}
+
+function addVinschoolMaterial() {
+  const subject = document.getElementById('vsSubject').value;
+  const title = document.getElementById('vsTitle').value.trim();
+  const link = document.getElementById('vsLink').value.trim();
+  const desc = document.getElementById('vsDesc').value.trim();
+  if (!title) { alert('Nhập tiêu đề!'); return; }
+  loadVinschool();
+  vinschoolMaterials.push({
+    id: 'vs_' + Date.now() + Math.random().toString(36).slice(2,6),
+    subject, title, link, desc,
+    addedBy: (teacherInfo && teacherInfo.name) || 'Admin',
+    createdAt: new Date().toISOString()
+  });
+  saveVinschool();
+  document.getElementById('vsTitle').value = '';
+  document.getElementById('vsLink').value = '';
+  document.getElementById('vsDesc').value = '';
+  alert('✅ Đã thêm tài liệu!');
+  renderVinschool();
+}
+
+function deleteVinschoolMaterial(id) {
+  if (!confirm('Xoá tài liệu này?')) return;
+  loadVinschool();
+  vinschoolMaterials = vinschoolMaterials.filter(m => m.id !== id);
+  saveVinschool();
+  renderVinschool();
+}
+
 // ========== PHỤ HUYNH REPORT ==========
 let parentInfo = null; // {name}
 
@@ -1674,7 +1904,9 @@ function renderParentReport() {
   html += '<div class="rep-metric"><div class="val">' + myReports.length + '</div><div class="lbl">📝 Số báo cáo</div></div>';
   html += '<div class="rep-metric"><div class="val" style="color:#f59e0b;">' + overall.toFixed(1) + '</div><div class="lbl">🎯 Điểm TB</div></div>';
   html += '<div class="rep-metric"><div class="val" style="color:#ec4899;">' + Object.keys(bySubject).length + '</div><div class="lbl">📚 Số môn</div></div>';
-  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + (myReports[0] && myReports[0].teacher ? '👩‍🏫' : '--') + '</div><div class="lbl" style="color:#92400e;">GVCN</div></div>';
+  let totalStars = 0;
+  myReports.forEach(r => { totalStars += scoreToStars(r.score); });
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + totalStars + ' 🌟</div><div class="lbl" style="color:#92400e;">Tổng sao tuần</div></div>';
   html += '</div>';
 
   // Điểm theo môn (progress bars)
@@ -1699,7 +1931,7 @@ function renderParentReport() {
     const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'numeric', year:'numeric'});
     html += '<div style="background:white;padding:14px 16px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;border-left:5px solid #a855f7;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:6px;">';
-    html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <strong>' + escapeHtml(r.subject||'--') + '</strong><br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
+    html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <strong>' + escapeHtml(r.subject||'--') + '</strong>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
     if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 16px;border-radius:12px;font-family:Baloo 2;font-size:22px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
     html += '</div>';
     if (r.content) html += '<div style="font-size:14px;margin-top:4px;padding:6px 10px;background:#f5f3ff;border-radius:6px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
@@ -2133,7 +2365,7 @@ function renderTeacher() {
     const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
     return '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;gap:10px;">' +
-      '<div><strong style="color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(r.studentName||'(học sinh cũ)') + '</strong><br><small style="color:var(--muted);font-weight:600;">👨‍👩‍👧 PH: ' + escapeHtml(r.parentName||'--') + ' • 📅 ' + dt + '</small></div>' +
+      '<div><strong style="color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(r.studentName||'(học sinh cũ)') + '</strong>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">👨‍👩‍👧 PH: ' + escapeHtml(r.parentName||'--') + ' • 📅 ' + dt + '</small></div>' +
       '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + (r.score||'--') + '</div>' +
       '</div>' +
       (r.subject ? '<div style="margin-bottom:6px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>' : '') +
@@ -2286,7 +2518,7 @@ function confirmBulkImport() {
   window._bulkPending = null;
   document.getElementById('bulkPreview').style.display = 'none';
   document.getElementById('bulkPreview').innerHTML = '';
-  alert('✅ Đã chấm điểm hàng loạt cho ' + valid.length + ' học sinh! Phụ huynh sẽ nhận được thông báo khi đăng nhập.');
+  alert('✅ Đã chấm điểm hàng loạt cho ' + valid.length + ' học sinh!\n\n📅 Xem lại các báo cáo ở tab "Báo cáo ngày".\n👨‍👩‍👧 Phụ huynh sẽ nhận được thông báo khi đăng nhập.');
   renderTeacher();
 }
 
@@ -2294,6 +2526,313 @@ function cancelBulkImport() {
   window._bulkPending = null;
   const el = document.getElementById('bulkPreview');
   el.style.display = 'none'; el.innerHTML = '';
+}
+
+// ========== HỆ SAO THƯỞNG ==========
+// 8-8.5 điểm → 1 sao ⭐
+// 9-9.5 điểm → 2 sao ⭐⭐
+// 10 điểm → 3 sao ⭐⭐⭐
+function scoreToStars(score) {
+  const s = parseFloat(score);
+  if (isNaN(s)) return 0;
+  if (s >= 10) return 3;
+  if (s >= 9) return 2;
+  if (s >= 8) return 1;
+  return 0;
+}
+function starsText(n) {
+  if (!n || n <= 0) return '';
+  return '⭐'.repeat(n);
+}
+function scoreStarsBadge(score) {
+  const n = scoreToStars(score);
+  if (!n) return '';
+  return '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:800;margin-left:6px;">' + starsText(n) + '</span>';
+}
+
+// ========== BÁO CÁO TUẦN / THÁNG ==========
+function showPeriodReport(period) {
+  loadTeacherReports();
+  loadStudents();
+  const days = period === 'week' ? 7 : 30;
+  const now = new Date();
+  const from = new Date(now.getTime() - days * 86400000);
+  const fromStr = from.toISOString().slice(0,10);
+  const toStr = now.toISOString().slice(0,10);
+  const teacherName = (teacherInfo && teacherInfo.name) || null;
+  const inPeriod = teacherReports.filter(r => r.date >= fromStr && r.date <= toStr);
+  const mine = teacherName ? inPeriod.filter(r => r.teacher === teacherName) : inPeriod;
+
+  const box = document.getElementById('periodReportBox');
+  if (mine.length === 0) {
+    box.style.display = 'block';
+    box.innerHTML = '<div style="background:white;padding:20px;border-radius:10px;text-align:center;color:var(--muted);font-weight:600;">Không có báo cáo nào trong ' + days + ' ngày qua.</div>';
+    return;
+  }
+
+  // Group by student
+  const byStudent = {};
+  mine.forEach(r => {
+    const sid = r.studentId || 'unknown';
+    if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', reports: [], subjects: {} };
+    byStudent[sid].reports.push(r);
+    if (r.subject && r.score) {
+      if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
+      byStudent[sid].subjects[r.subject].push(r.score);
+    }
+  });
+
+  const title = period === 'week' ? '📅 BÁO CÁO TUẦN (7 NGÀY)' : '📆 BÁO CÁO THÁNG (30 NGÀY)';
+  const fromDisplay = from.toLocaleDateString('vi-VN');
+  const toDisplay = now.toLocaleDateString('vi-VN');
+
+  let html = '<div style="background:white;padding:20px;border-radius:14px;border:3px solid #6366f1;">';
+  html += '<h3 style="color:#3730a3;font-family:Baloo 2;font-size:20px;margin-bottom:6px;">' + title + '</h3>';
+  html += '<div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:14px;">Từ ' + fromDisplay + ' đến ' + toDisplay + ' — Giáo viên: <strong>' + (teacherName || 'Tất cả') + '</strong> — Tổng: <strong>' + mine.length + ' báo cáo</strong> cho <strong>' + Object.keys(byStudent).length + ' học sinh</strong></div>';
+  
+  // Table
+  html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html += '<thead><tr style="background:linear-gradient(135deg,#4338ca,#6366f1);color:white;font-weight:700;">';
+  html += '<th style="padding:10px 8px;text-align:left;">Học sinh</th>';
+  ALL_SUBJECTS.forEach(subj => {
+    html += '<th style="padding:10px 8px;text-align:center;min-width:80px;">' + (SUBJECT_ICONS[subj]||'') + ' ' + subj + '</th>';
+  });
+  html += '<th style="padding:10px 8px;text-align:center;background:#312e81;">TB chung</th>';
+  html += '<th style="padding:10px 8px;text-align:center;background:#312e81;">Số BC</th>';
+  html += '<th style="padding:10px 8px;text-align:center;background:linear-gradient(135deg,#fbbf24,#f59e0b);">🌟 Sao</th>';
+  html += '</tr></thead><tbody>';
+  Object.values(byStudent).sort((a,b)=>a.name.localeCompare(b.name)).forEach((st, idx) => {
+    const rowBg = idx % 2 === 0 ? '#faf5ff' : 'white';
+    html += '<tr style="border-bottom:1px solid #e9d5ff;background:' + rowBg + ';">';
+    html += '<td style="padding:8px;font-weight:700;">' + escapeHtml(st.name) + '<br><small style="color:var(--muted);font-weight:600;font-size:11px;">' + escapeHtml(st.parent) + '</small></td>';
+    let allScores = [];
+    ALL_SUBJECTS.forEach(subj => {
+      const scores = st.subjects[subj] || [];
+      allScores.push(...scores);
+      if (scores.length === 0) {
+        html += '<td style="padding:8px;text-align:center;color:#cbd5e1;">--</td>';
+      } else {
+        const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+        const color = avg >= 8 ? '#10b981' : avg >= 6.5 ? '#0ea5e9' : avg >= 5 ? '#f59e0b' : '#ef4444';
+        html += '<td style="padding:8px;text-align:center;color:' + color + ';font-weight:700;font-size:15px;">' + avg.toFixed(1) + '<br><small style="font-size:10px;color:var(--muted);">(' + scores.length + ' lần)</small></td>';
+      }
+    });
+    const overall = allScores.length ? allScores.reduce((a,b)=>a+b,0)/allScores.length : 0;
+    const overallColor = overall >= 8 ? '#10b981' : overall >= 6.5 ? '#0ea5e9' : overall >= 5 ? '#f59e0b' : '#ef4444';
+    html += '<td style="padding:8px;text-align:center;background:#eef2ff;color:' + overallColor + ';font-weight:800;font-size:16px;">' + (overall ? overall.toFixed(1) : '--') + '</td>';
+    html += '<td style="padding:8px;text-align:center;background:#eef2ff;font-weight:700;">' + st.reports.length + '</td>';
+    // Tổng sao trong kỳ
+    let totalStars = 0;
+    st.reports.forEach(r => { totalStars += scoreToStars(r.score); });
+    html += '<td style="padding:8px;text-align:center;background:#fef3c7;font-weight:800;color:#b45309;font-size:15px;">' + (totalStars > 0 ? totalStars + ' ⭐' : '--') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  // Export button for this period
+  html += '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">';
+  html += '<button class="btn btn-success" onclick="exportPeriodReport(\'' + period + '\')" style="padding:10px 14px;font-size:14px;">💾 Xuất báo cáo ' + (period==='week'?'tuần':'tháng') + ' ra Excel</button>';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'periodReportBox\').style.display=\'none\'" style="padding:10px 14px;font-size:14px;">✖ Đóng</button>';
+  html += '</div>';
+  html += '</div>';
+  box.style.display = 'block';
+  box.innerHTML = html;
+  box.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showStarRanking() {
+  loadTeacherReports();
+  loadStudents();
+  const now = new Date();
+  const from = new Date(now.getTime() - 7 * 86400000);
+  const fromStr = from.toISOString().slice(0,10);
+  const toStr = now.toISOString().slice(0,10);
+  const inWeek = teacherReports.filter(r => r.date >= fromStr && r.date <= toStr);
+
+  const byStudent = {};
+  inWeek.forEach(r => {
+    const sid = r.studentId || 'unknown';
+    if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', stars: 0, reports: [], details: [] };
+    const stars = scoreToStars(r.score);
+    byStudent[sid].stars += stars;
+    byStudent[sid].reports.push(r);
+    if (stars > 0) byStudent[sid].details.push({subj: r.subject, score: r.score, stars, date: r.date});
+  });
+
+  const ranked = Object.values(byStudent).filter(s => s.stars > 0).sort((a,b) => b.stars - a.stars);
+
+  const box = document.getElementById('periodReportBox');
+  box.style.display = 'block';
+  const fromDisplay = from.toLocaleDateString('vi-VN');
+  const toDisplay = now.toLocaleDateString('vi-VN');
+
+  let html = '<div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:20px;border-radius:14px;border:3px solid #fbbf24;">';
+  html += '<h3 style="color:#92400e;font-family:Baloo 2;font-size:22px;margin-bottom:6px;text-align:center;">🌟 BẢNG XẾP HẠNG SAO TUẦN 🌟</h3>';
+  html += '<div style="text-align:center;color:#92400e;font-weight:700;margin-bottom:14px;">Từ ' + fromDisplay + ' đến ' + toDisplay + '</div>';
+
+  // Luật cho sao
+  html += '<div style="background:white;padding:12px 16px;border-radius:10px;margin-bottom:16px;text-align:center;font-size:14px;font-weight:600;color:#78350f;">';
+  html += '📏 <strong>Cách tính sao:</strong> 8-8.5 điểm ⭐ (1 sao) • 9-9.5 điểm ⭐⭐ (2 sao) • 10 điểm ⭐⭐⭐ (3 sao)';
+  html += '</div>';
+
+  if (ranked.length === 0) {
+    html += '<div style="text-align:center;padding:30px;color:#92400e;font-weight:700;">😔 Chưa có bé nào đạt sao trong tuần này.<br>Cố lên các con nhé!</div>';
+  } else {
+    // Top 3 podium
+    const medals = ['🥇','🥈','🥉'];
+    const podiumColors = ['linear-gradient(135deg,#fbbf24,#f59e0b)','linear-gradient(135deg,#d1d5db,#9ca3af)','linear-gradient(135deg,#fed7aa,#fb923c)'];
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;">';
+    ranked.slice(0, 3).forEach((s, i) => {
+      html += '<div style="background:' + podiumColors[i] + ';padding:16px;border-radius:14px;text-align:center;color:white;box-shadow:0 4px 0 rgba(0,0,0,0.15);">';
+      html += '<div style="font-size:40px;">' + medals[i] + '</div>';
+      html += '<div style="font-family:Baloo 2;font-size:18px;font-weight:800;margin:6px 0;">' + escapeHtml(s.name) + '</div>';
+      html += '<div style="font-family:Baloo 2;font-size:28px;font-weight:800;">' + s.stars + ' ⭐</div>';
+      html += '<div style="font-size:12px;font-weight:600;opacity:0.9;">' + s.details.length + ' môn đạt sao</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // Full ranking table
+    html += '<div style="overflow-x:auto;background:white;border-radius:12px;padding:8px;">';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+    html += '<thead><tr style="background:#fef3c7;color:#78350f;font-weight:700;"><th style="padding:10px;text-align:center;">#</th><th style="padding:10px;text-align:left;">Học sinh</th><th style="padding:10px;text-align:center;">Số sao</th><th style="padding:10px;text-align:left;">Chi tiết</th></tr></thead><tbody>';
+    ranked.forEach((s, idx) => {
+      const rank = idx + 1;
+      const bg = rank <= 3 ? '#fef3c7' : (idx % 2 === 0 ? '#fffbeb' : 'white');
+      html += '<tr style="border-bottom:1px solid #fde68a;background:' + bg + ';">';
+      html += '<td style="padding:10px;text-align:center;font-weight:800;color:#b45309;font-size:16px;">' + (rank <= 3 ? medals[idx] : '#' + rank) + '</td>';
+      html += '<td style="padding:10px;font-weight:700;">' + escapeHtml(s.name) + '<br><small style="color:var(--muted);font-weight:600;font-size:11px;">' + escapeHtml(s.parent) + '</small></td>';
+      html += '<td style="padding:10px;text-align:center;font-family:Baloo 2;font-size:20px;color:#d97706;font-weight:800;">' + s.stars + ' ⭐</td>';
+      const detStr = s.details.map(d => (SUBJECT_ICONS[d.subj]||'') + ' ' + d.score + starsText(d.stars)).join(' | ');
+      html += '<td style="padding:10px;font-size:13px;color:#78350f;">' + detStr + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  html += '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">';
+  html += '<button class="btn" onclick="exportStarRanking()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 3px 0 #d97706;">💾 Xuất bảng xếp hạng ra Excel</button>';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'periodReportBox\').style.display=\'none\'">✖ Đóng</button>';
+  html += '</div>';
+  html += '</div>';
+  box.innerHTML = html;
+  box.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function exportStarRanking() {
+  loadTeacherReports();
+  const now = new Date();
+  const from = new Date(now.getTime() - 7 * 86400000);
+  const fromStr = from.toISOString().slice(0,10);
+  const toStr = now.toISOString().slice(0,10);
+  const inWeek = teacherReports.filter(r => r.date >= fromStr && r.date <= toStr);
+  const byStudent = {};
+  inWeek.forEach(r => {
+    const sid = r.studentId || 'unknown';
+    if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || '', parent: r.parentName || '', stars: 0, details: [] };
+    const stars = scoreToStars(r.score);
+    byStudent[sid].stars += stars;
+    if (stars > 0) byStudent[sid].details.push(SUBJECT_ICONS[r.subject] + ' ' + r.subject + ': ' + r.score + ' (' + starsText(stars) + ')');
+  });
+  const ranked = Object.values(byStudent).filter(s => s.stars > 0).sort((a,b) => b.stars - a.stars);
+  const data = [['Xếp hạng', 'Học sinh', 'Phụ huynh', 'Tổng sao', 'Chi tiết môn đạt sao']];
+  ranked.forEach((s, i) => {
+    data.push([i+1, s.name, s.parent, s.stars, s.details.join(' | ')]);
+  });
+  const fileName = 'xep-hang-sao_tuan_' + toStr + '.xlsx';
+  if (typeof XLSX === 'undefined') {
+    const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'}), fileName.replace('.xlsx','.csv'));
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:10},{wch:22},{wch:22},{wch:10},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, ws, 'XepHangSao');
+  XLSX.writeFile(wb, fileName);
+}
+
+function exportPeriodReport(period) {
+  loadTeacherReports();
+  loadStudents();
+  const days = period === 'week' ? 7 : 30;
+  const now = new Date();
+  const from = new Date(now.getTime() - days * 86400000);
+  const fromStr = from.toISOString().slice(0,10);
+  const toStr = now.toISOString().slice(0,10);
+  const teacherName = (teacherInfo && teacherInfo.name) || null;
+  const inPeriod = teacherReports.filter(r => r.date >= fromStr && r.date <= toStr);
+  const mine = teacherName ? inPeriod.filter(r => r.teacher === teacherName) : inPeriod;
+
+  // Group by student
+  const byStudent = {};
+  mine.forEach(r => {
+    const sid = r.studentId || 'unknown';
+    if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', subjects: {}, reports: [] };
+    byStudent[sid].reports.push(r);
+    if (r.subject && r.score) {
+      if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
+      byStudent[sid].subjects[r.subject].push(r.score);
+    }
+  });
+
+  // Build data
+  const header = ['Học sinh', 'Phụ huynh'];
+  ALL_SUBJECTS.forEach(s => { header.push(s + ' (TB)'); header.push(s + ' (Số lần)'); });
+  header.push('TB chung', 'Tổng số BC');
+  const data = [header];
+  Object.values(byStudent).sort((a,b)=>a.name.localeCompare(b.name)).forEach(st => {
+    const row = [st.name, st.parent];
+    let allScores = [];
+    ALL_SUBJECTS.forEach(subj => {
+      const scores = st.subjects[subj] || [];
+      allScores.push(...scores);
+      row.push(scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2) : '');
+      row.push(scores.length || '');
+    });
+    const overall = allScores.length ? (allScores.reduce((a,b)=>a+b,0)/allScores.length).toFixed(2) : '';
+    row.push(overall);
+    row.push(st.reports.length);
+    data.push(row);
+  });
+
+  const fileName = 'bao-cao-' + (period==='week'?'tuan':'thang') + '_' + toStr + '.xlsx';
+  if (typeof XLSX === 'undefined') {
+    const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'}), fileName.replace('.xlsx','.csv'));
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const cols = [{wch:22},{wch:22}];
+  for (let i = 0; i < ALL_SUBJECTS.length * 2; i++) cols.push({wch:12});
+  cols.push({wch:12},{wch:10});
+  ws['!cols'] = cols;
+  XLSX.utils.book_append_sheet(wb, ws, 'BaoCao');
+  XLSX.writeFile(wb, fileName);
+}
+
+function exportReportsExcel() {
+  loadTeacherReports();
+  if (teacherReports.length === 0) { alert('Chưa có báo cáo nào để xuất!'); return; }
+  const teacherName = (teacherInfo && teacherInfo.name) || null;
+  const mine = teacherName ? teacherReports.filter(r => r.teacher === teacherName) : teacherReports;
+  if (mine.length === 0) { alert('Bạn chưa gửi báo cáo nào!'); return; }
+  const data = [['Ngày', 'Học sinh', 'Phụ huynh', 'Môn học', 'Điểm', 'Giáo viên', 'Nội dung dạy', 'BT về nhà', 'Nhận xét']];
+  mine.sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(r => {
+    const dt = r.date ? new Date(r.date).toLocaleDateString('vi-VN') : '';
+    data.push([dt, r.studentName||'', r.parentName||'', r.subject||'', r.score||'', r.teacher||'', r.content||'', r.homework||'', r.eval||'']);
+  });
+  const fileName = 'tat-ca-bao-cao_' + new Date().toISOString().slice(0,10) + '.xlsx';
+  if (typeof XLSX === 'undefined') {
+    const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'}), fileName.replace('.xlsx','.csv'));
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:12},{wch:22},{wch:22},{wch:14},{wch:8},{wch:18},{wch:30},{wch:30},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws, 'BaoCao');
+  XLSX.writeFile(wb, fileName);
 }
 
 function renderStudentGrid() {
@@ -2338,8 +2877,8 @@ function pickStudent(id) {
   renderSubjectPanel(id);
 }
 
-const ALL_SUBJECTS = ['Toán','Tiếng Việt','Tiếng Anh','Khoa học','Lịch sử - Địa lý','Tin học','Đạo đức','Mỹ thuật','Âm nhạc','Thể dục','Khác'];
-const SUBJECT_ICONS = {'Toán':'📊','Tiếng Việt':'📖','Tiếng Anh':'🔤','Khoa học':'🔬','Lịch sử - Địa lý':'🌏','Tin học':'💻','Đạo đức':'💖','Mỹ thuật':'🎨','Âm nhạc':'🎵','Thể dục':'⚽','Khác':'📝'};
+const ALL_SUBJECTS = ['Toán','Tiếng Việt','Khoa học','Lịch sử và Địa lý'];
+const SUBJECT_ICONS = {'Toán':'📊','Tiếng Việt':'📖','Khoa học':'🔬','Lịch sử và Địa lý':'🌏'};
 
 function renderSubjectPanel(studentId) {
   loadTeacherReports();
@@ -2399,7 +2938,7 @@ function submitTeacherReport() {
   loadTeacherReports();
   teacherReports.push(r);
   saveTeacherReports();
-  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!\n\n📅 Báo cáo cũng xuất hiện ở tab "Báo cáo ngày"');
   renderStudentGrid();
   if (window._selectedStudentId) renderSubjectPanel(window._selectedStudentId);
   document.getElementById('reportContent').value = '';
@@ -2437,7 +2976,7 @@ function submitQuickEval() {
   loadTeacherReports();
   teacherReports.push(r);
   saveTeacherReports();
-  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!\n\n📅 Báo cáo cũng xuất hiện ở tab "Báo cáo ngày"');
   renderStudentGrid();
   if (window._selectedStudentId) renderSubjectPanel(window._selectedStudentId);
   document.getElementById('dqEval').value = '';
@@ -2543,6 +3082,8 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
     else if (v === 'students') { showView('students'); renderStudents(); }
+    else if (v === 'myScores') { showView('myScores'); renderMyScores(); }
+    else if (v === 'vinschool') { showView('vinschool'); renderVinschool(); }
     else if (v === 'teacher') { showView('teacher'); renderTeacher(); }
     else if (v === 'daily') { showView('daily'); renderDailyReport(); }
     else if (v === 'adminDash') { showView('adminDash'); renderAdminDash(); }
