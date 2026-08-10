@@ -416,13 +416,17 @@
           <button class="btn btn-secondary" onclick="exportStudents()" style="padding:12px 18px;font-size:14px;">📤 Xuất danh sách</button>
         </div>
         <div style="margin-top:10px;font-size:12px;color:#166534;font-weight:600;">
-          💡 <strong>Cột trong file:</strong> Tên học sinh | Ngày sinh | Tên phụ huynh | Mật khẩu PH | SĐT PH<br>
+          💡 <strong>Cột trong file:</strong> Mã HS | Tên HS | Ngày sinh | Tên PH | Mật khẩu PH | SĐT PH<br>💡 <strong>Mã HS</strong>: nếu trùng với HS cũ → sẽ cập nhật (không tạo mới). Bỏ trống → tự sinh HS001, HS002...<br>
           📝 <strong>Ngày sinh:</strong> dd/mm/yyyy (VD: 15/05/2014) hoặc yyyy-mm-dd
         </div>
       </div>
       <div id="importPreview" style="display:none;"></div>
       <h3 style="margin-bottom:12px;font-size:18px;color:#9d174d;" id="studentFormTitle">➕ Thêm từng học sinh</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:12px;">
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🆔 Mã HS:</label>
+            <input type="text" id="sCode" placeholder="HS001" maxlength="20" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
           <div>
             <label style="font-weight:700;color:var(--muted);font-size:13px;">🧑 Tên học sinh:</label>
             <input type="text" id="sName" placeholder="Ví dụ: Thành Lâm" maxlength="50" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
@@ -1723,13 +1727,12 @@ function getStudentById(id) {
 // ========== EXCEL IMPORT/EXPORT ==========
 function downloadTemplate() {
   const ws_data = [
-    ['Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH'],
-    ['Thành Lâm', '15/05/2014', 'Nguyễn Thành Trung', 'lam2014', '0912345678'],
-    ['Minh An', '20/08/2014', 'Trần Văn Hùng', 'an2014', '0987654321'],
-    ['Bảo Ngọc', '10/03/2014', 'Lê Thị Hoa', 'ngoc2014', '0901234567']
+    ['Mã học sinh', 'Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH'],
+    ['HS001', 'Thành Lâm', '15/05/2014', 'Nguyễn Thành Trung', 'lam2014', '0912345678'],
+    ['HS002', 'Minh An', '20/08/2014', 'Trần Văn Hùng', 'an2014', '0987654321'],
+    ['HS003', 'Bảo Ngọc', '10/03/2014', 'Lê Thị Hoa', 'ngoc2014', '0901234567']
   ];
   if (typeof XLSX === 'undefined') {
-    // Fallback: CSV
     const csv = ws_data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
     downloadBlob(blob, 'danh-sach-hoc-sinh-mau.csv');
@@ -1737,7 +1740,7 @@ function downloadTemplate() {
   }
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
+  ws['!cols'] = [{wch:12},{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh');
   XLSX.writeFile(wb, 'danh-sach-hoc-sinh-mau.xlsx');
 }
@@ -1753,10 +1756,10 @@ function downloadBlob(blob, name) {
 function exportStudents() {
   loadStudents();
   if (students.length === 0) { alert('Chưa có học sinh nào để xuất!'); return; }
-  const data = [['Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH']];
+  const data = [['Mã học sinh', 'Tên học sinh', 'Ngày sinh', 'Tên phụ huynh', 'Mật khẩu PH', 'SĐT PH']];
   students.forEach(s => {
     const dob = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : '';
-    data.push([s.name||'', dob, s.parentName||'', s.parentPass||'', s.parentPhone||'']);
+    data.push([s.code || s.id.slice(-6).toUpperCase(), s.name||'', dob, s.parentName||'', s.parentPass||'', s.parentPhone||'']);
   });
   if (typeof XLSX === 'undefined') {
     const csv = data.map(row => row.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
@@ -1765,7 +1768,7 @@ function exportStudents() {
   }
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
+  ws['!cols'] = [{wch:12},{wch:20},{wch:14},{wch:24},{wch:15},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws, 'DanhSachHocSinh');
   XLSX.writeFile(wb, 'danh-sach-hoc-sinh-' + new Date().toISOString().slice(0,10) + '.xlsx');
 }
@@ -1792,15 +1795,26 @@ function handleImportFile(evt) {
       // Bỏ hàng tiêu đề
       const header = rows[0].map(h => String(h).toLowerCase().trim());
       const parsed = [];
+      // Detect header format: có "Mã học sinh" hay không
+      const headerStr = header.join('|').toLowerCase();
+      const hasCode = headerStr.includes('mã') || headerStr.includes('ma hoc') || headerStr.includes('code');
+      const codeIdx = hasCode ? 0 : -1;
+      const nameIdx = hasCode ? 1 : 0;
+      const dobIdx = hasCode ? 2 : 1;
+      const parentIdx = hasCode ? 3 : 2;
+      const passIdx = hasCode ? 4 : 3;
+      const phoneIdx = hasCode ? 5 : 4;
       for (let i = 1; i < rows.length; i++) {
         const r = rows[i];
-        if (!r[0] || String(r[0]).trim() === '') continue;
+        const nameVal = String(r[nameIdx]||'').trim();
+        if (!nameVal) continue;
         parsed.push({
-          name: String(r[0]||'').trim(),
-          dob: parseDate(r[1]),
-          parentName: String(r[2]||'').trim(),
-          parentPass: String(r[3]||'').trim(),
-          parentPhone: String(r[4]||'').trim()
+          code: hasCode ? String(r[codeIdx]||'').trim() : '',
+          name: nameVal,
+          dob: parseDate(r[dobIdx]),
+          parentName: String(r[parentIdx]||'').trim(),
+          parentPass: String(r[passIdx]||'').trim(),
+          parentPhone: String(r[phoneIdx]||'').trim()
         });
       }
       if (parsed.length === 0) { alert('Không đọc được học sinh nào từ file.'); return; }
@@ -1870,11 +1884,11 @@ function showImportPreview(parsed) {
     html += '<div style="margin-bottom:10px;color:#b91c1c;font-weight:700;font-size:14px;">⚠️ Có ' + dupNames.length + ' học sinh trùng tên trong danh sách cũ (sẽ được thêm mới, không ghi đè)</div>';
   }
   html += '<div style="max-height:300px;overflow-y:auto;background:white;padding:8px;border-radius:8px;">';
-  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;"><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:left;">Ngày sinh</th><th style="padding:6px;text-align:left;">PH</th><th style="padding:6px;text-align:left;">Pass</th><th style="padding:6px;text-align:left;">SĐT</th></tr></thead><tbody>';
+  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;"><th style="padding:6px;text-align:left;">Mã HS</th><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:left;">Ngày sinh</th><th style="padding:6px;text-align:left;">PH</th><th style="padding:6px;text-align:left;">Pass</th><th style="padding:6px;text-align:left;">SĐT</th></tr></thead><tbody>';
   parsed.forEach((p,i) => {
     const dupClass = students.some(s => s.name.toLowerCase() === p.name.toLowerCase()) ? 'background:#fee2e2;' : '';
     const dob = p.dob ? new Date(p.dob).toLocaleDateString('vi-VN') : '<span style="color:red;">(sai định dạng)</span>';
-    html += '<tr style="border-bottom:1px solid #e9d5ff;' + dupClass + '"><td style="padding:6px;">' + escapeHtml(p.name) + '</td><td style="padding:6px;">' + dob + '</td><td style="padding:6px;">' + escapeHtml(p.parentName||'') + '</td><td style="padding:6px;"><code>' + escapeHtml(p.parentPass||'') + '</code></td><td style="padding:6px;">' + escapeHtml(p.parentPhone||'') + '</td></tr>';
+    html += '<tr style="border-bottom:1px solid #e9d5ff;' + dupClass + '"><td style="padding:6px;"><code>' + escapeHtml(p.code||'(auto)') + '</code></td><td style="padding:6px;">' + escapeHtml(p.name) + '</td><td style="padding:6px;">' + dob + '</td><td style="padding:6px;">' + escapeHtml(p.parentName||'') + '</td><td style="padding:6px;"><code>' + escapeHtml(p.parentPass||'') + '</code></td><td style="padding:6px;">' + escapeHtml(p.parentPhone||'') + '</td></tr>';
   });
   html += '</tbody></table></div>';
   html += '<div style="margin-top:12px;display:flex;gap:10px;">';
@@ -1891,11 +1905,25 @@ function confirmImport() {
   const list = window._importPending || [];
   if (list.length === 0) return;
   loadStudents();
-  let added = 0;
+  let added = 0, updated = 0;
   list.forEach(p => {
     if (!p.name) return;
+    // Nếu có Mã HS → check trùng với student cũ (theo code) để update thay vì thêm mới
+    if (p.code) {
+      const existing = students.find(s => s.code === p.code);
+      if (existing) {
+        existing.name = p.name;
+        if (p.dob) existing.dob = p.dob;
+        if (p.parentName) existing.parentName = p.parentName;
+        if (p.parentPass) existing.parentPass = p.parentPass;
+        if (p.parentPhone) existing.parentPhone = p.parentPhone;
+        updated++;
+        return;
+      }
+    }
     students.push({
       id: 'st_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      code: p.code || 'HS' + String(students.length + 1).padStart(3,'0'),
       name: p.name,
       dob: p.dob || '',
       parentName: p.parentName || '',
@@ -1909,7 +1937,7 @@ function confirmImport() {
   window._importPending = null;
   document.getElementById('importPreview').style.display = 'none';
   document.getElementById('importPreview').innerHTML = '';
-  alert('✅ Đã import ' + added + ' học sinh!');
+  alert('✅ Đã import: thêm mới ' + added + ' học sinh' + (updated > 0 ? ', cập nhật ' + updated + ' học sinh' : '') + '!');
   renderStudents();
 }
 
@@ -1932,7 +1960,7 @@ function renderStudents() {
     return '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">' +
       '<div style="flex:1;">' +
-      '<div style="font-weight:700;font-size:16px;color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(s.name) + ' <small style="color:var(--muted);font-weight:600;">(sinh ' + dob + ')</small></div>' +
+      '<div style="font-weight:700;font-size:16px;color:var(--primary-dark);"><code style="background:#f3e8ff;padding:2px 8px;border-radius:6px;color:#7c3aed;font-size:13px;margin-right:6px;">' + escapeHtml(s.code||'--') + '</code>🧑‍🎓 ' + escapeHtml(s.name) + ' <small style="color:var(--muted);font-weight:600;">(sinh ' + dob + ')</small></div>' +
       '<div style="margin-top:6px;font-size:14px;">👨‍👩‍👧 <strong>PH:</strong> ' + escapeHtml(s.parentName || '--') + (s.parentPhone ? ' • 📱 ' + escapeHtml(s.parentPhone) : '') + '</div>' +
       '<div style="margin-top:4px;font-size:13px;color:var(--muted);font-weight:600;">🔑 Mật khẩu PH: <code style="background:#f3e8ff;padding:2px 6px;border-radius:4px;">' + escapeHtml(s.parentPass || '(dùng chung: phuhuynh)') + '</code></div>' +
       '</div>' +
@@ -1944,6 +1972,7 @@ function renderStudents() {
 }
 
 function saveStudent() {
+  const code = document.getElementById('sCode').value.trim();
   const name = document.getElementById('sName').value.trim();
   const dob = document.getElementById('sDob').value;
   const parentName = document.getElementById('sParent').value.trim();
@@ -1954,11 +1983,12 @@ function saveStudent() {
   loadStudents();
   if (editingStudentId) {
     const s = students.find(x => x.id === editingStudentId);
-    if (s) { s.name = name; s.dob = dob; s.parentName = parentName; s.parentPass = parentPass; s.parentPhone = parentPhone; }
+    if (s) { s.code = code; s.name = name; s.dob = dob; s.parentName = parentName; s.parentPass = parentPass; s.parentPhone = parentPhone; }
     alert('✅ Đã cập nhật học sinh!');
   } else {
     students.push({
       id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
+      code: code || 'HS' + String(students.length + 1).padStart(3,'0'),
       name, dob, parentName, parentPass, parentPhone,
       createdAt: new Date().toISOString()
     });
@@ -1972,6 +2002,7 @@ function editStudent(id) {
   const s = getStudentById(id);
   if (!s) return;
   editingStudentId = id;
+  document.getElementById('sCode').value = s.code || '';
   document.getElementById('sName').value = s.name || '';
   document.getElementById('sDob').value = s.dob || '';
   document.getElementById('sParent').value = s.parentName || '';
@@ -1983,7 +2014,7 @@ function editStudent(id) {
 
 function clearStudentForm() {
   editingStudentId = null;
-  ['sName','sDob','sParent','sParentPass','sParentPhone'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['sCode','sName','sDob','sParent','sParentPass','sParentPhone'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const t = document.getElementById('studentFormTitle');
   if (t) t.textContent = '➕ Thêm học sinh mới';
 }
