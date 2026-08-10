@@ -1,0 +1,30 @@
+HỌC CÙNG BÉ - HƯỚNG DẪN SỬ DỤNG
+================================
+
+CÁCH MỞ ỨNG DỤNG:
+  Nhấp đúp vào file "hoc-cung-be.html". Ứng dụng sẽ mở trong trình duyệt
+  (Chrome, Edge, Firefox...). Không cần cài đặt gì cả.
+
+CÁC PHẦN CHÍNH:
+  - Trang chủ: chọn môn (Toán, Tiếng Việt, Tiếng Anh, Luyện thi AMS)
+  - Học & ôn tập: chọn chủ đề, làm bài 10 câu ngẫu nhiên
+  - Tiến độ: xem thống kê điểm và chủ đề còn yếu
+  - Quản lý đề: thêm câu hỏi mới (dán JSON)
+
+3 LOẠI CÂU HỎI:
+  1. Trắc nghiệm (mcq) - chọn A/B/C/D
+  2. Điền đáp số (fillblank) - gõ số vào ô
+  3. Tự luận (essay) - bé tự viết bài, xem bài làm mẫu
+
+DỮ LIỆU LƯU Ở ĐÂU:
+  Tiến độ học và điểm được lưu trong trình duyệt (localStorage).
+  Mỗi trình duyệt là một bộ dữ liệu riêng.
+  Nếu muốn backup, vào "Quản lý đề" → "Xuất toàn bộ ra JSON".
+
+THÊM CÂU HỎI MỚI:
+  Gửi đề thi mới cho trợ lý (PDF, Word, ảnh) → trợ lý chuyển sang JSON
+  → bạn dán vào "Quản lý đề" → bấm "Thêm vào ngân hàng câu hỏi".
+
+NGUỒN ĐỀ:
+  Đề mục "Luyện thi AMS" được trích từ các đề thi thử do Thầy Trần Hữu Hiếu
+  biên soạn (mathx.vn). Đã đánh dấu rõ câu gốc và câu biến thể.

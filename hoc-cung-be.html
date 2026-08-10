@@ -156,6 +156,35 @@
   .admin-solution .explain-text { background: white; padding: 10px 12px; border-radius: 8px; border: 2px solid #fde68a; color: #78350f; font-size: 14px; line-height: 1.6; }
   .admin-toggle { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; margin-top: 8px; box-shadow: 0 3px 0 #d97706; }
   .admin-toggle:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #d97706; }
+  /* Login screen */
+  #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 30% 30%, #fce7f3 0%, transparent 50%), radial-gradient(circle at 70% 70%, #dbeafe 0%, transparent 50%), linear-gradient(135deg, #f3e8ff 0%, #fff7ed 100%); z-index: 9998; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  .login-box { background: white; padding: 36px; border-radius: 28px; box-shadow: 0 20px 60px rgba(168, 85, 247, 0.25); max-width: 480px; width: 100%; border: 4px solid #f3e8ff; }
+  .login-box h1 { font-family: 'Baloo 2', cursive; font-size: 32px; color: var(--primary); text-align: center; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .login-box h1::before { content: '🌟'; animation: wiggle 2s infinite; display: inline-block; }
+  .login-box .subtitle { text-align: center; color: var(--muted); font-weight: 600; margin-bottom: 22px; }
+  .login-role { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .login-role-btn { padding: 18px 12px; text-align: center; border-radius: 16px; border: 3px solid #e9d5ff; background: white; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+  .login-role-btn:hover { transform: translateY(-3px); border-color: var(--primary); }
+  .login-role-btn.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border-color: var(--primary-dark); box-shadow: 0 4px 0 var(--primary-dark); }
+  .login-role-btn .emoji { font-size: 40px; display: block; margin-bottom: 6px; }
+  .login-form label { display: block; font-weight: 700; color: var(--muted); margin-bottom: 6px; margin-top: 12px; font-size: 14px; }
+  .login-form input { width: 100%; padding: 14px 16px; border: 3px solid #e9d5ff; border-radius: 14px; font-family: Quicksand; font-weight: 600; font-size: 16px; }
+  .login-form input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99,102,241,0.15); }
+  .login-form .login-submit { width: 100%; margin-top: 20px; }
+  .greeting-child { color: white; background: linear-gradient(135deg, #10b981, #14b8a6); padding: 8px 14px; border-radius: 14px; font-weight: 700; font-size: 13px; box-shadow: 0 3px 0 #059669; display: inline-flex; align-items: center; gap: 6px; }
+  /* Answers library */
+  .ans-subj-btn { padding: 12px 10px; text-align: center; cursor: pointer; border-radius: 12px; font-weight: 700; border: 2px solid #e9d5ff; background: white; transition: all 0.2s; font-size: 13px; }
+  .ans-subj-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .ans-subj-btn.active { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border-color: #d97706; }
+  .ans-item { background: white; padding: 16px 18px; border-radius: 12px; border: 2px solid #e9d5ff; margin-bottom: 12px; }
+  .ans-item .aq-src { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .ans-item .aq-q { font-weight: 700; margin-bottom: 8px; line-height: 1.6; color: var(--text); }
+  .ans-item .aq-choices { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+  .ans-item .aq-answer { background: linear-gradient(135deg, #d1fae5, #a7f3d0); padding: 8px 12px; border-radius: 8px; font-weight: 700; color: #065f46; margin-bottom: 6px; }
+  .ans-item .aq-explain { background: #fef3c7; padding: 10px 12px; border-radius: 8px; color: #78350f; font-size: 14px; line-height: 1.6; white-space: pre-line; margin-top: 6px; }
+  .ans-topic-hdr { font-family: 'Baloo 2', cursive; font-size: 18px; color: var(--primary-dark); margin: 16px 0 10px; padding: 10px 14px; background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 10px; border-left: 5px solid var(--primary); }
+  .ans-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ans-controls input { padding: 10px 14px; border: 2px solid #e9d5ff; border-radius: 10px; flex: 1; min-width: 200px; font-family: Quicksand; font-weight: 600; }
   /* Mock Test styles */
   .timer-display { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: var(--danger); background: white; padding: 10px 20px; border-radius: 16px; border: 3px solid #fecaca; box-shadow: 0 4px 0 #fca5a5; display: inline-flex; align-items: center; gap: 8px; }
   .timer-display.warning { color: #b91c1c; border-color: #ef4444; animation: shake 0.5s infinite; }
@@ -175,17 +204,47 @@
 </style>
 </head>
 <body>
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Học cùng bé</h1>
+    <div class="subtitle">Chào mừng đến với ứng dụng ôn thi vào lớp 6!</div>
+    <div class="login-role">
+      <div class="login-role-btn active" id="roleChild" onclick="selectRole('child')">
+        <span class="emoji">👦</span>Con vào học
+      </div>
+      <div class="login-role-btn" id="roleParent" onclick="selectRole('parent')">
+        <span class="emoji">👨‍👩‍👧</span>Phụ huynh
+      </div>
+    </div>
+    <div class="login-form">
+      <div id="childForm">
+        <label>👶 Tên của con:</label>
+        <input type="text" id="childName" placeholder="Ví dụ: Bảo, Minh, Nhi..." maxlength="30">
+        <label>🎂 Ngày sinh:</label>
+        <input type="date" id="childDOB">
+        <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
+      </div>
+      <div id="parentForm" style="display:none;">
+        <label>🔐 Mật khẩu phụ huynh:</label>
+        <input type="password" id="parentPass" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doParentLogin()">
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>868686</code></div>
+        <button class="btn login-submit" onclick="doParentLogin()">🔓 Đăng nhập</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="container">
   <header>
-    <div><h1>Học cùng bé</h1><div class="student">🚀 Cùng nhau chinh phục kỳ thi vào lớp 6 nào!</div></div>
-    <div id="adminBadge" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Chế độ Phụ huynh <button onclick="logoutAdmin()" style="margin-left:8px;background:white;color:#92400e;border:none;padding:3px 8px;border-radius:8px;font-weight:700;cursor:pointer;font-size:11px;">Thoát</button></div>
-    <button id="adminLoginBtn" onclick="adminLogin()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border:none;padding:10px 18px;border-radius:14px;font-size:14px;cursor:pointer;font-weight:700;box-shadow:0 3px 0 #d97706;position:relative;z-index:10;font-family:Quicksand;">🔐 Phụ huynh</button>
+    <div><h1>Học cùng bé</h1><div class="student" id="headerSubtitle">🚀 Cùng nhau chinh phục kỳ thi vào lớp 6 nào!</div></div>
+    <div id="userBadge" style="display:flex;gap:8px;align-items:center;"></div>
   </header>
   <nav>
     <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
     <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
+    <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án (Admin)</button>
     <button class="nav-btn" data-view="manage">⚙️ Quản lý đề</button>
   </nav>
   <div id="view-home">
@@ -272,6 +331,14 @@
       </div>
     </div>
   </div>
+  <div id="view-answers" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom: 14px; font-size: 26px;">📖 Kho đáp án & lời giải (Admin)</h2>
+      <p style="color:var(--muted);font-weight:600;margin-bottom:14px;">Chỉ phụ huynh xem được. Chọn môn/trường để xem tất cả câu hỏi kèm đáp án và bài giải chi tiết.</p>
+      <div id="ansSubjects" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;"></div>
+      <div id="ansContent"></div>
+    </div>
+  </div>
   <div id="view-result" class="hidden">
     <div class="card">
       <h2 style="margin-bottom:20px;">Tuyệt vời, con đã hoàn thành!</h2>
@@ -289,7 +356,8 @@
   </div>
   <div id="view-stats" class="hidden">
     <div class="card">
-      <h2 style="margin-bottom: 18px; font-size: 26px;">📊 Tiến độ học tập của con</h2>
+      <h2 style="margin-bottom: 18px; font-size: 26px;">📊 Báo cáo tiến độ <span id="statsChildName" style="color:var(--primary);"></span></h2>
+      <div id="parentReport" style="margin-bottom:20px;"></div>
       <div class="grid grid-2">
         <div><h3 style="margin-bottom: 14px; font-size: 20px;">📚 Theo môn học</h3><div id="statsBySubject"></div></div>
         <div><h3 style="margin-bottom: 14px; font-size: 20px;">🎯 Cần ôn thêm</h3><div id="statsByTopic"></div></div>
@@ -578,6 +646,44 @@ function finishQuiz() {
 }
 
 function renderStats() {
+  // Show child name
+  const nameEl = document.getElementById('statsChildName');
+  if (nameEl && currentUser && currentUser.role === 'child') nameEl.textContent = 'của ' + currentUser.name;
+  else if (nameEl && currentUser && currentUser.name) nameEl.textContent = 'của ' + currentUser.name;
+
+  // Parent report card (extra summary for admin)
+  const reportEl = document.getElementById('parentReport');
+  if (reportEl) {
+    const total = history.length;
+    const avg = total ? Math.round(history.reduce((s,h)=>s+h.percent,0)/total) : 0;
+    const bestScore = total ? Math.max(...history.map(h=>h.percent)) : 0;
+    const totalQ = history.reduce((s,h)=>s+h.total, 0);
+    const totalCorrect = history.reduce((s,h)=>s+h.correct, 0);
+    const streak = computeStreak();
+    // Last 7 days activity
+    const last7 = {};
+    for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); last7[d.toISOString().slice(0,10)] = 0; }
+    history.forEach(h => { const d = h.date.slice(0,10); if (last7.hasOwnProperty(d)) last7[d]++; });
+
+    reportEl.innerHTML = '<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:20px;border-radius:16px;border:3px solid #f59e0b;">' +
+      '<h3 style="font-size:18px;color:#92400e;margin-bottom:12px;">📋 Tổng quan báo cáo</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">' +
+      '<div style="background:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">' + total + '</div><div style="font-size:12px;color:var(--muted);font-weight:600;">Lượt làm bài</div></div>' +
+      '<div style="background:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">' + totalQ + '</div><div style="font-size:12px;color:var(--muted);font-weight:600;">Tổng câu đã làm</div></div>' +
+      '<div style="background:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#10b981;">' + avg + '%</div><div style="font-size:12px;color:var(--muted);font-weight:600;">Điểm trung bình</div></div>' +
+      '<div style="background:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#ec4899;">' + bestScore + '%</div><div style="font-size:12px;color:var(--muted);font-weight:600;">Điểm cao nhất</div></div>' +
+      '<div style="background:white;padding:12px;border-radius:12px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#f97316;">🔥 ' + streak + '</div><div style="font-size:12px;color:var(--muted);font-weight:600;">Ngày liên tiếp</div></div>' +
+      '</div>' +
+      '<div style="margin-top:14px;"><strong style="color:#92400e;">Hoạt động 7 ngày gần đây:</strong><div style="display:flex;gap:6px;margin-top:8px;align-items:end;height:50px;">' +
+      Object.entries(last7).map(([d,c]) => {
+        const height = c > 0 ? Math.max(10, Math.min(50, c*10)) : 3;
+        const day = new Date(d).getDate() + '/' + (new Date(d).getMonth()+1);
+        return '<div style="flex:1;text-align:center;"><div style="background:linear-gradient(180deg,#f59e0b,#fbbf24);height:' + height + 'px;border-radius:4px;display:flex;align-items:end;justify-content:center;color:white;font-size:10px;font-weight:700;padding-bottom:2px;">' + (c||'') + '</div><div style="font-size:10px;color:#78350f;margin-top:2px;">' + day + '</div></div>';
+      }).join('') +
+      '</div></div>' +
+      '</div>';
+  }
+
   const bySubject = {};
   history.forEach(h => {
     if (!bySubject[h.subject]) bySubject[h.subject] = {total:0, correct:0, count:0};
@@ -671,42 +777,112 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ========== ADMIN MODE ==========
+// ========== USER PROFILE & LOGIN ==========
 let isAdmin = false;
+let currentUser = null; // {role, name, dob}
 const ADMIN_PASS = '868686';
+let selectedRole = 'child';
 
-function checkAdmin() {
-  const saved = sessionStorage.getItem('hoccungbe_admin');
-  isAdmin = (saved === 'zinzu');
-  updateAdminBadge();
+function selectRole(r) {
+  selectedRole = r;
+  document.getElementById('roleChild').classList.toggle('active', r === 'child');
+  document.getElementById('roleParent').classList.toggle('active', r === 'parent');
+  document.getElementById('childForm').style.display = r === 'child' ? 'block' : 'none';
+  document.getElementById('parentForm').style.display = r === 'parent' ? 'block' : 'none';
 }
 
-function adminLogin() {
-  const pw = prompt('🔐 Nhập mật khẩu phụ huynh:');
-  if (pw === null) return;
-  if (pw === ADMIN_PASS) {
-    isAdmin = true;
-    sessionStorage.setItem('hoccungbe_admin', 'zinzu');
-    updateAdminBadge();
-    alert('✅ Đã vào chế độ Phụ huynh! Bạn có thể xem đáp án và lời giải.');
-    if (currentQuiz.length) renderQuestion();
-  } else {
-    alert('❌ Mật khẩu sai.');
-  }
+function doChildLogin() {
+  const name = document.getElementById('childName').value.trim();
+  const dob = document.getElementById('childDOB').value;
+  if (!name) { alert('Con nhập tên trước nhé!'); return; }
+  if (!dob) { alert('Con chọn ngày sinh nhé!'); return; }
+  currentUser = { role: 'child', name, dob, loginAt: new Date().toISOString() };
+  localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
+  isAdmin = false;
+  sessionStorage.removeItem('hoccungbe_admin');
+  hideLoginScreen();
+  updateUserBadge();
+  renderHome();
+}
+
+function doParentLogin() {
+  const pw = document.getElementById('parentPass').value;
+  if (pw !== ADMIN_PASS) { alert('❌ Mật khẩu sai!'); return; }
+  isAdmin = true;
+  sessionStorage.setItem('hoccungbe_admin', 'zinzu');
+  // Keep existing child profile if any
+  const savedUser = localStorage.getItem('hoccungbe_user');
+  if (savedUser) currentUser = JSON.parse(savedUser);
+  else currentUser = { role: 'parent', name: 'Phụ huynh' };
+  hideLoginScreen();
+  updateUserBadge();
+  renderHome();
+}
+
+function hideLoginScreen() { document.getElementById('loginScreen').style.display = 'none'; }
+function showLoginScreen() { document.getElementById('loginScreen').style.display = 'flex'; }
+
+function logout() {
+  if (!confirm('Đăng xuất khỏi app?')) return;
+  isAdmin = false;
+  currentUser = null;
+  sessionStorage.removeItem('hoccungbe_admin');
+  // Keep child profile so name still remembered next time
+  location.reload();
 }
 
 function logoutAdmin() {
   isAdmin = false;
   sessionStorage.removeItem('hoccungbe_admin');
-  updateAdminBadge();
+  updateUserBadge();
+  const ansBtn = document.getElementById('adminAnswerBtn');
+  if (ansBtn) ansBtn.style.display = 'none';
   if (currentQuiz.length) renderQuestion();
 }
 
-function updateAdminBadge() {
-  const badge = document.getElementById('adminBadge');
-  const btn = document.getElementById('adminLoginBtn');
-  if (badge) badge.style.display = isAdmin ? 'inline-flex' : 'none';
-  if (btn) btn.style.display = isAdmin ? 'none' : 'inline-block';
+function updateUserBadge() {
+  const el = document.getElementById('userBadge');
+  const sub = document.getElementById('headerSubtitle');
+  if (!el) return;
+  let html = '';
+  if (isAdmin) {
+    html += '<div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Phụ huynh</div>';
+  }
+  if (currentUser && currentUser.role === 'child') {
+    html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
+    if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
+  } else if (isAdmin && currentUser && currentUser.name && currentUser.name !== 'Phụ huynh') {
+    html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
+    if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + currentUser.name;
+  } else if (isAdmin) {
+    if (sub) sub.textContent = '👨‍👩‍👧 Chế độ phụ huynh - xem báo cáo bé';
+  }
+  html += '<button onclick="logout()" style="background:#e5e7eb;color:#374151;border:none;padding:6px 12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;">🚪 Đăng xuất</button>';
+  el.innerHTML = html;
+
+  // Show admin nav button if admin
+  const ansBtn = document.getElementById('adminAnswerBtn');
+  if (ansBtn) ansBtn.style.display = isAdmin ? 'inline-block' : 'none';
+}
+
+function checkAdmin() {
+  const saved = sessionStorage.getItem('hoccungbe_admin');
+  isAdmin = (saved === 'zinzu');
+  const savedUser = localStorage.getItem('hoccungbe_user');
+  if (savedUser) currentUser = JSON.parse(savedUser);
+  // Show login screen if never logged in
+  if (!currentUser && !isAdmin) {
+    showLoginScreen();
+  } else {
+    hideLoginScreen();
+    updateUserBadge();
+  }
+}
+
+function adminLogin() {
+  // Legacy support - now handled via login screen but keep for compat
+  showLoginScreen();
+  selectRole('parent');
 }
 
 function renderAdminSolution(q) {
@@ -862,6 +1038,85 @@ function finishMockTest() {
   finishQuiz();
 }
 
+// ========== ANSWERS LIBRARY (Admin only) ==========
+let ansCurrentSubject = null;
+let ansFilter = '';
+let ansLimit = 50;
+
+function renderAnswers() {
+  if (!isAdmin) {
+    document.getElementById('ansContent').innerHTML = '<div class="empty-state">🔐<br><br>Chỉ phụ huynh (admin) mới xem được mục này!</div>';
+    document.getElementById('ansSubjects').innerHTML = '';
+    return;
+  }
+  // Subject buttons
+  const counts = {};
+  questions.forEach(q => { counts[q.subject] = (counts[q.subject]||0) + 1; });
+  const subjectsEl = document.getElementById('ansSubjects');
+  subjectsEl.innerHTML = '<div class="ans-subj-btn ' + (ansCurrentSubject===null?'active':'') + '" onclick="setAnsSubject(null)">🌈 Tất cả<br><small>' + questions.length + ' câu</small></div>' +
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([s,c]) =>
+      '<div class="ans-subj-btn ' + (ansCurrentSubject===s?'active':'') + '" onclick="setAnsSubject(\'' + s + '\')">' + (SUBJECT_NAMES[s]||s) + '<br><small>' + c + ' câu</small></div>'
+    ).join('');
+
+  const content = document.getElementById('ansContent');
+  content.innerHTML = '<div class="ans-controls">' +
+    '<input type="text" id="ansSearch" placeholder="🔍 Tìm kiếm câu hỏi..." oninput="ansFilter=this.value;renderAnsList();" value="' + escapeHtml(ansFilter) + '">' +
+    '</div><div id="ansList"></div>';
+  renderAnsList();
+}
+
+function setAnsSubject(s) {
+  ansCurrentSubject = s;
+  ansLimit = 50;
+  renderAnswers();
+}
+
+function renderAnsList() {
+  const list = document.getElementById('ansList');
+  let pool = [...questions];
+  if (ansCurrentSubject) pool = pool.filter(q => q.subject === ansCurrentSubject);
+  if (ansFilter) {
+    const f = ansFilter.toLowerCase();
+    pool = pool.filter(q => (q.question||'').toLowerCase().includes(f) || (q.topic||'').toLowerCase().includes(f));
+  }
+  const total = pool.length;
+  pool = pool.slice(0, ansLimit);
+  if (pool.length === 0) { list.innerHTML = '<div class="empty-state">🧸<br><br>Không tìm thấy</div>'; return; }
+
+  const byTopic = {};
+  pool.forEach(q => { const t = q.topic || 'Khác'; if (!byTopic[t]) byTopic[t] = []; byTopic[t].push(q); });
+  let html = '';
+  let idx = 1;
+  Object.entries(byTopic).forEach(([topic, items]) => {
+    html += '<div class="ans-topic-hdr">📚 ' + escapeHtml(topic) + ' (' + items.length + ' câu)</div>';
+    items.forEach(q => {
+      html += '<div class="ans-item">';
+      html += '<div class="aq-src">' + (q.source ? '📖 ' + escapeHtml(q.source) : '📖 ' + (SUBJECT_NAMES[q.subject]||q.subject)) + '</div>';
+      html += '<div class="aq-q"><strong>Câu ' + idx + ':</strong> ' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>';
+      if (q.type === 'mcq' && q.choices) {
+        html += '<div class="aq-choices">' + q.choices.map((c,i) => String.fromCharCode(65+i) + '. ' + escapeHtml(c)).join(' &nbsp;•&nbsp; ') + '</div>';
+        html += '<div class="aq-answer">✅ Đáp án: ' + String.fromCharCode(65+q.answer) + '. ' + escapeHtml(q.choices[q.answer]) + '</div>';
+      } else if (q.type === 'fillblank') {
+        html += '<div class="aq-answer">✅ Đáp án: ' + escapeHtml(String(q.answer)) + '</div>';
+      }
+      if (q.explanation && q.explanation.trim()) {
+        html += '<div class="aq-explain"><strong>💡 Phương pháp:</strong><br>' + escapeHtml(q.explanation) + '</div>';
+      }
+      if (q.sampleAnswer && !q.sampleAnswer.startsWith('(Đáp án không có')) {
+        html += '<div class="aq-explain"><strong>📝 Bài làm mẫu:</strong><br>' + escapeHtml(q.sampleAnswer) + '</div>';
+      }
+      html += '</div>';
+      idx++;
+    });
+  });
+  if (total > ansLimit) {
+    html += '<div style="text-align:center;margin-top:16px;"><button class="btn" onclick="ansLimit+=50;renderAnsList();">⬇️ Xem thêm 50 câu (còn ' + (total-ansLimit) + ')</button></div>';
+  } else {
+    html += '<div style="text-align:center;color:var(--muted);margin-top:14px;font-weight:600;">📚 Đã xem hết ' + total + ' câu</div>';
+  }
+  list.innerHTML = html;
+}
+
 loadData();
 checkAdmin();
 renderHome();
@@ -881,6 +1136,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       showView('subjects');
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
+    else if (v === 'answers') { showView('answers'); renderAnswers(); }
     else if (v === 'stats') { showView('stats'); renderStats(); }
     else if (v === 'manage') { showView('manage'); renderManage(); }
   });
