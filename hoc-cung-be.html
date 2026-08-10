@@ -489,6 +489,7 @@
         <h2 style="color:white;font-size:24px;margin-bottom:6px;">📅 Báo cáo hàng ngày</h2>
         <div style="font-weight:600;font-size:14px;">Nhận xét từ giáo viên + hoạt động học tập của con theo ngày</div>
       </div>
+      <div id="dailyQuickEval" style="display:none;"></div>
       <div id="dailyReportBody"></div>
     </div>
   </div>
@@ -1157,6 +1158,13 @@ function updateUserBadge() {
 
   const manageBtn = document.querySelector('[data-view="manage"]');
   if (manageBtn) manageBtn.style.display = (currentRole === 'admin' || currentRole === 'child') ? 'inline-block' : 'none';
+
+  // Nếu là giáo viên: chỉ hiện 3 nút: Giáo viên, Báo cáo ngày, Học sinh
+  const defaultBtns = ['home','subjects','mocktest','stats'];
+  defaultBtns.forEach(v => {
+    const b = document.querySelector('[data-view="' + v + '"]');
+    if (b) b.style.display = (currentRole === 'teacher') ? 'none' : 'inline-block';
+  });
 }
 
 function checkAdmin() {
@@ -2101,11 +2109,62 @@ function deleteTeacherReport(id) {
   renderTeacher();
 }
 
+function submitQuickEval() {
+  const studentId = document.getElementById('dqStudent').value;
+  if (!studentId) { alert('Chọn học sinh!'); return; }
+  const student = getStudentById(studentId);
+  if (!student) { alert('Học sinh không tồn tại!'); return; }
+  const r = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    studentId,
+    studentName: student.name,
+    parentName: student.parentName,
+    date: document.getElementById('dqDate').value,
+    teacher: (teacherInfo && teacherInfo.name) || 'Giáo viên',
+    subject: document.getElementById('dqSubject').value,
+    score: parseFloat(document.getElementById('dqScore').value),
+    eval: document.getElementById('dqEval').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  if (!r.date) { alert('Chọn ngày!'); return; }
+  loadTeacherReports();
+  teacherReports.push(r);
+  saveTeacherReports();
+  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  document.getElementById('dqEval').value = '';
+  renderDailyReport();
+}
+
 // ========== DAILY REPORT VIEW (phụ huynh + giáo viên xem) ==========
 function renderDailyReport() {
   loadTeacherReports();
   loadStudents();
   const body = document.getElementById('dailyReportBody');
+  // Form đánh giá nhanh cho giáo viên trong tab Báo cáo ngày
+  const quickEl = document.getElementById('dailyQuickEval');
+  if (currentRole === 'teacher' && quickEl) {
+    quickEl.style.display = 'block';
+    const today = new Date().toISOString().slice(0,10);
+    let studOpts = students.length === 0
+      ? '<option value="">-- Chưa có học sinh (vào tab 🧑‍🎓 Học sinh để thêm) --</option>'
+      : students.map(s => '<option value="' + s.id + '">' + escapeHtml(s.name) + ' — 👨‍👩‍👧 ' + escapeHtml(s.parentName||'') + '</option>').join('');
+    quickEl.innerHTML =
+      '<div style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);padding:18px;border-radius:14px;border:3px solid #7dd3fc;margin-bottom:16px;">' +
+      '<h3 style="margin-bottom:10px;font-size:18px;color:#075985;">✏️ Đánh giá nhanh học sinh</h3>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+      '<div><label style="font-weight:700;color:var(--muted);font-size:13px;">🧑‍🎓 Học sinh:</label><select id="dqStudent" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">' + studOpts + '</select></div>' +
+      '<div><label style="font-weight:700;color:var(--muted);font-size:13px;">📅 Ngày:</label><input type="date" id="dqDate" value="' + today + '" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></div>' +
+      '<div><label style="font-weight:700;color:var(--muted);font-size:13px;">📚 Môn:</label><select id="dqSubject" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">' +
+      '<option>Toán</option><option>Tiếng Việt</option><option>Tiếng Anh</option><option>Khoa học</option><option>Lịch sử - Địa lý</option><option>Tin học</option><option>Đạo đức</option><option>Mỹ thuật</option><option>Âm nhạc</option><option>Thể dục</option><option>Khác</option></select></div>' +
+      '<div><label style="font-weight:700;color:var(--muted);font-size:13px;">🎯 Điểm (1-10):</label><div style="display:flex;gap:8px;align-items:center;margin-top:4px;"><input type="range" id="dqScore" min="1" max="10" step="0.5" value="8" style="flex:1;" oninput="document.getElementById(\'dqScoreDisp\').textContent=this.value"><span id="dqScoreDisp" style="font-family:Baloo 2;font-size:22px;font-weight:800;color:#0ea5e9;min-width:40px;text-align:center;">8</span></div></div>' +
+      '</div>' +
+      '<label style="font-weight:700;color:var(--muted);font-size:13px;display:block;margin-top:10px;">💬 Ghi chú / Nhận xét:</label>' +
+      '<textarea id="dqEval" placeholder="Nhận xét, bài tập về nhà, nội dung dạy..." style="width:100%;min-height:60px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>' +
+      '<button class="btn btn-success" style="margin-top:10px;width:100%;" onclick="submitQuickEval()">💾 Gửi báo cáo cho phụ huynh</button>' +
+      '</div>';
+  } else if (quickEl) {
+    quickEl.style.display = 'none';
+  }
   // Filter reports for parent's child
   let filteredReports = teacherReports;
   if (currentRole === 'parent') {
