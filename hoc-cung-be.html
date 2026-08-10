@@ -221,11 +221,14 @@
   <div class="login-box">
     <h1>Học cùng bé</h1>
     <div class="subtitle">Chào mừng đến với ứng dụng ôn thi vào lớp 6!</div>
-    <div class="login-role">
+    <div class="login-role" style="grid-template-columns:1fr 1fr 1fr;">
       <div class="login-role-btn active" id="roleChild" onclick="selectRole('child')">
         <span class="emoji">👦</span>Con vào học
       </div>
       <div class="login-role-btn" id="roleParent" onclick="selectRole('parent')">
+        <span class="emoji">👨‍👩‍👧</span>Phụ huynh
+      </div>
+      <div class="login-role-btn" id="roleAdmin" onclick="selectRole('admin')">
         <span class="emoji">🔐</span>Admin
       </div>
     </div>
@@ -238,10 +241,18 @@
         <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
       </div>
       <div id="parentForm" style="display:none;">
+        <label>👨‍👩‍👧 Tên phụ huynh:</label>
+        <input type="text" id="parentNameIn" placeholder="Ví dụ: Nguyễn Văn A" maxlength="50">
+        <label>🔑 Mật khẩu phụ huynh:</label>
+        <input type="password" id="parentPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doParentLogin()">
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>phuhuynh</code></div>
+        <button class="btn login-submit" style="background:linear-gradient(135deg,#10b981,#14b8a6);box-shadow:0 4px 0 #059669;" onclick="doParentLogin()">👨‍👩‍👧 Vào xem báo cáo</button>
+      </div>
+      <div id="adminForm" style="display:none;">
         <label>🔐 Mật khẩu Admin:</label>
-        <input type="password" id="parentPass" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doParentLogin()">
+        <input type="password" id="adminPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doAdminLogin()">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>868686</code></div>
-        <button class="btn login-submit" onclick="doParentLogin()">🔓 Đăng nhập</button>
+        <button class="btn login-submit" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 4px 0 #d97706;" onclick="doAdminLogin()">🔐 Đăng nhập Admin</button>
       </div>
     </div>
   </div>
@@ -257,7 +268,8 @@
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
     <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
-    <button class="nav-btn" id="parentReportBtn" data-view="parent" style="display:none;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;border-color:#059669;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 Phụ huynh</button>
+    <button class="nav-btn" id="adminDashBtn" data-view="adminDash" style="display:none;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border-color:#7c3aed;box-shadow:0 3px 0 #7c3aed;">📊 Thống kê Admin</button>
+    <button class="nav-btn" id="parentReportBtn" data-view="parent" style="display:none;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;border-color:#059669;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 Báo cáo con</button>
     <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án</button>
     <button class="nav-btn" data-view="manage">⚙️ Quản lý đề</button>
   </nav>
@@ -345,6 +357,15 @@
       </div>
     </div>
   </div>
+  <div id="view-adminDash" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">📊 Bảng thống kê tổng - Admin</h2>
+        <div style="font-weight:600;font-size:14px;">Toàn cảnh ngân hàng câu hỏi + hoạt động sử dụng app</div>
+      </div>
+      <div id="adminDashBody"></div>
+    </div>
+  </div>
   <div id="view-parent" class="hidden">
     <div class="card">
       <div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
@@ -352,8 +373,7 @@
         <div style="font-weight:600;font-size:15px;">🧑‍🎓 Học sinh: <span id="parentChildName">Chưa có</span> — 🎂 Ngày sinh: <span id="parentChildDOB">--</span></div>
       </div>
       <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;" onclick="editParentInfo()">✏️ Sửa thông tin phụ huynh</button>
-        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;box-shadow:0 3px 0 #9333ea;" onclick="loadDemoData()">🎬 Xem báo cáo DEMO</button>
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;box-shadow:0 3px 0 #9333ea;" onclick="loadDemoData()">🎬 Tạo báo cáo DEMO (Thành Lâm)</button>
       </div>
       <div id="parentReportBody"></div>
     </div>
@@ -810,12 +830,17 @@ let currentUser = null; // {role, name, dob}
 const ADMIN_PASS = '868686';
 let selectedRole = 'child';
 
+const PARENT_PASS = 'phuhuynh';
+let currentRole = 'child'; // 'child' | 'parent' | 'admin'
+
 function selectRole(r) {
   selectedRole = r;
-  document.getElementById('roleChild').classList.toggle('active', r === 'child');
-  document.getElementById('roleParent').classList.toggle('active', r === 'parent');
-  document.getElementById('childForm').style.display = r === 'child' ? 'block' : 'none';
-  document.getElementById('parentForm').style.display = r === 'parent' ? 'block' : 'none';
+  ['child','parent','admin'].forEach(x => {
+    const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
+    if (btn) btn.classList.toggle('active', r === x);
+    const form = document.getElementById(x + 'Form');
+    if (form) form.style.display = r === x ? 'block' : 'none';
+  });
 }
 
 function doChildLogin() {
@@ -826,24 +851,46 @@ function doChildLogin() {
   currentUser = { role: 'child', name, dob, loginAt: new Date().toISOString() };
   localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
   isAdmin = false;
+  currentRole = 'child';
   sessionStorage.removeItem('hoccungbe_admin');
+  sessionStorage.setItem('hoccungbe_role', 'child');
   hideLoginScreen();
   updateUserBadge();
   renderHome();
 }
 
 function doParentLogin() {
-  const pw = document.getElementById('parentPass').value;
-  if (pw !== ADMIN_PASS) { alert('❌ Mật khẩu sai!'); return; }
-  isAdmin = true;
-  sessionStorage.setItem('hoccungbe_admin', 'zinzu');
-  // Keep existing child profile if any
+  const name = document.getElementById('parentNameIn').value.trim();
+  const pw = document.getElementById('parentPassIn').value;
+  if (!name) { alert('Nhập tên phụ huynh nhé!'); return; }
+  if (pw !== PARENT_PASS) { alert('❌ Mật khẩu phụ huynh sai! (mặc định: phuhuynh)'); return; }
+  parentInfo = { name };
+  saveParentInfo();
+  currentRole = 'parent';
+  isAdmin = false;
+  sessionStorage.setItem('hoccungbe_role', 'parent');
+  sessionStorage.removeItem('hoccungbe_admin');
   const savedUser = localStorage.getItem('hoccungbe_user');
   if (savedUser) currentUser = JSON.parse(savedUser);
-  else currentUser = { role: 'parent', name: 'Phụ huynh' };
   hideLoginScreen();
   updateUserBadge();
-  renderHome();
+  showView('parent');
+  renderParentReport();
+}
+
+function doAdminLogin() {
+  const pw = document.getElementById('adminPassIn').value;
+  if (pw !== ADMIN_PASS) { alert('❌ Mật khẩu Admin sai! (mặc định: 868686)'); return; }
+  isAdmin = true;
+  currentRole = 'admin';
+  sessionStorage.setItem('hoccungbe_admin', 'zinzu');
+  sessionStorage.setItem('hoccungbe_role', 'admin');
+  const savedUser = localStorage.getItem('hoccungbe_user');
+  if (savedUser) currentUser = JSON.parse(savedUser);
+  hideLoginScreen();
+  updateUserBadge();
+  showView('adminDash');
+  renderAdminDash();
 }
 
 function hideLoginScreen() { document.getElementById('loginScreen').style.display = 'none'; }
@@ -872,33 +919,43 @@ function updateUserBadge() {
   const sub = document.getElementById('headerSubtitle');
   if (!el) return;
   let html = '';
-  if (isAdmin) {
+  if (currentRole === 'admin') {
     html += '<div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Admin</div>';
-  }
-  if (currentUser && currentUser.role === 'child') {
+    if (sub) sub.textContent = '⚙️ Chế độ quản trị - Thống kê tổng & Quản lý đề';
+  } else if (currentRole === 'parent') {
+    html += '<div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 ' + escapeHtml((parentInfo && parentInfo.name) || 'Phụ huynh') + '</div>';
+    if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
+    if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + ((currentUser && currentUser.name) || 'bé');
+  } else if (currentRole === 'child' && currentUser) {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
-  } else if (isAdmin && currentUser && currentUser.name && currentUser.name !== 'Phụ huynh') {
-    html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
-    if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + currentUser.name;
-  } else if (isAdmin) {
-    if (sub) sub.textContent = '👨‍👩‍👧 Chế độ phụ huynh - xem báo cáo bé';
   }
   html += '<button onclick="logout()" style="background:#e5e7eb;color:#374151;border:none;padding:6px 12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;">🚪 Đăng xuất</button>';
   el.innerHTML = html;
 
-  // Show admin nav button if admin
+  // Show/hide role-specific nav buttons
   const ansBtn = document.getElementById('adminAnswerBtn');
-  if (ansBtn) ansBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  const parentBtn = document.getElementById('parentReportBtn');
+  const adminDashBtn = document.getElementById('adminDashBtn');
+  if (ansBtn) ansBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
+  if (parentBtn) parentBtn.style.display = (currentRole === 'parent') ? 'inline-block' : 'none';
+  if (adminDashBtn) adminDashBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
+
+  // Hide certain features for parent role (they don't need to see child's quiz)
+  const manageBtn = document.querySelector('[data-view="manage"]');
+  if (manageBtn) manageBtn.style.display = (currentRole === 'admin' || currentRole === 'child') ? 'inline-block' : 'none';
 }
 
 function checkAdmin() {
   const saved = sessionStorage.getItem('hoccungbe_admin');
   isAdmin = (saved === 'zinzu');
+  const savedRole = sessionStorage.getItem('hoccungbe_role');
+  if (savedRole) currentRole = savedRole;
   const savedUser = localStorage.getItem('hoccungbe_user');
   if (savedUser) currentUser = JSON.parse(savedUser);
-  // Show login screen if never logged in
-  if (!currentUser && !isAdmin) {
+  loadParentInfo();
+  // Show login screen if no session
+  if (!savedRole) {
     showLoginScreen();
   } else {
     hideLoginScreen();
@@ -1144,6 +1201,65 @@ function renderAnsList() {
   list.innerHTML = html;
 }
 
+// ========== ADMIN DASHBOARD ==========
+function renderAdminDash() {
+  const body = document.getElementById('adminDashBody');
+  const totalQ = questions.length;
+  const bySub = {};
+  const byType = {mcq:0,fillblank:0,essay:0};
+  const withAns = questions.filter(q => q.explanation || (q.sampleAnswer && !q.sampleAnswer.startsWith('(Đáp án không có'))).length;
+  questions.forEach(q => {
+    bySub[q.subject] = (bySub[q.subject]||0)+1;
+    if (byType[q.type] !== undefined) byType[q.type]++;
+  });
+
+  // History stats
+  const totalSessions = history.length;
+  const uniqueDays = new Set(history.map(h => h.date.slice(0,10))).size;
+  const totalCorrect = history.reduce((s,h)=>s+h.correct, 0);
+  const totalQAnswered = history.reduce((s,h)=>s+h.total, 0);
+  const avgScore = totalSessions ? Math.round(history.reduce((s,h)=>s+h.percent,0)/totalSessions) : 0;
+
+  let html = '<h3 style="font-size:20px;margin-bottom:14px;">🗂️ Ngân hàng câu hỏi</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-color:#c4b5fd;"><div class="val" style="color:#7c3aed;">' + totalQ + '</div><div class="lbl" style="color:#6d28d9;">📚 Tổng câu hỏi</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#93c5fd;"><div class="val" style="color:#2563eb;">' + Object.keys(bySub).length + '</div><div class="lbl" style="color:#1e40af;">🏫 Số môn/trường</div></div>';
+  html += '<div class="rep-metric"><div class="val">' + byType.mcq + '</div><div class="lbl">✅ Trắc nghiệm</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + byType.fillblank + '</div><div class="lbl" style="color:#92400e;">✏️ Điền đáp số</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-color:#f472b6;"><div class="val" style="color:#be185d;">' + byType.essay + '</div><div class="lbl" style="color:#9d174d;">📝 Tự luận</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#86efac;"><div class="val" style="color:#059669;">' + withAns + '</div><div class="lbl" style="color:#065f46;">💡 Có đáp án</div></div>';
+  html += '</div>';
+
+  // By subject
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📚 Phân bố theo môn/trường</h3>';
+  html += '<div style="background:white;padding:16px;border-radius:12px;border:2px solid #e9d5ff;">';
+  Object.entries(bySub).sort((a,b)=>b[1]-a[1]).forEach(([s,c]) => {
+    const pct = Math.round(c/totalQ*100);
+    html += '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;margin-bottom:4px;"><span>' + (SUBJECT_NAMES[s]||s) + '</span><span>' + c + ' câu (' + pct + '%)</span></div>' +
+      '<div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+  });
+  html += '</div>';
+
+  // Usage stats
+  html += '<h3 style="font-size:20px;margin:20px 0 14px;">📈 Sử dụng ứng dụng</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">';
+  html += '<div class="rep-metric"><div class="val">' + totalSessions + '</div><div class="lbl">Lượt làm bài</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fbbf24;"><div class="val" style="color:#d97706;">' + uniqueDays + '</div><div class="lbl" style="color:#92400e;">Ngày sử dụng</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#059669;">' + totalQAnswered + '</div><div class="lbl">Câu đã làm</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-color:#f472b6;"><div class="val" style="color:#be185d;">' + avgScore + '%</div><div class="lbl" style="color:#9d174d;">Điểm TB</div></div>';
+  html += '</div>';
+
+  // Quick actions
+  html += '<h3 style="font-size:18px;margin:24px 0 12px;">⚡ Thao tác nhanh</h3>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+  html += '<button class="btn" onclick="showView(\'answers\');renderAnswers();">📖 Xem kho đáp án</button>';
+  html += '<button class="btn btn-success" onclick="showView(\'manage\');renderManage();">⚙️ Quản lý câu hỏi</button>';
+  html += '<button class="btn btn-secondary" onclick="showView(\'stats\');renderStats();">📊 Xem tiến độ chi tiết</button>';
+  html += '</div>';
+
+  body.innerHTML = html;
+}
+
 // ========== PHỤ HUYNH REPORT ==========
 let parentInfo = null; // {name}
 
@@ -1382,6 +1498,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       showView('subjects');
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
+    else if (v === 'adminDash') { showView('adminDash'); renderAdminDash(); }
     else if (v === 'parent') { showView('parent'); renderParentReport(); }
     else if (v === 'answers') { showView('answers'); renderAnswers(); }
     else if (v === 'stats') { showView('stats'); renderStats(); }
