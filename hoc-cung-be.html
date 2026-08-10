@@ -24,6 +24,10 @@
   @keyframes shine { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
   @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
   body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
     font-family: 'Quicksand', 'Segoe UI', sans-serif;
     background: radial-gradient(circle at 10% 20%, #fce7f3 0%, transparent 40%), radial-gradient(circle at 90% 80%, #dbeafe 0%, transparent 40%), radial-gradient(circle at 50% 50%, #fef3c7 0%, transparent 50%), linear-gradient(135deg, #f3e8ff 0%, #fff7ed 100%);
     background-attachment: fixed; min-height: 100vh; color: var(--text); padding: 16px; font-weight: 500;
@@ -105,7 +109,7 @@
   .btn-secondary { background: linear-gradient(135deg, #e5e7eb, #d1d5db); color: var(--text); box-shadow: 0 4px 0 #9ca3af; }
   .question { padding: 24px; background: linear-gradient(135deg, #fefce8, #fff7ed); border-radius: 18px; border: 3px solid #fde68a; margin-bottom: 18px; position: relative; }
   .question::before { content: '🤔'; position: absolute; top: -15px; left: 20px; font-size: 30px; background: white; padding: 0 8px; border-radius: 50%; }
-  .question-text { font-size: 17px; line-height: 1.7; margin-bottom: 18px; margin-top: 8px; font-weight: 600; color: var(--text); }
+  .question-text { user-select: text; -webkit-user-select: text; font-size: 17px; line-height: 1.7; margin-bottom: 18px; margin-top: 8px; font-weight: 600; color: var(--text); }
   .choice { padding: 16px 20px; background: white; border: 3px solid #e9d5ff; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 15px; }
   .choice:hover { border-color: var(--primary); background: #f5f3ff; transform: translateX(4px); }
   .choice.selected { border-color: var(--primary); background: linear-gradient(135deg, #e0e7ff, #fce7f3); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
@@ -119,7 +123,7 @@
   .stat-card:hover { transform: scale(1.05); }
   .stat-value { font-family: 'Baloo 2', cursive; font-size: 42px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
   .stat-label { color: var(--muted); font-size: 14px; font-weight: 700; margin-top: 6px; }
-  .answer-input { width: 100%; min-height: 130px; padding: 16px; border: 3px solid #e9d5ff; border-radius: 14px; font-size: 16px; font-family: 'Quicksand', sans-serif; font-weight: 500; resize: vertical; background: #fefcff; }
+  .answer-input { user-select: text; -webkit-user-select: text; width: 100%; min-height: 130px; padding: 16px; border: 3px solid #e9d5ff; border-radius: 14px; font-size: 16px; font-family: 'Quicksand', sans-serif; font-weight: 500; resize: vertical; background: #fefcff; }
   .answer-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
   .feedback { padding: 18px; border-radius: 16px; margin-top: 14px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 3px solid #7dd3fc; position: relative; }
   .feedback::before { content: '💡'; position: absolute; top: -14px; left: 16px; font-size: 26px; background: white; padding: 0 6px; border-radius: 50%; }
@@ -221,12 +225,15 @@
   <div class="login-box">
     <h1>Học cùng bé</h1>
     <div class="subtitle">Chào mừng đến với ứng dụng ôn thi vào lớp 6!</div>
-    <div class="login-role" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="login-role" style="grid-template-columns:1fr 1fr;">
       <div class="login-role-btn active" id="roleChild" onclick="selectRole('child')">
         <span class="emoji">👦</span>Con vào học
       </div>
       <div class="login-role-btn" id="roleParent" onclick="selectRole('parent')">
         <span class="emoji">👨‍👩‍👧</span>Phụ huynh
+      </div>
+      <div class="login-role-btn" id="roleTeacher" onclick="selectRole('teacher')">
+        <span class="emoji">👩‍🏫</span>Giáo viên
       </div>
       <div class="login-role-btn" id="roleAdmin" onclick="selectRole('admin')">
         <span class="emoji">🔐</span>Admin
@@ -248,6 +255,14 @@
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>phuhuynh</code></div>
         <button class="btn login-submit" style="background:linear-gradient(135deg,#10b981,#14b8a6);box-shadow:0 4px 0 #059669;" onclick="doParentLogin()">👨‍👩‍👧 Vào xem báo cáo</button>
       </div>
+      <div id="teacherForm" style="display:none;">
+        <label>👩‍🏫 Tên giáo viên:</label>
+        <input type="text" id="teacherNameIn" placeholder="Ví dụ: Cô Lan, Thầy Nam..." maxlength="50">
+        <label>🔑 Mật khẩu giáo viên:</label>
+        <input type="password" id="teacherPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doTeacherLogin()">
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>giaovien</code></div>
+        <button class="btn login-submit" style="background:linear-gradient(135deg,#8b5cf6,#a855f7);box-shadow:0 4px 0 #7c3aed;" onclick="doTeacherLogin()">👩‍🏫 Đăng nhập</button>
+      </div>
       <div id="adminForm" style="display:none;">
         <label>🔐 Mật khẩu Admin:</label>
         <input type="password" id="adminPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doAdminLogin()">
@@ -268,6 +283,9 @@
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
     <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
+    <button class="nav-btn" id="teacherBtn" data-view="teacher" style="display:none;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border-color:#7c3aed;box-shadow:0 3px 0 #7c3aed;">👩‍🏫 Giáo viên</button>
+    <button class="nav-btn" id="dailyReportBtn" data-view="daily" style="display:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border-color:#0369a1;box-shadow:0 3px 0 #0369a1;">📅 Báo cáo ngày</button>
+    <button class="nav-btn" id="studentMgmtBtn" data-view="students" style="display:none;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border-color:#be185d;box-shadow:0 3px 0 #be185d;">🧑‍🎓 Học sinh</button>
     <button class="nav-btn" id="adminDashBtn" data-view="adminDash" style="display:none;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border-color:#7c3aed;box-shadow:0 3px 0 #7c3aed;">📊 Thống kê Admin</button>
     <button class="nav-btn" id="parentReportBtn" data-view="parent" style="display:none;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;border-color:#059669;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 Báo cáo con</button>
     <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án</button>
@@ -355,6 +373,106 @@
         </div>
         <button class="btn btn-success" style="margin-top:16px;" onclick="startCustomMock()">🚀 Bắt đầu thi thử tự thiết kế</button>
       </div>
+    </div>
+  </div>
+  <div id="view-students" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">🧑‍🎓 Quản lý danh sách học sinh</h2>
+        <div style="font-weight:600;font-size:14px;">Thêm/sửa/xóa học sinh và liên kết với phụ huynh</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);padding:20px;border-radius:14px;border:3px solid #f9a8d4;margin-bottom:16px;">
+        <h3 style="margin-bottom:12px;font-size:18px;color:#9d174d;" id="studentFormTitle">➕ Thêm học sinh mới</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🧑 Tên học sinh:</label>
+            <input type="text" id="sName" placeholder="Ví dụ: Thành Lâm" maxlength="50" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🎂 Ngày sinh:</label>
+            <input type="date" id="sDob" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">👨‍👩‍👧 Tên phụ huynh:</label>
+            <input type="text" id="sParent" placeholder="Ví dụ: Nguyễn Thành Trung" maxlength="50" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🔑 Mật khẩu PH (để PH đăng nhập):</label>
+            <input type="text" id="sParentPass" placeholder="Ví dụ: phuhuynh123" maxlength="30" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+        </div>
+        <label style="font-weight:700;color:var(--muted);font-size:13px;display:block;margin-top:12px;">📱 SĐT phụ huynh (tuỳ chọn):</label>
+        <input type="text" id="sParentPhone" placeholder="0912xxxxxx" maxlength="15" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn btn-success" onclick="saveStudent()">💾 Lưu học sinh</button>
+          <button class="btn btn-secondary" onclick="clearStudentForm()">🔄 Xoá form</button>
+        </div>
+      </div>
+      <h3 style="margin-top:20px;font-size:18px;">📋 Danh sách học sinh</h3>
+      <div id="studentList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+  <div id="view-teacher" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">👩‍🏫 Giáo viên: <span id="teacherHeaderName">--</span></h2>
+        <div style="font-weight:600;font-size:14px;">Cập nhật báo cáo hàng ngày cho học sinh: <strong id="teacherStudentName">--</strong></div>
+      </div>
+      <div style="background:linear-gradient(135deg,#ecfeff,#f0f9ff);padding:20px;border-radius:14px;border:3px solid #7dd3fc;margin-bottom:16px;">
+        <h3 style="margin-bottom:12px;font-size:18px;color:#075985;">📝 Chấm điểm - Đánh giá học sinh</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🧑‍🎓 Chọn học sinh: <span style="color:red;">*</span></label>
+            <select id="reportStudent" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;"></select>
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">📅 Ngày:</label>
+            <input type="date" id="reportDate" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">📚 Môn học: <span style="color:red;">*</span></label>
+            <select id="reportSubject" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
+              <option value="Toán">📊 Toán</option>
+              <option value="Tiếng Việt">📖 Tiếng Việt</option>
+              <option value="Tiếng Anh">🔤 Tiếng Anh</option>
+              <option value="Khoa học">🔬 Khoa học</option>
+              <option value="Lịch sử - Địa lý">🌏 Lịch sử - Địa lý</option>
+              <option value="Tin học">💻 Tin học</option>
+              <option value="Đạo đức">💖 Đạo đức</option>
+              <option value="Mỹ thuật">🎨 Mỹ thuật</option>
+              <option value="Âm nhạc">🎵 Âm nhạc</option>
+              <option value="Thể dục">⚽ Thể dục</option>
+              <option value="Khác">📝 Khác</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);font-size:13px;">🎯 Điểm số (1-10): <span style="color:red;">*</span></label>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+              <input type="range" id="reportScore" min="1" max="10" step="0.5" value="8" style="flex:1;" oninput="document.getElementById('scoreDisplay').textContent=this.value">
+              <span id="scoreDisplay" style="font-family:Baloo 2;font-size:28px;font-weight:800;color:#0ea5e9;min-width:50px;text-align:center;">8</span>
+            </div>
+          </div>
+        </div>
+        <label style="font-weight:700;color:var(--muted);font-size:13px;display:block;margin-top:12px;">📖 Nội dung đã dạy:</label>
+        <textarea id="reportContent" placeholder="Hôm nay học chương gì, nội dung nào..." style="width:100%;min-height:60px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
+        <label style="font-weight:700;color:var(--muted);font-size:13px;display:block;margin-top:12px;">📝 Bài tập về nhà:</label>
+        <textarea id="reportHomework" placeholder="Bài tập giao về nhà cho con..." style="width:100%;min-height:60px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
+        <label style="font-weight:700;color:var(--muted);font-size:13px;display:block;margin-top:12px;">💬 Ghi chú / Nhận xét về học sinh:</label>
+        <textarea id="reportEval" placeholder="Học tốt/khá/tiến bộ/cần cố gắng hơn... Điểm mạnh, điểm yếu..." style="width:100%;min-height:70px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
+        <button class="btn btn-success" style="margin-top:14px;width:100%;font-size:16px;" onclick="submitTeacherReport()">💾 Gửi báo cáo cho phụ huynh</button>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);text-align:center;">📤 Sau khi lưu, phụ huynh của học sinh sẽ nhận được báo cáo này khi đăng nhập.</div>
+      </div>
+      <h3 style="margin-top:20px;font-size:18px;">📚 Các báo cáo đã gửi</h3>
+      <div id="teacherReportList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+  <div id="view-daily" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:6px;">📅 Báo cáo hàng ngày</h2>
+        <div style="font-weight:600;font-size:14px;">Nhận xét từ giáo viên + hoạt động học tập của con theo ngày</div>
+      </div>
+      <div id="dailyReportBody"></div>
     </div>
   </div>
   <div id="view-adminDash" class="hidden">
@@ -831,11 +949,15 @@ const ADMIN_PASS = '868686';
 let selectedRole = 'child';
 
 const PARENT_PASS = 'phuhuynh';
+const TEACHER_PASS = 'giaovien';
+let teacherInfo = null;
+function loadTeacherInfo(){ const s=localStorage.getItem('hoccungbe_teacher'); if(s) teacherInfo=JSON.parse(s); }
+function saveTeacherInfo(){ if(teacherInfo) localStorage.setItem('hoccungbe_teacher',JSON.stringify(teacherInfo)); }
 let currentRole = 'child'; // 'child' | 'parent' | 'admin'
 
 function selectRole(r) {
   selectedRole = r;
-  ['child','parent','admin'].forEach(x => {
+  ['child','parent','teacher','admin'].forEach(x => {
     const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
     if (btn) btn.classList.toggle('active', r === x);
     const form = document.getElementById(x + 'Form');
@@ -863,15 +985,35 @@ function doParentLogin() {
   const name = document.getElementById('parentNameIn').value.trim();
   const pw = document.getElementById('parentPassIn').value;
   if (!name) { alert('Nhập tên phụ huynh nhé!'); return; }
-  if (pw !== PARENT_PASS) { alert('❌ Mật khẩu phụ huynh sai! (mặc định: phuhuynh)'); return; }
+  // Kiểm tra pass: nếu tên PH có trong danh sách học sinh với pass riêng thì check pass đó, 
+  // nếu không thì dùng pass PH chung
+  loadStudents();
+  const linkedStudents = students.filter(s => s.parentName && s.parentName.trim().toLowerCase() === name.toLowerCase());
+  let passOk = false;
+  if (linkedStudents.length > 0) {
+    // Match với pass riêng của phụ huynh (nếu có)
+    const withCustomPass = linkedStudents.find(s => s.parentPass && s.parentPass === pw);
+    if (withCustomPass) passOk = true;
+    else if (pw === getParentPass()) passOk = true;
+  } else {
+    if (pw === getParentPass()) passOk = true;
+  }
+  if (!passOk) { alert('❌ Mật khẩu không đúng!\n\n- Nếu bạn có trong danh sách học sinh: dùng mật khẩu riêng do Admin đặt\n- Nếu chưa: dùng mật khẩu chung: phuhuynh'); return; }
   parentInfo = { name };
   saveParentInfo();
   currentRole = 'parent';
   isAdmin = false;
   sessionStorage.setItem('hoccungbe_role', 'parent');
   sessionStorage.removeItem('hoccungbe_admin');
-  const savedUser = localStorage.getItem('hoccungbe_user');
-  if (savedUser) currentUser = JSON.parse(savedUser);
+  // Auto-detect child from students list
+  if (linkedStudents.length > 0) {
+    const s = linkedStudents[0];
+    currentUser = { role: 'child', name: s.name, dob: s.dob, studentId: s.id };
+    localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
+  } else {
+    const savedUser = localStorage.getItem('hoccungbe_user');
+    if (savedUser) currentUser = JSON.parse(savedUser);
+  }
   hideLoginScreen();
   updateUserBadge();
   showView('parent');
@@ -880,7 +1022,7 @@ function doParentLogin() {
 
 function doAdminLogin() {
   const pw = document.getElementById('adminPassIn').value;
-  if (pw !== ADMIN_PASS) { alert('❌ Mật khẩu Admin sai! (mặc định: 868686)'); return; }
+  if (pw !== getAdminPass()) { alert('❌ Mật khẩu Admin sai! (mặc định: 868686)'); return; }
   isAdmin = true;
   currentRole = 'admin';
   sessionStorage.setItem('hoccungbe_admin', 'zinzu');
@@ -891,6 +1033,48 @@ function doAdminLogin() {
   updateUserBadge();
   showView('adminDash');
   renderAdminDash();
+}
+
+function doTeacherLogin() {
+  const name = document.getElementById('teacherNameIn').value.trim();
+  const pw = document.getElementById('teacherPassIn').value;
+  if (!name) { alert('Nhập tên giáo viên nhé!'); return; }
+  if (pw !== getTeacherPass()) { alert('❌ Mật khẩu giáo viên sai! (mặc định: giaovien)'); return; }
+  teacherInfo = { name };
+  saveTeacherInfo();
+  currentRole = 'teacher';
+  isAdmin = false;
+  sessionStorage.setItem('hoccungbe_role', 'teacher');
+  sessionStorage.removeItem('hoccungbe_admin');
+  const savedUser = localStorage.getItem('hoccungbe_user');
+  if (savedUser) currentUser = JSON.parse(savedUser);
+  hideLoginScreen();
+  updateUserBadge();
+  showView('teacher');
+  renderTeacher();
+}
+
+// Password management (with fallback to defaults)
+function getParentPass() { return localStorage.getItem('hoccungbe_pass_parent') || PARENT_PASS; }
+function getTeacherPass() { return localStorage.getItem('hoccungbe_pass_teacher') || TEACHER_PASS; }
+function getAdminPass() { return localStorage.getItem('hoccungbe_pass_admin') || ADMIN_PASS; }
+
+function changeMyPassword() {
+  let role, currentPass, setter;
+  if (currentRole === 'parent') { role = 'phụ huynh'; currentPass = getParentPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_parent', p); }
+  else if (currentRole === 'teacher') { role = 'giáo viên'; currentPass = getTeacherPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_teacher', p); }
+  else if (currentRole === 'admin') { role = 'admin'; currentPass = getAdminPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_admin', p); }
+  else return;
+  const old = prompt('🔑 Nhập mật khẩu ' + role + ' hiện tại:');
+  if (old === null) return;
+  if (old !== currentPass) { alert('❌ Mật khẩu hiện tại sai!'); return; }
+  const newPass = prompt('🆕 Nhập mật khẩu MỚI (tối thiểu 4 ký tự):');
+  if (newPass === null) return;
+  if (newPass.length < 4) { alert('❌ Mật khẩu quá ngắn!'); return; }
+  const confirm2 = prompt('🔁 Nhập lại mật khẩu MỚI:');
+  if (confirm2 !== newPass) { alert('❌ Xác nhận không khớp!'); return; }
+  setter(newPass);
+  alert('✅ Đã đổi mật khẩu ' + role + ' thành công!');
 }
 
 function hideLoginScreen() { document.getElementById('loginScreen').style.display = 'none'; }
@@ -927,6 +1111,12 @@ function updateUserBadge() {
     html += '<div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 ' + escapeHtml((parentInfo && parentInfo.name) || 'Phụ huynh') + '</div>';
     if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + ((currentUser && currentUser.name) || 'bé');
+    html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
+  } else if (currentRole === 'teacher') {
+    html += '<div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #7c3aed;">👩‍🏫 ' + escapeHtml((teacherInfo && teacherInfo.name) || 'Giáo viên') + '</div>';
+    if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
+    if (sub) sub.textContent = '👩‍🏫 Cập nhật báo cáo cho ' + ((currentUser && currentUser.name) || 'học sinh');
+    html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
   } else if (currentRole === 'child' && currentUser) {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
@@ -938,11 +1128,16 @@ function updateUserBadge() {
   const ansBtn = document.getElementById('adminAnswerBtn');
   const parentBtn = document.getElementById('parentReportBtn');
   const adminDashBtn = document.getElementById('adminDashBtn');
+  const teacherBtn = document.getElementById('teacherBtn');
+  const dailyBtn = document.getElementById('dailyReportBtn');
   if (ansBtn) ansBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
   if (parentBtn) parentBtn.style.display = (currentRole === 'parent') ? 'inline-block' : 'none';
   if (adminDashBtn) adminDashBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
+  const studentBtn = document.getElementById('studentMgmtBtn');
+  if (studentBtn) studentBtn.style.display = (currentRole === 'admin') ? 'inline-block' : 'none';
+  if (teacherBtn) teacherBtn.style.display = (currentRole === 'teacher') ? 'inline-block' : 'none';
+  if (dailyBtn) dailyBtn.style.display = (currentRole === 'parent' || currentRole === 'teacher') ? 'inline-block' : 'none';
 
-  // Hide certain features for parent role (they don't need to see child's quiz)
   const manageBtn = document.querySelector('[data-view="manage"]');
   if (manageBtn) manageBtn.style.display = (currentRole === 'admin' || currentRole === 'child') ? 'inline-block' : 'none';
 }
@@ -1337,11 +1532,18 @@ function generateDemoHistory() {
 
 function renderParentReport() {
   loadParentInfo();
+  loadTeacherReports();
+  loadStudents();
   document.getElementById('parentName').textContent = parentInfo ? parentInfo.name : 'Chưa cập nhật';
-  if (currentUser && currentUser.role === 'child') {
-    document.getElementById('parentChildName').textContent = currentUser.name;
+  // Filter reports for this parent's child
+  const myStudent = currentUser && currentUser.studentId ? getStudentById(currentUser.studentId) : null;
+  const myReports = myStudent ? teacherReports.filter(r => r.studentId === myStudent.id) : (parentInfo ? teacherReports.filter(r => r.parentName === parentInfo.name) : []);
+  if (currentUser) {
+    document.getElementById('parentChildName').textContent = currentUser.name || '--';
     document.getElementById('parentChildDOB').textContent = currentUser.dob ? new Date(currentUser.dob).toLocaleDateString('vi-VN') : '--';
   }
+  // Inject teacher reports notification at top
+  const notifyEl = document.getElementById('parentReportBody');
 
   const body = document.getElementById('parentReportBody');
   if (history.length === 0) {
@@ -1395,6 +1597,27 @@ function renderParentReport() {
   const last7Days = Object.entries(recentDays).slice(0, 7);
 
   let html = '';
+
+  // Teacher reports (highlight)
+  if (myReports.length > 0) {
+    html += '<div style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);padding:18px;border-radius:14px;border:3px solid #c4b5fd;margin-bottom:20px;">';
+    html += '<h3 style="font-size:20px;margin-bottom:12px;color:#6d28d9;">📬 Báo cáo mới nhất từ giáo viên (' + myReports.length + ')</h3>';
+    myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0, 5).forEach(r => {
+      const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
+      const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'numeric', year:'numeric'});
+      html += '<div style="background:white;padding:12px 14px;border-radius:10px;margin-bottom:8px;border-left:4px solid #a855f7;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">';
+      html += '<div><strong style="color:#6d28d9;">👩‍🏫 ' + escapeHtml(r.teacher) + '</strong> — ' + escapeHtml(r.subject||'') + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
+      html += '<div style="background:' + scoreColor + ';color:white;padding:6px 14px;border-radius:10px;font-family:Baloo 2;font-size:20px;font-weight:800;">' + (r.score||'--') + '</div>';
+      html += '</div>';
+      if (r.content) html += '<div style="font-size:13px;margin-top:4px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
+      if (r.homework) html += '<div style="font-size:13px;margin-top:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
+      if (r.eval) html += '<div style="font-size:13px;margin-top:4px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+      html += '</div>';
+    });
+    if (myReports.length > 5) html += '<div style="text-align:center;color:var(--muted);font-weight:600;font-size:13px;">... và ' + (myReports.length-5) + ' báo cáo cũ hơn. Xem đầy đủ ở tab "📅 Báo cáo ngày"</div>';
+    html += '</div>';
+  }
 
   // Metrics grid
   html += '<h3 style="font-size:20px;margin-bottom:12px;">📊 Tổng quan 30 ngày</h3>';
@@ -1479,8 +1702,261 @@ updateUserBadge = function() {
   if (btn) btn.style.display = isAdmin ? 'inline-block' : 'none';
 };
 
+// ========== STUDENTS MANAGEMENT ==========
+let students = []; // [{id, name, dob, parentName, parentPass, parentPhone}]
+let editingStudentId = null;
+
+function loadStudents() {
+  const s = localStorage.getItem('hoccungbe_students');
+  students = s ? JSON.parse(s) : [];
+}
+function saveStudents() {
+  localStorage.setItem('hoccungbe_students', JSON.stringify(students));
+}
+function getStudentById(id) {
+  loadStudents();
+  return students.find(s => s.id === id);
+}
+
+function renderStudents() {
+  loadStudents();
+  clearStudentForm();
+  const list = document.getElementById('studentList');
+  if (students.length === 0) {
+    list.innerHTML = '<div class="empty-state">👶<br><br>Chưa có học sinh nào. Điền form phía trên để thêm học sinh đầu tiên.</div>';
+    return;
+  }
+  list.innerHTML = students.map(s => {
+    const dob = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : '--';
+    return '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">' +
+      '<div style="flex:1;">' +
+      '<div style="font-weight:700;font-size:16px;color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(s.name) + ' <small style="color:var(--muted);font-weight:600;">(sinh ' + dob + ')</small></div>' +
+      '<div style="margin-top:6px;font-size:14px;">👨‍👩‍👧 <strong>PH:</strong> ' + escapeHtml(s.parentName || '--') + (s.parentPhone ? ' • 📱 ' + escapeHtml(s.parentPhone) : '') + '</div>' +
+      '<div style="margin-top:4px;font-size:13px;color:var(--muted);font-weight:600;">🔑 Mật khẩu PH: <code style="background:#f3e8ff;padding:2px 6px;border-radius:4px;">' + escapeHtml(s.parentPass || '(dùng chung: phuhuynh)') + '</code></div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;">' +
+      '<button onclick="editStudent(\'' + s.id + '\')" style="background:#dbeafe;color:#1e40af;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">✏️ Sửa</button>' +
+      '<button onclick="deleteStudent(\'' + s.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">🗑️ Xoá</button>' +
+      '</div></div></div>';
+  }).join('');
+}
+
+function saveStudent() {
+  const name = document.getElementById('sName').value.trim();
+  const dob = document.getElementById('sDob').value;
+  const parentName = document.getElementById('sParent').value.trim();
+  const parentPass = document.getElementById('sParentPass').value.trim();
+  const parentPhone = document.getElementById('sParentPhone').value.trim();
+  if (!name) { alert('Nhập tên học sinh!'); return; }
+  if (!parentName) { alert('Nhập tên phụ huynh!'); return; }
+  loadStudents();
+  if (editingStudentId) {
+    const s = students.find(x => x.id === editingStudentId);
+    if (s) { s.name = name; s.dob = dob; s.parentName = parentName; s.parentPass = parentPass; s.parentPhone = parentPhone; }
+    alert('✅ Đã cập nhật học sinh!');
+  } else {
+    students.push({
+      id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
+      name, dob, parentName, parentPass, parentPhone,
+      createdAt: new Date().toISOString()
+    });
+    alert('✅ Đã thêm học sinh!');
+  }
+  saveStudents();
+  renderStudents();
+}
+
+function editStudent(id) {
+  const s = getStudentById(id);
+  if (!s) return;
+  editingStudentId = id;
+  document.getElementById('sName').value = s.name || '';
+  document.getElementById('sDob').value = s.dob || '';
+  document.getElementById('sParent').value = s.parentName || '';
+  document.getElementById('sParentPass').value = s.parentPass || '';
+  document.getElementById('sParentPhone').value = s.parentPhone || '';
+  document.getElementById('studentFormTitle').textContent = '✏️ Sửa thông tin học sinh';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function clearStudentForm() {
+  editingStudentId = null;
+  ['sName','sDob','sParent','sParentPass','sParentPhone'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const t = document.getElementById('studentFormTitle');
+  if (t) t.textContent = '➕ Thêm học sinh mới';
+}
+
+function deleteStudent(id) {
+  if (!confirm('Xoá học sinh này? Các báo cáo của học sinh sẽ vẫn còn.')) return;
+  loadStudents();
+  students = students.filter(s => s.id !== id);
+  saveStudents();
+  renderStudents();
+}
+
+// ========== TEACHER REPORTS ==========
+let teacherReports = []; // [{date, teacher, subject, content, homework, eval, star, createdAt}]
+
+function loadTeacherReports() {
+  const s = localStorage.getItem('hoccungbe_teacher_reports');
+  teacherReports = s ? JSON.parse(s) : [];
+}
+function saveTeacherReports() {
+  localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(teacherReports));
+}
+
+function renderTeacher() {
+  loadTeacherReports();
+  loadTeacherInfo();
+  loadStudents();
+  document.getElementById('teacherHeaderName').textContent = (teacherInfo && teacherInfo.name) || '--';
+  document.getElementById('teacherStudentName').textContent = students.length + ' học sinh trong hệ thống';
+  // Default date to today
+  const dt = document.getElementById('reportDate');
+  if (dt && !dt.value) dt.value = new Date().toISOString().slice(0,10);
+  // Populate student dropdown
+  const sel = document.getElementById('reportStudent');
+  if (students.length === 0) {
+    sel.innerHTML = '<option value="">-- Chưa có học sinh (nhờ Admin thêm) --</option>';
+  } else {
+    sel.innerHTML = students.map(s => '<option value="' + s.id + '">' + escapeHtml(s.name) + ' — 👨‍👩‍👧 ' + escapeHtml(s.parentName || '(chưa có PH)') + '</option>').join('');
+  }
+
+  // Render existing reports (by this teacher)
+  const list = document.getElementById('teacherReportList');
+  const myReports = teacherReports.filter(r => !teacherInfo || r.teacher === teacherInfo.name).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  if (myReports.length === 0) {
+    list.innerHTML = '<div class="empty-state">📋<br><br>Chưa có báo cáo nào. Điền form phía trên và bấm "Lưu" để tạo báo cáo đầu tiên.</div>';
+    return;
+  }
+  list.innerHTML = myReports.slice(0, 30).map((r) => {
+    const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
+    const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    return '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;gap:10px;">' +
+      '<div><strong style="color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(r.studentName||'(học sinh cũ)') + '</strong><br><small style="color:var(--muted);font-weight:600;">👨‍👩‍👧 PH: ' + escapeHtml(r.parentName||'--') + ' • 📅 ' + dt + '</small></div>' +
+      '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + (r.score||'--') + '</div>' +
+      '</div>' +
+      (r.subject ? '<div style="margin-bottom:6px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>' : '') +
+      (r.content ? '<div style="margin-bottom:6px;font-size:14px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>' : '') +
+      (r.homework ? '<div style="margin-bottom:6px;background:#fef3c7;padding:6px 10px;border-radius:8px;font-size:14px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>' : '') +
+      (r.eval ? '<div style="margin-bottom:6px;background:#dbeafe;padding:6px 10px;border-radius:8px;font-size:14px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>' : '') +
+      '<button onclick="deleteTeacherReport(\'' + r.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-top:6px;">🗑️ Xóa</button>' +
+      '</div>';
+  }).join('');
+}
+
+function submitTeacherReport() {
+  const studentId = document.getElementById('reportStudent').value;
+  if (!studentId) { alert('Chọn học sinh trước!'); return; }
+  const student = getStudentById(studentId);
+  if (!student) { alert('Học sinh không tồn tại!'); return; }
+  const r = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    studentId,
+    studentName: student.name,
+    parentName: student.parentName,
+    date: document.getElementById('reportDate').value,
+    teacher: (teacherInfo && teacherInfo.name) || 'Giáo viên',
+    subject: document.getElementById('reportSubject').value,
+    score: parseFloat(document.getElementById('reportScore').value),
+    content: document.getElementById('reportContent').value.trim(),
+    homework: document.getElementById('reportHomework').value.trim(),
+    eval: document.getElementById('reportEval').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  if (!r.date) { alert('Chọn ngày báo cáo!'); return; }
+  loadTeacherReports();
+  teacherReports.push(r);
+  saveTeacherReports();
+  alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
+  document.getElementById('reportContent').value = '';
+  document.getElementById('reportHomework').value = '';
+  document.getElementById('reportEval').value = '';
+  renderTeacher();
+}
+
+function deleteTeacherReport(id) {
+  if (!confirm('Xóa báo cáo này?')) return;
+  loadTeacherReports();
+  teacherReports = teacherReports.filter(r => r.id !== id);
+  saveTeacherReports();
+  renderTeacher();
+}
+
+// ========== DAILY REPORT VIEW (phụ huynh + giáo viên xem) ==========
+function renderDailyReport() {
+  loadTeacherReports();
+  loadStudents();
+  const body = document.getElementById('dailyReportBody');
+  // Filter reports for parent's child
+  let filteredReports = teacherReports;
+  if (currentRole === 'parent') {
+    const myStudent = currentUser && currentUser.studentId ? getStudentById(currentUser.studentId) : null;
+    filteredReports = myStudent ? teacherReports.filter(r => r.studentId === myStudent.id) : (parentInfo ? teacherReports.filter(r => r.parentName === parentInfo.name) : []);
+  }
+  // Combine teacher reports + child quiz activity per day
+  const byDate = {};
+  filteredReports.forEach(r => {
+    const d = r.date;
+    if (!byDate[d]) byDate[d] = { teacherReports: [], quizzes: [] };
+    byDate[d].teacherReports.push(r);
+  });
+  history.forEach(h => {
+    const d = h.date.slice(0,10);
+    if (!byDate[d]) byDate[d] = { teacherReports: [], quizzes: [] };
+    byDate[d].quizzes.push(h);
+  });
+  const dates = Object.keys(byDate).sort().reverse().slice(0, 30);
+  if (dates.length === 0) {
+    body.innerHTML = '<div class="empty-state">📅<br><br>Chưa có dữ liệu. Giáo viên chưa nhập báo cáo và bé chưa làm bài.</div>';
+    return;
+  }
+  let html = '';
+  dates.forEach(d => {
+    const dt = new Date(d);
+    const dayStr = dt.toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    const info = byDate[d];
+    html += '<div style="background:white;padding:16px 20px;border-radius:14px;border:3px solid #e9d5ff;margin-bottom:14px;box-shadow:0 3px 0 #e9d5ff;">';
+    html += '<h3 style="color:var(--primary-dark);margin-bottom:12px;font-size:17px;">📆 ' + dayStr + '</h3>';
+    // Teacher reports
+    if (info.teacherReports.length) {
+      info.teacherReports.forEach(r => {
+        const stars = '⭐'.repeat(Number(r.star)||3);
+        html += '<div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);padding:12px 14px;border-radius:10px;margin-bottom:8px;border-left:4px solid #a855f7;">';
+        html += '<div style="font-weight:700;color:#6d28d9;margin-bottom:6px;">👩‍🏫 ' + escapeHtml(r.teacher) + ' &nbsp;•&nbsp; ' + stars + '</div>';
+        if (r.subject) html += '<div style="font-size:14px;margin-bottom:4px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>';
+        if (r.content) html += '<div style="font-size:14px;margin-bottom:4px;"><strong>📖 Đã học:</strong> ' + escapeHtml(r.content) + '</div>';
+        if (r.homework) html += '<div style="font-size:14px;margin-bottom:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
+        if (r.eval) html += '<div style="font-size:14px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+        html += '</div>';
+      });
+    }
+    // Quiz activity
+    if (info.quizzes.length) {
+      html += '<div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);padding:12px 14px;border-radius:10px;border-left:4px solid #10b981;">';
+      html += '<div style="font-weight:700;color:#059669;margin-bottom:6px;">👶 Bé tự làm bài trên app:</div>';
+      const totalQ = info.quizzes.reduce((s,h)=>s+h.total,0);
+      const totalC = info.quizzes.reduce((s,h)=>s+h.correct,0);
+      const avgP = Math.round(info.quizzes.reduce((s,h)=>s+h.percent,0)/info.quizzes.length);
+      html += '<div style="font-size:14px;">📊 ' + info.quizzes.length + ' lượt • ' + totalC + '/' + totalQ + ' câu đúng • TB ' + avgP + '%</div>';
+      info.quizzes.forEach(h => {
+        const time = new Date(h.date).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+        const color = h.percent>=70?'#10b981':(h.percent>=50?'#f59e0b':'#ef4444');
+        html += '<div style="font-size:13px;padding:4px 8px;background:white;border-radius:6px;margin-top:4px;">🕐 ' + time + ' — ' + (SUBJECT_NAMES[h.subject]||h.subject) + ' - ' + (h.topic||'Tổng hợp') + ' — <strong style="color:' + color + ';">' + h.correct + '/' + h.total + ' (' + h.percent + '%)</strong></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
 loadData();
 loadParentInfo();
+loadTeacherInfo();
+loadStudents();
 checkAdmin();
 renderHome();
 
@@ -1499,6 +1975,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       showView('subjects');
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
+    else if (v === 'students') { showView('students'); renderStudents(); }
+    else if (v === 'teacher') { showView('teacher'); renderTeacher(); }
+    else if (v === 'daily') { showView('daily'); renderDailyReport(); }
     else if (v === 'adminDash') { showView('adminDash'); renderAdminDash(); }
     else if (v === 'parent') { showView('parent'); renderParentReport(); }
     else if (v === 'answers') { showView('answers'); renderAnswers(); }
