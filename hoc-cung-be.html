@@ -172,6 +172,19 @@
   .login-form input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99,102,241,0.15); }
   .login-form .login-submit { width: 100%; margin-top: 20px; }
   .greeting-child { color: white; background: linear-gradient(135deg, #10b981, #14b8a6); padding: 8px 14px; border-radius: 14px; font-weight: 700; font-size: 13px; box-shadow: 0 3px 0 #059669; display: inline-flex; align-items: center; gap: 6px; }
+  /* Parent report */
+  .rep-metric { background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 16px; border-radius: 14px; border: 2px solid #86efac; text-align: center; }
+  .rep-metric .val { font-family: 'Baloo 2', cursive; font-size: 32px; font-weight: 800; color: #059669; line-height: 1; }
+  .rep-metric .lbl { font-size: 12px; color: #065f46; font-weight: 700; margin-top: 6px; }
+  .rep-day { background: white; padding: 14px 16px; border-radius: 12px; border: 2px solid #e9d5ff; margin-bottom: 10px; }
+  .rep-day-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .rep-day-date { font-weight: 700; color: var(--primary-dark); font-size: 15px; }
+  .rep-session { display: flex; justify-content: space-between; padding: 8px 12px; background: #faf5ff; border-radius: 8px; margin-top: 6px; font-size: 13px; }
+  .rep-chart-bar { display: flex; align-items: end; gap: 6px; height: 100px; padding: 12px; background: white; border-radius: 12px; border: 2px solid #e9d5ff; margin-bottom: 16px; }
+  .rep-chart-bar .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rep-chart-bar .bar-fill { width: 100%; background: linear-gradient(180deg, #10b981, #14b8a6); border-radius: 6px 6px 0 0; min-height: 4px; transition: all 0.3s; position: relative; }
+  .rep-chart-bar .bar-num { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: #059669; }
+  .rep-chart-bar .bar-label { font-size: 11px; color: var(--muted); font-weight: 700; }
   /* Answers library */
   .ans-subj-btn { padding: 12px 10px; text-align: center; cursor: pointer; border-radius: 12px; font-weight: 700; border: 2px solid #e9d5ff; background: white; transition: all 0.2s; font-size: 13px; }
   .ans-subj-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -213,7 +226,7 @@
         <span class="emoji">👦</span>Con vào học
       </div>
       <div class="login-role-btn" id="roleParent" onclick="selectRole('parent')">
-        <span class="emoji">👨‍👩‍👧</span>Phụ huynh
+        <span class="emoji">🔐</span>Admin
       </div>
     </div>
     <div class="login-form">
@@ -225,7 +238,7 @@
         <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
       </div>
       <div id="parentForm" style="display:none;">
-        <label>🔐 Mật khẩu phụ huynh:</label>
+        <label>🔐 Mật khẩu Admin:</label>
         <input type="password" id="parentPass" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doParentLogin()">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>868686</code></div>
         <button class="btn login-submit" onclick="doParentLogin()">🔓 Đăng nhập</button>
@@ -244,7 +257,8 @@
     <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
     <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
-    <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án (Admin)</button>
+    <button class="nav-btn" id="parentReportBtn" data-view="parent" style="display:none;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;border-color:#059669;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 Phụ huynh</button>
+    <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án</button>
     <button class="nav-btn" data-view="manage">⚙️ Quản lý đề</button>
   </nav>
   <div id="view-home">
@@ -329,6 +343,19 @@
         </div>
         <button class="btn btn-success" style="margin-top:16px;" onclick="startCustomMock()">🚀 Bắt đầu thi thử tự thiết kế</button>
       </div>
+    </div>
+  </div>
+  <div id="view-parent" class="hidden">
+    <div class="card">
+      <div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:20px 24px;border-radius:16px;margin-bottom:20px;">
+        <h2 style="color:white;font-size:24px;margin-bottom:8px;">👨‍👩‍👧 Phụ huynh: <span id="parentName">Chưa cập nhật</span></h2>
+        <div style="font-weight:600;font-size:15px;">🧑‍🎓 Học sinh: <span id="parentChildName">Chưa có</span> — 🎂 Ngày sinh: <span id="parentChildDOB">--</span></div>
+      </div>
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;" onclick="editParentInfo()">✏️ Sửa thông tin phụ huynh</button>
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:14px;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;box-shadow:0 3px 0 #9333ea;" onclick="loadDemoData()">🎬 Xem báo cáo DEMO</button>
+      </div>
+      <div id="parentReportBody"></div>
     </div>
   </div>
   <div id="view-answers" class="hidden">
@@ -846,7 +873,7 @@ function updateUserBadge() {
   if (!el) return;
   let html = '';
   if (isAdmin) {
-    html += '<div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Phụ huynh</div>';
+    html += '<div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Admin</div>';
   }
   if (currentUser && currentUser.role === 'child') {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
@@ -1117,7 +1144,226 @@ function renderAnsList() {
   list.innerHTML = html;
 }
 
+// ========== PHỤ HUYNH REPORT ==========
+let parentInfo = null; // {name}
+
+function loadParentInfo() {
+  const saved = localStorage.getItem('hoccungbe_parent');
+  if (saved) parentInfo = JSON.parse(saved);
+}
+function saveParentInfo() {
+  if (parentInfo) localStorage.setItem('hoccungbe_parent', JSON.stringify(parentInfo));
+}
+function editParentInfo() {
+  const name = prompt('Nhập tên phụ huynh:', parentInfo ? parentInfo.name : '');
+  if (name === null) return;
+  parentInfo = { name: name.trim() || 'Chưa cập nhật' };
+  saveParentInfo();
+  renderParentReport();
+}
+
+function loadDemoData() {
+  if (!confirm('Tải bộ dữ liệu DEMO của bé Thành Lâm?\n\nSẽ ghi đè lịch sử làm bài hiện tại.\n(Bạn có thể xóa demo sau bằng cách vào Quản lý đề → Xóa toàn bộ)')) return;
+  // Set demo user
+  currentUser = { role: 'child', name: 'Thành Lâm', dob: '2014-05-15', loginAt: new Date().toISOString() };
+  localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
+  parentInfo = { name: 'Nguyễn Thành Trung' };
+  saveParentInfo();
+  // Generate 30 days of demo history
+  history = generateDemoHistory();
+  saveData();
+  updateUserBadge();
+  renderParentReport();
+  alert('✅ Đã tải dữ liệu DEMO! Bây giờ bạn xem báo cáo của bé Thành Lâm.');
+}
+
+function generateDemoHistory() {
+  const demos = [];
+  const subjects = ['ontap','toan','ams','archimedes','caugiay','ngoaingu','tonghop'];
+  const topics = {
+    ontap: ['2. Phân số','5. Hình học','7. Tỉ lệ phần trăm','10. Chuyển động','9. Toán tuổi','11. Dãy số'],
+    toan: ['Phân số','Hình học','Số đo'],
+    ams: ['Dãy số - Quy luật','Hình học','Toán tuổi'],
+    archimedes: ['Tính nhanh','Cấu tạo số'],
+    caugiay: ['Chuyển động','Phần trăm'],
+    ngoaingu: ['Toán tuổi'],
+    tonghop: ['Suy luận']
+  };
+  const now = Date.now();
+  const day = 86400000;
+  // Tạo dữ liệu 30 ngày qua - bé học không đều, có ngày nhiều, ngày ít
+  const pattern = [3,2,0,4,2,3,1, 2,0,3,2,4,2,1, 5,3,2,0,3,4,2, 3,2,1,4,3,0,5, 3,4]; // 30 ngày
+  for (let d = 29; d >= 0; d--) {
+    const numSessions = pattern[29-d];
+    for (let s = 0; s < numSessions; s++) {
+      const subj = subjects[Math.floor(Math.random()*subjects.length)];
+      const topic = topics[subj][Math.floor(Math.random()*topics[subj].length)];
+      const total = 5 + Math.floor(Math.random()*6); // 5-10 câu
+      // Xu hướng tăng dần: điểm càng gần hiện tại càng cao
+      const baseAccuracy = 50 + (29-d)*1.2; // 50% → 85%
+      const noise = (Math.random()-0.5) * 30;
+      let accuracy = Math.max(20, Math.min(100, baseAccuracy + noise));
+      const correct = Math.round(total * accuracy / 100);
+      const percent = Math.round(correct/total*100);
+      const date = new Date(now - d*day + s*3600000).toISOString();
+      // Time: 10-25 phút
+      const time = 600 + Math.floor(Math.random()*900);
+      const details = [];
+      for (let i = 0; i < total; i++) {
+        details.push({ question: 'Câu demo', type: 'mcq', topic, isCorrect: i < correct });
+      }
+      demos.push({ date, subject: subj, topic, correct, total, percent, time, details });
+    }
+  }
+  return demos;
+}
+
+function renderParentReport() {
+  loadParentInfo();
+  document.getElementById('parentName').textContent = parentInfo ? parentInfo.name : 'Chưa cập nhật';
+  if (currentUser && currentUser.role === 'child') {
+    document.getElementById('parentChildName').textContent = currentUser.name;
+    document.getElementById('parentChildDOB').textContent = currentUser.dob ? new Date(currentUser.dob).toLocaleDateString('vi-VN') : '--';
+  }
+
+  const body = document.getElementById('parentReportBody');
+  if (history.length === 0) {
+    body.innerHTML = '<div class="empty-state">📊<br><br>Chưa có dữ liệu học tập.<br>Bấm "🎬 Xem báo cáo DEMO" để xem bản mẫu.</div>';
+    return;
+  }
+
+  // ==== METRICS ====
+  const total = history.length;
+  const totalQ = history.reduce((s,h)=>s+h.total, 0);
+  const totalCorrect = history.reduce((s,h)=>s+h.correct, 0);
+  const avg = Math.round(history.reduce((s,h)=>s+h.percent,0)/total);
+  const best = Math.max(...history.map(h=>h.percent));
+  const totalTime = history.reduce((s,h)=>s+(h.time||0), 0);
+  const totalMinutes = Math.round(totalTime/60);
+  const streak = computeStreak();
+  const uniqueDays = new Set(history.map(h => h.date.slice(0,10))).size;
+
+  // ==== 30-DAY CHART ====
+  const dayCount = {};
+  const dayScore = {};
+  for(let i=29; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); const k = d.toISOString().slice(0,10); dayCount[k] = 0; dayScore[k] = []; }
+  history.forEach(h => { const d = h.date.slice(0,10); if (d in dayCount) { dayCount[d]++; dayScore[d].push(h.percent); } });
+  const maxCount = Math.max(...Object.values(dayCount), 1);
+
+  // ==== SUBJECT BREAKDOWN ====
+  const bySubj = {};
+  history.forEach(h => {
+    if (!bySubj[h.subject]) bySubj[h.subject] = {t:0,c:0,n:0};
+    bySubj[h.subject].t += h.total; bySubj[h.subject].c += h.correct; bySubj[h.subject].n++;
+  });
+
+  // ==== TOPICS WEAK ====
+  const byTopic = {};
+  history.forEach(h => (h.details||[]).forEach(d => {
+    if (!d.topic) return;
+    if (!byTopic[d.topic]) byTopic[d.topic] = {t:0,c:0};
+    byTopic[d.topic].t++;
+    if (d.isCorrect) byTopic[d.topic].c++;
+  }));
+  const weakTopics = Object.entries(byTopic).filter(([_,d])=>d.t>=3).sort((a,b) => (a[1].c/a[1].t) - (b[1].c/b[1].t)).slice(0,5);
+  const strongTopics = Object.entries(byTopic).filter(([_,d])=>d.t>=3).sort((a,b) => (b[1].c/b[1].t) - (a[1].c/a[1].t)).slice(0,5);
+
+  // ==== RECENT DAYS DETAIL (last 7 days) ====
+  const recentDays = {};
+  history.slice().reverse().forEach(h => {
+    const d = h.date.slice(0,10);
+    if (!recentDays[d]) recentDays[d] = [];
+    recentDays[d].push(h);
+  });
+  const last7Days = Object.entries(recentDays).slice(0, 7);
+
+  let html = '';
+
+  // Metrics grid
+  html += '<h3 style="font-size:20px;margin-bottom:12px;">📊 Tổng quan 30 ngày</h3>';
+  html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">';
+  html += '<div class="rep-metric"><div class="val">' + uniqueDays + '</div><div class="lbl">📅 Ngày học</div></div>';
+  html += '<div class="rep-metric"><div class="val">' + total + '</div><div class="lbl">📝 Lượt làm bài</div></div>';
+  html += '<div class="rep-metric"><div class="val">' + totalQ + '</div><div class="lbl">✏️ Tổng số câu</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#f59e0b;">' + avg + '%</div><div class="lbl">🎯 Điểm TB</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#ec4899;">' + best + '%</div><div class="lbl">🏆 Cao nhất</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#f97316;">🔥' + streak + '</div><div class="lbl">Ngày liên tiếp</div></div>';
+  html += '<div class="rep-metric"><div class="val" style="color:#6366f1;">' + totalMinutes + '</div><div class="lbl">⏱️ Phút học</div></div>';
+  html += '</div>';
+
+  // Activity chart 30 days
+  html += '<h3 style="font-size:18px;margin-bottom:10px;">📈 Hoạt động 30 ngày qua</h3>';
+  html += '<div class="rep-chart-bar">';
+  Object.entries(dayCount).forEach(([d,c]) => {
+    const h = c > 0 ? Math.max(10, (c/maxCount)*80) : 3;
+    const dt = new Date(d);
+    const label = dt.getDate() + '/' + (dt.getMonth()+1);
+    html += '<div class="bar-col"><div class="bar-fill" style="height:' + h + 'px;">' + (c > 0 ? '<span class="bar-num">' + c + '</span>' : '') + '</div><div class="bar-label">' + label + '</div></div>';
+  });
+  html += '</div>';
+
+  // Subject breakdown
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📚 Kết quả theo môn</h3>';
+  html += '<div style="background:white;padding:16px;border-radius:12px;border:2px solid #e9d5ff;">';
+  Object.entries(bySubj).sort((a,b)=>b[1].n-a[1].n).forEach(([s,d]) => {
+    const pct = d.t ? Math.round(d.c/d.t*100) : 0;
+    html += '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px;font-size:14px;">' +
+      '<span>' + (SUBJECT_NAMES[s]||s) + '</span><span>' + pct + '% (' + d.n + ' bài / ' + d.t + ' câu)</span></div>' +
+      '<div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+  });
+  html += '</div>';
+
+  // Strong/Weak topics
+  html += '<div class="grid grid-2" style="margin-top:20px;">';
+  html += '<div><h3 style="font-size:18px;margin-bottom:10px;color:#10b981;">💪 Chủ đề mạnh</h3><div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);padding:14px;border-radius:12px;border:2px solid #86efac;">';
+  if (strongTopics.length) strongTopics.forEach(([t,d]) => {
+    const p = Math.round(d.c/d.t*100);
+    html += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:600;font-size:14px;"><span>✅ ' + escapeHtml(t) + '</span><span style="color:#059669;">' + p + '%</span></div>';
+  });
+  else html += '<div style="color:var(--muted);text-align:center;font-weight:600;">Chưa có đủ dữ liệu</div>';
+  html += '</div></div>';
+
+  html += '<div><h3 style="font-size:18px;margin-bottom:10px;color:#ef4444;">⚠️ Chủ đề cần cải thiện</h3><div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);padding:14px;border-radius:12px;border:2px solid #fca5a5;">';
+  if (weakTopics.length) weakTopics.forEach(([t,d]) => {
+    const p = Math.round(d.c/d.t*100);
+    html += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:600;font-size:14px;"><span>📌 ' + escapeHtml(t) + '</span><span style="color:#dc2626;">' + p + '%</span></div>';
+  });
+  else html += '<div style="color:var(--muted);text-align:center;font-weight:600;">Chưa có đủ dữ liệu</div>';
+  html += '</div></div>';
+  html += '</div>';
+
+  // Recent 7 days detail
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">📅 Chi tiết 7 ngày gần nhất</h3>';
+  last7Days.forEach(([d, sessions]) => {
+    const dt = new Date(d);
+    const dayStr = dt.toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    const totalQ = sessions.reduce((s,h)=>s+h.total, 0);
+    const totalC = sessions.reduce((s,h)=>s+h.correct, 0);
+    const avgPct = Math.round(sessions.reduce((s,h)=>s+h.percent,0)/sessions.length);
+    const totalMin = Math.round(sessions.reduce((s,h)=>s+(h.time||0),0)/60);
+    html += '<div class="rep-day">';
+    html += '<div class="rep-day-hdr"><div class="rep-day-date">📆 ' + dayStr + '</div>';
+    html += '<div style="font-size:13px;color:var(--muted);font-weight:700;">' + sessions.length + ' lượt • ' + totalC + '/' + totalQ + ' đúng • ' + avgPct + '% • ⏱️ ' + totalMin + ' phút</div></div>';
+    sessions.forEach(h => {
+      const time = new Date(h.date).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+      html += '<div class="rep-session"><span>🕐 ' + time + ' — ' + (SUBJECT_NAMES[h.subject]||h.subject) + ' - ' + (h.topic||'Tổng hợp') + '</span><span style="font-weight:700;color:' + (h.percent>=70?'#10b981':(h.percent>=50?'#f59e0b':'#ef4444')) + ';">' + h.correct + '/' + h.total + ' (' + h.percent + '%)</span></div>';
+    });
+    html += '</div>';
+  });
+
+  body.innerHTML = html;
+}
+
+// Extend updateUserBadge to show parent nav button
+const _origUpdateBadge = updateUserBadge;
+updateUserBadge = function() {
+  _origUpdateBadge();
+  const btn = document.getElementById('parentReportBtn');
+  if (btn) btn.style.display = isAdmin ? 'inline-block' : 'none';
+};
+
 loadData();
+loadParentInfo();
 checkAdmin();
 renderHome();
 
@@ -1136,6 +1382,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       showView('subjects');
     }
     else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
+    else if (v === 'parent') { showView('parent'); renderParentReport(); }
     else if (v === 'answers') { showView('answers'); renderAnswers(); }
     else if (v === 'stats') { showView('stats'); renderStats(); }
     else if (v === 'manage') { showView('manage'); renderManage(); }
