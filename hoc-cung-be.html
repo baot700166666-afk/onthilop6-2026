@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Học cùng bé - Ôn thi lớp 5 lên 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #6366f1; --primary-dark: #4f46e5;
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --pink: #ec4899; --purple: #a855f7; --cyan: #06b6d4;
+    --bg: #fef9ff; --card: #ffffff; --text: #1e293b;
+    --muted: #64748b; --border: #e9d5ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @keyframes wiggle { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes celebrate { 0% { transform: scale(0) rotate(0); } 50% { transform: scale(1.3) rotate(15deg); } 100% { transform: scale(1) rotate(0); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  @keyframes shine { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+  body {
+    font-family: 'Quicksand', 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at 10% 20%, #fce7f3 0%, transparent 40%), radial-gradient(circle at 90% 80%, #dbeafe 0%, transparent 40%), radial-gradient(circle at 50% 50%, #fef3c7 0%, transparent 50%), linear-gradient(135deg, #f3e8ff 0%, #fff7ed 100%);
+    background-attachment: fixed; min-height: 100vh; color: var(--text); padding: 16px; font-weight: 500;
+  }
+  .container { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+  header { background: linear-gradient(135deg, #ffffff 0%, #fef7ff 100%); padding: 24px 28px; border-radius: 24px; box-shadow: 0 8px 30px rgba(168, 85, 247, 0.15); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 3px solid #f3e8ff; position: relative; overflow: hidden; }
+  header > * { position: relative; z-index: 1; }
+  header::after { content: '🎒📚✏️'; position: absolute; right: -10px; top: -10px; font-size: 60px; opacity: 0.12; transform: rotate(15deg); pointer-events: none; z-index: 0; }
+  header h1 { font-family: 'Baloo 2', cursive; color: var(--primary); font-size: 32px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  header h1::before { content: '🌟'; font-size: 32px; animation: wiggle 2s infinite; display: inline-block; }
+  header .student { color: var(--muted); font-size: 15px; font-weight: 600; }
+  nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  nav button { background: white; border: 3px solid #e9d5ff; padding: 12px 22px; border-radius: 16px; cursor: pointer; font-size: 15px; font-weight: 700; font-family: 'Quicksand', sans-serif; transition: all 0.2s; color: var(--muted); box-shadow: 0 3px 0 #e9d5ff; }
+  nav button:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 0 #c7d2fe; color: var(--primary); }
+  nav button.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border-color: var(--primary-dark); box-shadow: 0 3px 0 var(--primary-dark); }
+  .card { background: var(--card); padding: 28px; border-radius: 24px; box-shadow: 0 6px 25px rgba(99, 102, 241, 0.08); margin-bottom: 18px; border: 3px solid #f3e8ff; animation: pop 0.4s ease; }
+  .card h2 { font-family: 'Baloo 2', cursive; font-weight: 700; color: var(--primary-dark); }
+  .card h3 { font-family: 'Baloo 2', cursive; font-weight: 700; }
+  .grid { display: grid; gap: 18px; }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .subject-card { background: white; padding: 22px; border-radius: 20px; cursor: pointer; transition: all 0.3s cubic-bezier(.34,1.56,.64,1); border: 3px solid transparent; box-shadow: 0 6px 0 #e5e7eb; position: relative; overflow: hidden; }
+  .subject-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: var(--primary); }
+  .subject-card:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 12px 0 #d1d5db; }
+  .subject-card.math { box-shadow: 0 6px 0 #fca5a5; }
+  .subject-card.math::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+  .subject-card.math::after { content: '🧮'; position: absolute; right: 14px; top: 18px; font-size: 36px; opacity: 0.85; }
+  .subject-card.vn { box-shadow: 0 6px 0 #6ee7b7; }
+  .subject-card.vn::before { background: linear-gradient(90deg, #10b981, #14b8a6); }
+  .subject-card.vn::after { content: '📖'; position: absolute; right: 14px; top: 18px; font-size: 36px; opacity: 0.85; }
+  .subject-card.en { box-shadow: 0 6px 0 #93c5fd; }
+  .subject-card.en::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+  .subject-card.en::after { content: '🔤'; position: absolute; right: 14px; top: 18px; font-size: 36px; opacity: 0.85; }
+  .subject-card.ams { background: linear-gradient(135deg, #faf5ff, #fef3ff); box-shadow: 0 6px 0 #d8b4fe; }
+  .subject-card.ams::before { background: linear-gradient(90deg, #a855f7, #ec4899); }
+  .subject-card.ams::after { content: '⭐'; position: absolute; right: 14px; top: 18px; font-size: 36px; animation: float 3s infinite; }
+  .subject-card.th { background: linear-gradient(135deg, #fffbeb, #fef7e7); box-shadow: 0 6px 0 #fde68a; }
+  .subject-card.th::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
+  .subject-card.th::after { content: '🎯'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.arc { background: linear-gradient(135deg, #ecfeff, #f0f9ff); box-shadow: 0 6px 0 #67e8f9; }
+  .subject-card.arc::before { background: linear-gradient(90deg, #06b6d4, #0ea5e9); }
+  .subject-card.arc::after { content: '🏛️'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.cg { background: linear-gradient(135deg, #fdf2f8, #fce7f3); box-shadow: 0 6px 0 #f9a8d4; }
+  .subject-card.cg::before { background: linear-gradient(90deg, #ec4899, #f43f5e); }
+  .subject-card.cg::after { content: '🌸'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.nn { background: linear-gradient(135deg, #f0fdfa, #ecfdf5); box-shadow: 0 6px 0 #5eead4; }
+  .subject-card.nn::before { background: linear-gradient(90deg, #14b8a6, #10b981); }
+  .subject-card.nn::after { content: '🌍'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.tx { background: linear-gradient(135deg, #f7fee7, #ecfccb); box-shadow: 0 6px 0 #bef264; }
+  .subject-card.tx::before { background: linear-gradient(90deg, #84cc16, #65a30d); }
+  .subject-card.tx::after { content: '🌿'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.ntt { background: linear-gradient(135deg, #fdf4ff, #fae8ff); box-shadow: 0 6px 0 #f0abfc; }
+  .subject-card.ntt::before { background: linear-gradient(90deg, #d946ef, #a855f7); }
+  .subject-card.ntt::after { content: '🎓'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.ntl { background: linear-gradient(135deg, #eef2ff, #e0e7ff); box-shadow: 0 6px 0 #a5b4fc; }
+  .subject-card.ntl::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .subject-card.ntl::after { content: '🏫'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.ns { background: linear-gradient(135deg, #fefce8, #fef9c3); box-shadow: 0 6px 0 #fde047; }
+  .subject-card.ns::before { background: linear-gradient(90deg, #eab308, #ca8a04); }
+  .subject-card.ns::after { content: '🏆'; position: absolute; right: 14px; top: 18px; font-size: 36px; animation: float 3s infinite; }
+  .subject-card.ums { background: linear-gradient(135deg, #fff7ed, #ffedd5); box-shadow: 0 6px 0 #fdba74; }
+  .subject-card.ums::before { background: linear-gradient(90deg, #f97316, #ea580c); }
+  .subject-card.ums::after { content: '🚀'; position: absolute; right: 14px; top: 18px; font-size: 36px; }
+  .subject-card.ot { background: linear-gradient(135deg, #f0fdf4, #ecfeff); box-shadow: 0 6px 0 #86efac; border: 3px solid #86efac; }
+  .subject-card.ot::before { background: linear-gradient(90deg, #22c55e, #10b981, #06b6d4); }
+  .subject-card.ot::after { content: '📝'; position: absolute; right: 14px; top: 18px; font-size: 36px; animation: float 3s infinite; }
+  .subject-card.ot h3::after { content: ' 🌱'; font-size: 16px; }
+  .subject-card h3 { font-family: 'Baloo 2', cursive; font-size: 24px; margin-bottom: 8px; margin-top: 4px; color: var(--text); padding-right: 50px; }
+  .subject-card p { color: var(--muted); font-size: 14px; font-weight: 600; padding-right: 50px; }
+  .topic-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .topic-item { padding: 16px 20px; background: linear-gradient(135deg, #f5f3ff, #fef3ff); border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; font-weight: 700; font-size: 15px; }
+  .topic-item:hover { background: linear-gradient(135deg, #ede9fe, #fce7f3); border-color: var(--primary); transform: translateX(4px); }
+  .topic-item .count { font-size: 13px; color: white; background: var(--primary); padding: 4px 12px; border-radius: 12px; font-weight: 700; }
+  .btn { background: linear-gradient(135deg, var(--primary), var(--purple)); color: white; border: none; padding: 14px 28px; border-radius: 16px; cursor: pointer; font-size: 16px; font-weight: 700; font-family: 'Quicksand', sans-serif; transition: all 0.2s; box-shadow: 0 4px 0 var(--primary-dark); }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 var(--primary-dark); }
+  .btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--primary-dark); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-success { background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 0 #059669; }
+  .btn-secondary { background: linear-gradient(135deg, #e5e7eb, #d1d5db); color: var(--text); box-shadow: 0 4px 0 #9ca3af; }
+  .question { padding: 24px; background: linear-gradient(135deg, #fefce8, #fff7ed); border-radius: 18px; border: 3px solid #fde68a; margin-bottom: 18px; position: relative; }
+  .question::before { content: '🤔'; position: absolute; top: -15px; left: 20px; font-size: 30px; background: white; padding: 0 8px; border-radius: 50%; }
+  .question-text { font-size: 17px; line-height: 1.7; margin-bottom: 18px; margin-top: 8px; font-weight: 600; color: var(--text); }
+  .choice { padding: 16px 20px; background: white; border: 3px solid #e9d5ff; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 15px; }
+  .choice:hover { border-color: var(--primary); background: #f5f3ff; transform: translateX(4px); }
+  .choice.selected { border-color: var(--primary); background: linear-gradient(135deg, #e0e7ff, #fce7f3); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+  .choice.correct { border-color: var(--success); background: linear-gradient(135deg, #d1fae5, #ecfdf5); animation: celebrate 0.6s ease; }
+  .choice.correct::after { content: ' ✅'; }
+  .choice.wrong { border-color: var(--danger); background: linear-gradient(135deg, #fee2e2, #fef2f2); animation: shake 0.4s ease; }
+  .choice.wrong::after { content: ' ❌'; }
+  .progress-bar { height: 14px; background: #e9d5ff; border-radius: 10px; overflow: hidden; margin: 10px 0; border: 2px solid #d8b4fe; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #fbbf24, #ec4899); background-size: 200% auto; animation: shine 3s linear infinite; transition: width 0.5s ease; border-radius: 8px; }
+  .stat-card { text-align: center; padding: 24px; background: linear-gradient(135deg, #fef3ff, #faf5ff); border-radius: 20px; border: 3px solid #e9d5ff; transition: transform 0.2s; }
+  .stat-card:hover { transform: scale(1.05); }
+  .stat-value { font-family: 'Baloo 2', cursive; font-size: 42px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+  .stat-label { color: var(--muted); font-size: 14px; font-weight: 700; margin-top: 6px; }
+  .answer-input { width: 100%; min-height: 130px; padding: 16px; border: 3px solid #e9d5ff; border-radius: 14px; font-size: 16px; font-family: 'Quicksand', sans-serif; font-weight: 500; resize: vertical; background: #fefcff; }
+  .answer-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
+  .feedback { padding: 18px; border-radius: 16px; margin-top: 14px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 3px solid #7dd3fc; position: relative; }
+  .feedback::before { content: '💡'; position: absolute; top: -14px; left: 16px; font-size: 26px; background: white; padding: 0 6px; border-radius: 50%; }
+  .feedback.correct { background: linear-gradient(135deg, #f0fdf4, #d1fae5); border-color: var(--success); }
+  .feedback.correct::before { content: '🎉'; }
+  .feedback.wrong { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-color: var(--danger); }
+  .feedback.wrong::before { content: '🤓'; }
+  .feedback h4 { margin-bottom: 8px; margin-top: 4px; font-family: 'Baloo 2', cursive; font-size: 18px; }
+  .history-item { display: flex; justify-content: space-between; padding: 14px 16px; margin-bottom: 8px; background: #faf5ff; border-radius: 12px; border-left: 4px solid var(--primary); transition: all 0.2s; }
+  .history-item:hover { background: #f3e8ff; transform: translateX(4px); }
+  .badge { display: inline-block; padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 700; }
+  .badge.good { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+  .badge.good::before { content: '🌟 '; }
+  .badge.medium { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+  .badge.medium::before { content: '⭐ '; }
+  .badge.bad { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; }
+  .badge.bad::before { content: '💪 '; }
+  .breadcrumb { color: var(--primary); font-size: 15px; font-weight: 700; margin-bottom: 14px; cursor: pointer; display: inline-block; padding: 6px 12px; border-radius: 12px; background: white; border: 2px solid #e9d5ff; }
+  .breadcrumb:hover { background: #f3e8ff; transform: translateX(-2px); }
+  .hidden { display: none; }
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); font-weight: 600; font-size: 15px; }
+  .import-area { border: 3px dashed #c4b5fd; border-radius: 16px; padding: 22px; margin-top: 14px; background: #faf5ff; }
+  .import-area textarea { width: 100%; min-height: 200px; font-family: 'Courier New', monospace; font-size: 13px; border: 2px solid #e9d5ff; border-radius: 10px; padding: 12px; background: white; }
+  #view-result .card { background: linear-gradient(135deg, #fef9ff, #fdf4ff); }
+  #view-result h2 { font-family: 'Baloo 2', cursive; font-size: 32px; text-align: center; background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  #view-result h2::before { content: '🎊 '; }
+  #view-result h2::after { content: ' 🎊'; }
+  /* Admin solution panel */
+  .admin-solution { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 3px solid #f59e0b; border-radius: 16px; padding: 14px 18px; margin-top: 12px; position: relative; animation: pop 0.3s ease; }
+  .admin-solution::before { content: '🔐 PHỤ HUYNH'; position: absolute; top: -12px; left: 16px; background: #f59e0b; color: white; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  .admin-solution .ans-label { font-weight: 700; color: #92400e; margin-bottom: 6px; margin-top: 4px; font-family: 'Baloo 2', cursive; font-size: 16px; }
+  .admin-solution .ans-value { background: white; padding: 8px 12px; border-radius: 8px; border: 2px solid #fbbf24; font-weight: 700; color: #b45309; font-size: 15px; }
+  .admin-solution .explain-label { font-weight: 700; color: #92400e; margin-top: 10px; margin-bottom: 6px; font-family: 'Baloo 2', cursive; font-size: 16px; }
+  .admin-solution .explain-text { background: white; padding: 10px 12px; border-radius: 8px; border: 2px solid #fde68a; color: #78350f; font-size: 14px; line-height: 1.6; }
+  .admin-toggle { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; margin-top: 8px; box-shadow: 0 3px 0 #d97706; }
+  .admin-toggle:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #d97706; }
+  /* Mock Test styles */
+  .timer-display { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: var(--danger); background: white; padding: 10px 20px; border-radius: 16px; border: 3px solid #fecaca; box-shadow: 0 4px 0 #fca5a5; display: inline-flex; align-items: center; gap: 8px; }
+  .timer-display.warning { color: #b91c1c; border-color: #ef4444; animation: shake 0.5s infinite; }
+  .timer-display::before { content: '⏱️'; }
+  .mock-config-card { padding: 20px; background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 3px solid #fbbf24; border-radius: 18px; cursor: pointer; transition: all 0.2s; }
+  .mock-config-card:hover { transform: translateY(-4px); box-shadow: 0 8px 0 #fbbf24; }
+  .mock-config-card h4 { font-family: 'Baloo 2', cursive; font-size: 20px; margin-bottom: 6px; color: #92400e; }
+  .mock-config-card p { color: #78350f; font-size: 14px; font-weight: 600; }
+  .preset-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 16px; }
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    header { padding: 18px; }
+    header h1 { font-size: 24px; }
+    .card { padding: 18px; }
+    .stat-value { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div><h1>Học cùng bé</h1><div class="student">🚀 Cùng nhau chinh phục kỳ thi vào lớp 6 nào!</div></div>
+    <div id="adminBadge" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Chế độ Phụ huynh <button onclick="logoutAdmin()" style="margin-left:8px;background:white;color:#92400e;border:none;padding:3px 8px;border-radius:8px;font-weight:700;cursor:pointer;font-size:11px;">Thoát</button></div>
+    <button id="adminLoginBtn" onclick="adminLogin()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border:none;padding:10px 18px;border-radius:14px;font-size:14px;cursor:pointer;font-weight:700;box-shadow:0 3px 0 #d97706;position:relative;z-index:10;font-family:Quicksand;">🔐 Phụ huynh</button>
+  </header>
+  <nav>
+    <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
+    <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
+    <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
+    <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
+    <button class="nav-btn" data-view="manage">⚙️ Quản lý đề</button>
+  </nav>
+  <div id="view-home">
+    <div class="card">
+      <h2 style="margin-bottom: 18px; font-size: 26px;">👋 Chào con! Hôm nay con muốn học gì?</h2>
+      <div class="grid grid-2">
+        <div class="subject-card ot" data-subject="ontap" style="border:3px solid #22c55e; transform:scale(1.02);"><h3>Ôn tập nền tảng</h3><p>🌟 Bắt đầu từ đây! Ôn lại kiến thức cơ bản trước khi vào đề thi thật.</p></div>
+        <div class="subject-card math" data-subject="toan"><h3>Toán</h3><p>Phân số, hình học, số đo, giải toán có lời văn...</p></div>
+        <div class="subject-card vn" data-subject="tiengviet"><h3>Tiếng Việt</h3><p>Đọc hiểu, chính tả, tập làm văn, từ và câu...</p></div>
+        <div class="subject-card en" data-subject="tienganh"><h3>Tiếng Anh</h3><p>Từ vựng, ngữ pháp, đọc hiểu cơ bản...</p></div>
+        <div class="subject-card ams" data-subject="ams"><h3>Luyện thi AMS</h3><p>Đề thi thử vào lớp 6 trường Hà Nội Amsterdam</p></div>
+        <div class="subject-card arc" data-subject="archimedes"><h3>Archimedes</h3><p>Đề thi vào lớp 6 trường THCS Archimedes Academy</p></div>
+        <div class="subject-card cg" data-subject="caugiay"><h3>THCS Cầu Giấy</h3><p>Đề thi vào lớp 6 trường THCS Cầu Giấy</p></div>
+        <div class="subject-card nn" data-subject="ngoaingu"><h3>THCS Ngoại Ngữ</h3><p>Đề thi vào lớp 6 trường THCS Ngoại Ngữ (UMC)</p></div>
+        <div class="subject-card tx" data-subject="thanhxuan"><h3>THCS Thanh Xuân</h3><p>Đề thi chính thức vào lớp 6 THCS Thanh Xuân</p></div>
+        <div class="subject-card ntt" data-subject="nguyentatthanh"><h3>Nguyễn Tất Thành</h3><p>Đề thi chính thức vào lớp 6 THCS Nguyễn Tất Thành</p></div>
+        <div class="subject-card ntl" data-subject="namtuliem"><h3>THCS Nam Từ Liêm</h3><p>Đề thi tuyển sinh vào lớp 6 Nam Từ Liêm</p></div>
+        <div class="subject-card ns" data-subject="ngoisao"><h3>Học bổng Ngôi Sao</h3><p>Đề ôn thi học bổng Ngôi Sao Hà Nội</p></div>
+        <div class="subject-card ums" data-subject="ums"><h3>UMS</h3><p>Đề ôn tự luận UMS</p></div>
+        <div class="subject-card th" data-subject="tonghop"><h3>Đề tổng hợp</h3><p>Đề đánh giá năng lực tư duy</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom: 14px; font-size: 22px;">🌟 Bảng thành tích của con</h3>
+      <div class="grid grid-3">
+        <div class="stat-card"><div class="stat-value" id="totalAttempts">0</div><div class="stat-label">📝 Lượt làm bài</div></div>
+        <div class="stat-card"><div class="stat-value" id="avgScore">0%</div><div class="stat-label">🎯 Điểm trung bình</div></div>
+        <div class="stat-card"><div class="stat-value" id="streakDays">0</div><div class="stat-label">🔥 Ngày học liên tiếp</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="view-subjects" class="hidden">
+    <div class="card"><h2 id="subjectTitle">Chọn môn học</h2><div id="topicListContainer" class="topic-list" style="margin-top: 16px;"></div></div>
+  </div>
+  <div id="view-quiz" class="hidden">
+    <div class="breadcrumb" onclick="showSubjects(currentSubject)">⬅ Quay lại danh sách chủ đề</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 id="quizTitle">Bài tập</h2><div id="quizProgress" style="color:var(--muted);font-size:14px;font-weight:700;"></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="quizProgressBar" style="width:0%"></div></div>
+      <div id="quizContent" style="margin-top:20px;"></div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()">⬅ Câu trước</button>
+        <button class="btn" id="nextBtn" onclick="nextQuestion()">Câu sau ➡</button>
+        <button class="btn btn-success hidden" id="finishBtn" onclick="finishQuiz()">🎉 Nộp bài</button>
+      </div>
+    </div>
+  </div>
+  <div id="view-mocktest" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom: 18px; font-size: 26px;">🎯 Phòng thi thử</h2>
+      <p style="color:var(--muted);font-weight:600;margin-bottom:14px;">Chọn dạng thi thử để bắt đầu. App sẽ chọn ngẫu nhiên câu hỏi từ ngân hàng đề và đếm ngược thời gian như thi thật.</p>
+      <div id="mockPresets" class="preset-grid"></div>
+      <div style="margin-top:24px;padding-top:20px;border-top:3px dashed #e9d5ff;">
+        <h3 style="font-size:20px;margin-bottom:12px;">⚙️ Tự thiết kế đề thi</h3>
+        <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+          <div>
+            <label style="font-weight:700;color:var(--muted);">Chọn trường/môn:</label>
+            <select id="mockSubject" style="width:100%;padding:12px;border:3px solid #e9d5ff;border-radius:12px;margin-top:4px;font-family:'Quicksand';font-weight:600;font-size:15px;"></select>
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);">Số câu hỏi:</label>
+            <select id="mockCount" style="width:100%;padding:12px;border:3px solid #e9d5ff;border-radius:12px;margin-top:4px;font-family:'Quicksand';font-weight:600;font-size:15px;">
+              <option value="10">10 câu</option>
+              <option value="15" selected>15 câu</option>
+              <option value="20">20 câu</option>
+              <option value="25">25 câu</option>
+              <option value="30">30 câu</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-weight:700;color:var(--muted);">Thời gian:</label>
+            <select id="mockTime" style="width:100%;padding:12px;border:3px solid #e9d5ff;border-radius:12px;margin-top:4px;font-family:'Quicksand';font-weight:600;font-size:15px;">
+              <option value="15">15 phút</option>
+              <option value="30" selected>30 phút</option>
+              <option value="45">45 phút</option>
+              <option value="60">60 phút</option>
+              <option value="90">90 phút</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-success" style="margin-top:16px;" onclick="startCustomMock()">🚀 Bắt đầu thi thử tự thiết kế</button>
+      </div>
+    </div>
+  </div>
+  <div id="view-result" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom:20px;">Tuyệt vời, con đã hoàn thành!</h2>
+      <div class="grid grid-3">
+        <div class="stat-card"><div class="stat-value" id="resultScore">0/0</div><div class="stat-label">✅ Số câu đúng</div></div>
+        <div class="stat-card"><div class="stat-value" id="resultPercent">0%</div><div class="stat-label">🎯 Tỉ lệ đúng</div></div>
+        <div class="stat-card"><div class="stat-value" id="resultTime">0:00</div><div class="stat-label">⏱️ Thời gian làm</div></div>
+      </div>
+      <div id="resultReview" style="margin-top:24px;"></div>
+      <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn" onclick="goHome()">🏠 Về trang chủ</button>
+        <button class="btn btn-secondary" onclick="showSubjects(currentSubject)">📚 Học chủ đề khác</button>
+      </div>
+    </div>
+  </div>
+  <div id="view-stats" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom: 18px; font-size: 26px;">📊 Tiến độ học tập của con</h2>
+      <div class="grid grid-2">
+        <div><h3 style="margin-bottom: 14px; font-size: 20px;">📚 Theo môn học</h3><div id="statsBySubject"></div></div>
+        <div><h3 style="margin-bottom: 14px; font-size: 20px;">🎯 Cần ôn thêm</h3><div id="statsByTopic"></div></div>
+      </div>
+    </div>
+    <div class="card"><h3 style="margin-bottom: 14px; font-size: 20px;">📜 Lịch sử làm bài</h3><div id="historyList"></div></div>
+  </div>
+  <div id="view-manage" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom: 18px; font-size: 26px;">⚙️ Quản lý ngân hàng câu hỏi</h2>
+      <p style="color:var(--muted);margin-bottom:16px;font-weight:600;">Dán dữ liệu JSON để thêm câu hỏi mới.</p>
+      <div class="import-area">
+        <textarea id="importText" placeholder='[{"subject":"toan","topic":"...","type":"mcq","question":"...","choices":[...],"answer":0,"explanation":"..."}]'></textarea>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-success" onclick="importQuestions()">➕ Thêm câu hỏi</button>
+          <button class="btn btn-secondary" onclick="exportQuestions()">💾 Xuất JSON</button>
+          <button class="btn btn-secondary" onclick="loadSampleData()">🔄 Tải lại đề mẫu</button>
+          <button class="btn btn-secondary" style="background:linear-gradient(135deg,#fecaca,#fca5a5);color:#991b1b;box-shadow:0 4px 0 #f87171;" onclick="clearAllData()">🗑️ Xóa toàn bộ</button>
+        </div>
+      </div>
+      <h3 style="margin-top:24px;margin-bottom: 10px; font-size: 20px;">📋 Thống kê ngân hàng</h3>
+      <div id="bankStats"></div>
+    </div>
+  </div>
+</div>
+<script src="review-bank.js"></script>
+<script src="questions-bank.js"></script>
+<script>
+const SUBJECT_NAMES = { ontap: '📝 Ôn tập nền tảng', toan: 'Toán', tiengviet: 'Tiếng Việt', tienganh: 'Tiếng Anh', ams: 'Luyện thi AMS', tonghop: 'Đề tổng hợp', archimedes: 'Archimedes', caugiay: 'THCS Cầu Giấy', ngoaingu: 'THCS Ngoại Ngữ', thanhxuan: 'THCS Thanh Xuân', nguyentatthanh: 'Nguyễn Tất Thành', namtuliem: 'THCS Nam Từ Liêm', ngoisao: 'Học bổng Ngôi Sao', ums: 'UMS' };
+const SUBJECT_CLASS = { ontap: 'ot', toan: 'math', tiengviet: 'vn', tienganh: 'en', ams: 'ams', tonghop: 'th', archimedes: 'arc', caugiay: 'cg', ngoaingu: 'nn', thanhxuan: 'tx', nguyentatthanh: 'ntt', namtuliem: 'ntl', ngoisao: 'ns', ums: 'ums' };
+
+const SAMPLE_QUESTIONS = [
+  {subject:'toan', topic:'Phân số', type:'mcq', question:'Phân số 3/4 bằng phân số nào sau đây?', choices:['6/8','9/16','3/8','4/3'], answer:0, explanation:'Nhân cả tử và mẫu với 2: 3×2/4×2 = 6/8'},
+  {subject:'toan', topic:'Phân số', type:'mcq', question:'Tính: 2/3 + 1/6 = ?', choices:['3/9','5/6','3/6','1/2'], answer:1, explanation:'Quy đồng: 4/6 + 1/6 = 5/6'},
+  {subject:'toan', topic:'Hình học', type:'mcq', question:'Diện tích hình chữ nhật dài 8cm, rộng 5cm là?', choices:['13 cm²','26 cm²','40 cm²','45 cm²'], answer:2, explanation:'8 × 5 = 40 cm²'},
+  {subject:'tiengviet', topic:'Từ và câu', type:'mcq', question:'Từ nào là từ ghép?', choices:['Lung linh','Xanh xanh','Bàn ghế','Long lanh'], answer:2, explanation:'"Bàn ghế" - cả 2 tiếng đều có nghĩa.'},
+  {subject:'tienganh', topic:'Từ vựng', type:'mcq', question:'Từ "school" có nghĩa là gì?', choices:['Bệnh viện','Trường học','Nhà ga','Công viên'], answer:1, explanation:'"School" = trường học.'}
+];
+
+let questions = [], history = [], currentSubject = null, currentTopic = null;
+let currentQuiz = [], currentQuizIdx = 0, currentAnswers = [], quizStartTime = 0;
+
+const DATA_VERSION = '6.0-ontap';
+function saveData() {
+  localStorage.setItem('hoccungbe_questions', JSON.stringify(questions));
+  localStorage.setItem('hoccungbe_history', JSON.stringify(history));
+}
+function getAllBuiltinQuestions() {
+  const builtin = [...SAMPLE_QUESTIONS];
+  const existing = new Set(builtin.map(q => q.subject + '|' + q.question.slice(0,80)));
+  // Load REVIEW_QUESTIONS first (ôn tập nền tảng)
+  if (typeof REVIEW_QUESTIONS !== 'undefined' && Array.isArray(REVIEW_QUESTIONS)) {
+    REVIEW_QUESTIONS.forEach(q => {
+      const key = q.subject + '|' + q.question.slice(0,80);
+      if (!existing.has(key)) { builtin.push(q); existing.add(key); }
+    });
+  }
+  // Then FULL_QUESTIONS (đề thi thật)
+  if (typeof FULL_QUESTIONS !== 'undefined' && Array.isArray(FULL_QUESTIONS)) {
+    FULL_QUESTIONS.forEach(q => {
+      const key = q.subject + '|' + q.question.slice(0,80);
+      if (!existing.has(key)) { builtin.push(q); existing.add(key); }
+    });
+  }
+  return builtin;
+}
+function loadData() {
+  const q = localStorage.getItem('hoccungbe_questions');
+  const h = localStorage.getItem('hoccungbe_history');
+  const v = localStorage.getItem('hoccungbe_version');
+  history = h ? JSON.parse(h) : [];
+  const builtin = getAllBuiltinQuestions();
+  if (!q || v !== DATA_VERSION) {
+    const existing = q ? JSON.parse(q) : [];
+    const userAdded = existing.filter(x => !builtin.some(s => s.question === x.question && s.subject === x.subject));
+    questions = [...builtin, ...userAdded];
+    localStorage.setItem('hoccungbe_version', DATA_VERSION);
+    saveData();
+  } else {
+    questions = JSON.parse(q);
+  }
+}
+function loadSampleData() {
+  if (confirm('Tải lại đề mẫu?')) { questions = getAllBuiltinQuestions(); saveData(); alert('✅ Đã tải lại!'); renderManage(); }
+}
+function clearAllData() {
+  if (confirm('Xóa toàn bộ dữ liệu? Không thể hoàn tác.')) { localStorage.clear(); alert('Đã xóa.'); location.reload(); }
+}
+
+function showView(name) {
+  document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+  document.getElementById('view-' + name).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const v = (name === 'quiz' || name === 'result') ? 'subjects' : name;
+  const btn = document.querySelector('[data-view="' + v + '"]');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function goHome() { showView('home'); renderHome(); }
+
+function renderHome() {
+  document.getElementById('totalAttempts').textContent = history.length;
+  const avg = history.length ? Math.round(history.reduce((s,h)=>s+h.percent,0)/history.length) : 0;
+  document.getElementById('avgScore').textContent = avg + '%';
+  document.getElementById('streakDays').textContent = computeStreak();
+}
+function computeStreak() {
+  if (!history.length) return 0;
+  const dates = [...new Set(history.map(h => h.date.slice(0,10)))].sort().reverse();
+  const today = new Date().toISOString().slice(0,10);
+  if (dates[0] !== today) {
+    const y = new Date(); y.setDate(y.getDate()-1);
+    if (dates[0] !== y.toISOString().slice(0,10)) return 0;
+  }
+  let streak = 1;
+  for (let i=1; i<dates.length; i++) {
+    if ((new Date(dates[i-1]) - new Date(dates[i]))/(86400000) === 1) streak++; else break;
+  }
+  return streak;
+}
+
+function showSubjects(subject) {
+  currentSubject = subject;
+  document.getElementById('subjectTitle').textContent = '📚 Môn ' + SUBJECT_NAMES[subject];
+  const topics = [...new Set(questions.filter(q => q.subject === subject).map(q => q.topic))];
+  const container = document.getElementById('topicListContainer');
+  if (topics.length === 0) {
+    container.innerHTML = '<div class="empty-state">🧸<br><br>Chưa có câu hỏi cho môn này.</div>';
+  } else {
+    container.innerHTML = topics.map(t => {
+      const count = questions.filter(q => q.subject === subject && q.topic === t).length;
+      const tEsc = t.replace(/'/g, "\\'");
+      return '<div class="topic-item" onclick="startQuiz(\'' + subject + '\',\'' + tEsc + '\')">' +
+        '<span>📝 ' + escapeHtml(t) + '</span>' +
+        '<span class="count">' + count + ' câu</span></div>';
+    }).join('') +
+    '<div class="topic-item" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;" onclick="startQuiz(\'' + subject + '\',null)">' +
+      '<span>🎲 Làm bài tổng hợp (tất cả chủ đề)</span>' +
+      '<span class="count">' + questions.filter(q=>q.subject===subject).length + ' câu</span></div>';
+  }
+  showView('subjects');
+}
+
+function startQuiz(subject, topic) {
+  currentSubject = subject;
+  currentTopic = topic;
+  let pool = questions.filter(q => q.subject === subject && (!topic || q.topic === topic));
+  pool = pool.sort(() => Math.random() - 0.5);
+  currentQuiz = pool.slice(0, Math.min(10, pool.length));
+  currentQuizIdx = 0;
+  currentAnswers = new Array(currentQuiz.length).fill(null);
+  quizStartTime = Date.now();
+  document.getElementById('quizTitle').textContent = (topic || 'Bài tập tổng hợp') + ' - ' + SUBJECT_NAMES[subject];
+  showView('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = currentQuiz[currentQuizIdx];
+  if (!q) return;
+  document.getElementById('quizProgress').textContent = '📍 Câu ' + (currentQuizIdx+1) + '/' + currentQuiz.length;
+  document.getElementById('quizProgressBar').style.width = ((currentQuizIdx+1)/currentQuiz.length*100) + '%';
+  const content = document.getElementById('quizContent');
+  const sourceTag = q.source ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;">📚 Nguồn: ' + escapeHtml(q.source) + '</div>' : '';
+
+  if (q.type === 'mcq') {
+    content.innerHTML = '<div class="question">' + sourceTag +
+      '<div class="question-text">' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>' +
+      q.choices.map((c,i) =>
+        '<div class="choice ' + (currentAnswers[currentQuizIdx]===i?'selected':'') + '" onclick="selectChoice(' + i + ')">' +
+        '<strong>' + String.fromCharCode(65+i) + '.</strong> ' + escapeHtml(c) + '</div>'
+      ).join('') + renderAdminSolution(q) + '</div>';
+  } else if (q.type === 'fillblank') {
+    content.innerHTML = '<div class="question">' + sourceTag +
+      '<div class="question-text">' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>' +
+      '<input type="text" class="answer-input" style="min-height:auto;height:56px;font-size:18px;" placeholder="✏️ Nhập đáp số..." value="' + escapeHtml(currentAnswers[currentQuizIdx] || '') + '" oninput="saveEssayAnswer(this.value)">' +
+      '<div style="margin-top:10px;font-size:13px;color:var(--muted);font-weight:600;">💡 Mẹo: chỉ cần nhập đáp số chính</div>' + renderAdminSolution(q) + '</div>';
+  } else {
+    content.innerHTML = '<div class="question">' + sourceTag +
+      '<div class="question-text">' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>' +
+      '<textarea class="answer-input" placeholder="✏️ Viết bài làm của con ở đây..." oninput="saveEssayAnswer(this.value)">' + escapeHtml(currentAnswers[currentQuizIdx] || '') + '</textarea>' + renderAdminSolution(q) + '</div>';
+  }
+  document.getElementById('prevBtn').disabled = currentQuizIdx === 0;
+  const isLast = currentQuizIdx === currentQuiz.length - 1;
+  document.getElementById('nextBtn').classList.toggle('hidden', isLast);
+  document.getElementById('finishBtn').classList.toggle('hidden', !isLast);
+}
+
+function selectChoice(i) { currentAnswers[currentQuizIdx] = i; renderQuestion(); }
+function saveEssayAnswer(text) { currentAnswers[currentQuizIdx] = text; }
+function nextQuestion() { if (currentQuizIdx < currentQuiz.length - 1) { currentQuizIdx++; renderQuestion(); } }
+function prevQuestion() { if (currentQuizIdx > 0) { currentQuizIdx--; renderQuestion(); } }
+
+function normalize(s) {
+  return String(s||'').toLowerCase().trim().replace(/\s+/g,' ').replace(/[,.]/g,'')
+    .replace(/\s*(km|cm|mm|kg|gam|tuổi|cái|chai|viên|khối|đồng|đv|đơn vị|m²|cm²|km²|%|m|giờ|phút)\s*$/g,'').trim();
+}
+function isFillblankCorrect(user, correct) {
+  if (!user) return false;
+  const u = normalize(user), c = normalize(correct);
+  if (u === c) return true;
+  const numU = u.match(/\d+([.,]\d+)?/g);
+  const numC = c.match(/\d+([.,]\d+)?/g);
+  if (numU && numC && numU[0] === numC[0]) return true;
+  return false;
+}
+
+function showConfetti() {
+  const emojis = ['🎉','🎊','⭐','🌟','✨','🎈','🏆','💖','🌈'];
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;';
+  document.body.appendChild(container);
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.cssText = 'position:absolute;font-size:'+(20+Math.random()*20)+'px;left:'+Math.random()*100+'%;top:-50px;animation:fall '+(2+Math.random()*2)+'s linear forwards;animation-delay:'+(Math.random()*0.5)+'s;';
+    container.appendChild(el);
+  }
+  setTimeout(() => container.remove(), 5000);
+}
+
+function finishQuiz() {
+  if (mockTimer) { clearInterval(mockTimer); mockTimer = null; }
+  let correct = 0, gradable = 0;
+  currentQuiz.forEach((q,i) => {
+    if (q.type === 'mcq') { gradable++; if (currentAnswers[i] === q.answer) correct++; }
+    else if (q.type === 'fillblank') { gradable++; if (isFillblankCorrect(currentAnswers[i], q.answer)) correct++; }
+  });
+  const percent = gradable ? Math.round(correct/gradable*100) : 0;
+  const elapsed = Math.round((Date.now() - quizStartTime)/1000);
+
+  history.push({
+    date: new Date().toISOString(), subject: currentSubject, topic: currentTopic,
+    correct, total: gradable, percent, time: elapsed,
+    details: currentQuiz.map((q,i) => ({
+      question: q.question, type: q.type, topic: q.topic,
+      userAnswer: currentAnswers[i],
+      correctAnswer: (q.type==='mcq' || q.type==='fillblank') ? q.answer : null,
+      isCorrect: q.type==='mcq' ? (currentAnswers[i] === q.answer) : q.type==='fillblank' ? isFillblankCorrect(currentAnswers[i], q.answer) : null
+    }))
+  });
+  saveData();
+
+  document.getElementById('resultScore').textContent = correct + '/' + gradable;
+  document.getElementById('resultPercent').textContent = percent + '%';
+  const mins = Math.floor(elapsed/60), secs = elapsed%60;
+  document.getElementById('resultTime').textContent = mins + ':' + String(secs).padStart(2,'0');
+  if (percent >= 70 && gradable > 0) showConfetti();
+
+  const review = document.getElementById('resultReview');
+  review.innerHTML = '<h3 style="margin-bottom:14px;font-size:20px;">📖 Xem lại từng câu</h3>' + currentQuiz.map((q,i) => {
+    const sourceTag = q.source ? '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;">📚 ' + escapeHtml(q.source) + '</div>' : '';
+    if (q.type === 'mcq') {
+      const isCorrect = currentAnswers[i] === q.answer;
+      return '<div class="question">' + sourceTag +
+        '<div class="question-text"><strong>Câu ' + (i+1) + ':</strong> ' + escapeHtml(q.question) + '</div>' +
+        q.choices.map((c,j) => {
+          let cls = 'choice';
+          if (j === q.answer) cls += ' correct';
+          else if (j === currentAnswers[i]) cls += ' wrong';
+          return '<div class="' + cls + '"><strong>' + String.fromCharCode(65+j) + '.</strong> ' + escapeHtml(c) + '</div>';
+        }).join('') +
+        (q.explanation ? '<div class="feedback ' + (isCorrect?'correct':'wrong') + '"><h4>' + (isCorrect?'Đúng rồi! Giỏi quá!':'Chưa đúng, lần sau cố lên!') + '</h4>' + escapeHtml(q.explanation) + '</div>' : '') +
+        '</div>';
+    } else if (q.type === 'fillblank') {
+      const isCorrect = isFillblankCorrect(currentAnswers[i], q.answer);
+      return '<div class="question">' + sourceTag +
+        '<div class="question-text"><strong>Câu ' + (i+1) + ':</strong> ' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>' +
+        '<div style="background:#fff;padding:14px;border-radius:12px;margin-bottom:8px;border:2px solid #e9d5ff;font-weight:600;">' +
+          '<strong>Đáp số con nhập:</strong> ' + escapeHtml(currentAnswers[i] || '(Chưa làm)') + '<br>' +
+          '<strong>Đáp số đúng:</strong> <span style="color:' + (isCorrect?'#10b981':'#ef4444') + ';font-weight:700;font-size:17px;">' + escapeHtml(String(q.answer)) + '</span>' +
+        '</div>' +
+        (q.explanation ? '<div class="feedback ' + (isCorrect?'correct':'wrong') + '"><h4>' + (isCorrect?'Đúng rồi!':'Chưa đúng.') + '</h4>' + escapeHtml(q.explanation).replace(/\n/g,'<br>') + '</div>' : '') +
+        '</div>';
+    } else {
+      return '<div class="question">' + sourceTag +
+        '<div class="question-text"><strong>Câu ' + (i+1) + ':</strong> ' + escapeHtml(q.question).replace(/\n/g,'<br>') + '</div>' +
+        '<div style="background:#fff;padding:14px;border-radius:12px;margin-bottom:8px;border:2px solid #e9d5ff;font-weight:600;">' +
+          '<strong>📝 Bài làm của con:</strong><br>' + escapeHtml(currentAnswers[i] || '(Chưa làm)').replace(/\n/g,'<br>') +
+        '</div>' +
+        (q.sampleAnswer ? '<div class="feedback"><h4>Bài làm mẫu:</h4>' + escapeHtml(q.sampleAnswer).replace(/\n/g,'<br>') + '</div>' : '') +
+        '</div>';
+    }
+  }).join('');
+  showView('result');
+}
+
+function renderStats() {
+  const bySubject = {};
+  history.forEach(h => {
+    if (!bySubject[h.subject]) bySubject[h.subject] = {total:0, correct:0, count:0};
+    bySubject[h.subject].total += h.total;
+    bySubject[h.subject].correct += h.correct;
+    bySubject[h.subject].count += 1;
+  });
+  document.getElementById('statsBySubject').innerHTML = Object.keys(bySubject).length === 0
+    ? '<div class="empty-state">🧸<br><br>Chưa có dữ liệu</div>'
+    : Object.entries(bySubject).map(([s,d]) => {
+      const pct = d.total ? Math.round(d.correct/d.total*100) : 0;
+      return '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-weight:700;">' +
+        '<span>' + (SUBJECT_NAMES[s]||s) + '</span><span>' + pct + '% (' + d.count + ' bài)</span></div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+    }).join('');
+
+  const byTopic = {};
+  history.forEach(h => {
+    h.details.forEach(d => {
+      if (d.type !== 'mcq' && d.type !== 'fillblank') return;
+      const key = (SUBJECT_NAMES[h.subject]||h.subject) + ' - ' + d.topic;
+      if (!byTopic[key]) byTopic[key] = {total:0, correct:0};
+      byTopic[key].total++;
+      if (d.isCorrect) byTopic[key].correct++;
+    });
+  });
+  const sortedTopics = Object.entries(byTopic).sort((a,b) => (a[1].correct/a[1].total) - (b[1].correct/b[1].total));
+  document.getElementById('statsByTopic').innerHTML = sortedTopics.length === 0
+    ? '<div class="empty-state">🧸<br><br>Chưa có dữ liệu</div>'
+    : sortedTopics.slice(0,10).map(([t,d]) => {
+      const pct = Math.round(d.correct/d.total*100);
+      const badge = pct >= 80 ? 'good' : pct >= 50 ? 'medium' : 'bad';
+      return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:2px solid #f3e8ff;font-weight:600;">' +
+        '<span>' + escapeHtml(t) + '</span><span class="badge ' + badge + '">' + pct + '%</span></div>';
+    }).join('');
+
+  document.getElementById('historyList').innerHTML = history.length === 0
+    ? '<div class="empty-state">🧸<br><br>Chưa có lịch sử làm bài</div>'
+    : [...history].reverse().slice(0,20).map(h => {
+      const badge = h.percent >= 80 ? 'good' : h.percent >= 50 ? 'medium' : 'bad';
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+      return '<div class="history-item"><div><strong>' + (SUBJECT_NAMES[h.subject]||h.subject) + '</strong> - ' + (h.topic || 'Tổng hợp') + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dateStr + '</small></div>' +
+        '<div><span class="badge ' + badge + '">' + h.correct + '/' + h.total + ' - ' + h.percent + '%</span></div></div>';
+    }).join('');
+}
+
+function renderManage() {
+  const stats = {};
+  questions.forEach(q => {
+    const key = SUBJECT_NAMES[q.subject] || q.subject;
+    if (!stats[key]) stats[key] = {topics: new Set(), count: 0, mcq:0, essay:0, fillblank:0};
+    stats[key].topics.add(q.topic);
+    stats[key].count++;
+    if (q.type === 'mcq') stats[key].mcq++;
+    else if (q.type === 'essay') stats[key].essay++;
+    else if (q.type === 'fillblank') stats[key].fillblank++;
+  });
+  document.getElementById('bankStats').innerHTML = Object.entries(stats).map(([s,d]) =>
+    '<div style="padding:12px;border-bottom:2px solid #f3e8ff;font-weight:600;"><strong>' + escapeHtml(s) + '</strong>: ' + d.count + ' câu (' + d.mcq + ' trắc nghiệm, ' + d.fillblank + ' điền đáp số, ' + d.essay + ' tự luận) - ' + d.topics.size + ' chủ đề</div>'
+  ).join('') || '<div class="empty-state">🧸<br><br>Chưa có câu hỏi nào</div>';
+}
+
+function importQuestions() {
+  const text = document.getElementById('importText').value.trim();
+  if (!text) { alert('Hãy dán dữ liệu JSON trước.'); return; }
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error('Phải là mảng');
+    let added = 0;
+    data.forEach(q => {
+      if (q.subject && q.topic && q.type && q.question) { questions.push(q); added++; }
+    });
+    saveData();
+    alert('✅ Đã thêm ' + added + ' câu hỏi!');
+    document.getElementById('importText').value = '';
+    renderManage();
+  } catch(e) { alert('Lỗi JSON: ' + e.message); }
+}
+
+function exportQuestions() {
+  const blob = new Blob([JSON.stringify(questions, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ngan-hang-cau-hoi.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ========== ADMIN MODE ==========
+let isAdmin = false;
+const ADMIN_PASS = '868686';
+
+function checkAdmin() {
+  const saved = sessionStorage.getItem('hoccungbe_admin');
+  isAdmin = (saved === 'zinzu');
+  updateAdminBadge();
+}
+
+function adminLogin() {
+  const pw = prompt('🔐 Nhập mật khẩu phụ huynh:');
+  if (pw === null) return;
+  if (pw === ADMIN_PASS) {
+    isAdmin = true;
+    sessionStorage.setItem('hoccungbe_admin', 'zinzu');
+    updateAdminBadge();
+    alert('✅ Đã vào chế độ Phụ huynh! Bạn có thể xem đáp án và lời giải.');
+    if (currentQuiz.length) renderQuestion();
+  } else {
+    alert('❌ Mật khẩu sai.');
+  }
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  sessionStorage.removeItem('hoccungbe_admin');
+  updateAdminBadge();
+  if (currentQuiz.length) renderQuestion();
+}
+
+function updateAdminBadge() {
+  const badge = document.getElementById('adminBadge');
+  const btn = document.getElementById('adminLoginBtn');
+  if (badge) badge.style.display = isAdmin ? 'inline-flex' : 'none';
+  if (btn) btn.style.display = isAdmin ? 'none' : 'inline-block';
+}
+
+function renderAdminSolution(q) {
+  if (!isAdmin) return '';
+  let html = '<div class="admin-solution" id="adminPanel_' + currentQuizIdx + '" style="display:none;">';
+  // ĐÁP ÁN
+  if (q.type === 'mcq') {
+    html += '<div class="ans-label">✅ Đáp án đúng:</div>';
+    html += '<div class="ans-value">' + String.fromCharCode(65 + q.answer) + '. ' + escapeHtml(q.choices[q.answer]) + '</div>';
+  } else if (q.type === 'fillblank') {
+    html += '<div class="ans-label">✅ Đáp án đúng:</div>';
+    html += '<div class="ans-value">' + escapeHtml(String(q.answer)) + '</div>';
+  }
+  // PHƯƠNG PHÁP GIẢI (explanation) - có cho cả mcq/fillblank/essay
+  if (q.explanation && q.explanation.trim()) {
+    html += '<div class="explain-label">💡 Phương pháp giải nhanh:</div>';
+    html += '<div class="explain-text">' + escapeHtml(q.explanation).replace(/\n/g,'<br>') + '</div>';
+  }
+  // BÀI LÀM MẪU CHI TIẾT (sampleAnswer) - thường dài, chi tiết cho câu tự luận
+  if (q.sampleAnswer && q.sampleAnswer.trim() && !q.sampleAnswer.startsWith('(Đáp án không có')) {
+    html += '<div class="explain-label">📝 Bài làm mẫu chi tiết:</div>';
+    html += '<div class="explain-text" style="white-space:pre-line;">' + escapeHtml(q.sampleAnswer).replace(/\n/g,'<br>') + '</div>';
+  }
+  // Nếu KHÔNG có đáp án nào
+  if (!q.explanation && !q.sampleAnswer && q.type === 'essay') {
+    html += '<div class="explain-label">⚠️ Chưa có lời giải trong tài liệu gốc:</div>';
+    html += '<div class="explain-text" style="background:#fef3c7;">Câu này được trích tự động từ đề PDF không kèm đáp án. Bạn có thể:<br>1. Tự giải cùng bé để dạy phương pháp<br>2. Tìm bộ đáp án theo tên đề (search Google) rồi cập nhật vào "Quản lý đề"<br>3. Bỏ qua câu này nếu quá khó</div>';
+  } else if (q.sampleAnswer && q.sampleAnswer.startsWith('(Đáp án không có')) {
+    html += '<div class="explain-label">⚠️ Đề gốc không có sẵn đáp án</div>';
+    html += '<div class="explain-text" style="background:#fef3c7;">Bạn có thể tìm đáp án theo tên đề rồi cập nhật vào "Quản lý đề".</div>';
+  }
+  if (q.source) {
+    html += '<div style="margin-top:10px;font-size:12px;color:#92400e;font-weight:600;padding:6px 10px;background:white;border-radius:8px;">📚 Nguồn: ' + escapeHtml(q.source) + '</div>';
+  }
+  html += '</div>';
+  html += '<button class="admin-toggle" onclick="toggleAdminPanel()">👁️ Xem đáp án &amp; bài giải chi tiết</button>';
+  return html;
+}
+
+function toggleAdminPanel() {
+  const panel = document.getElementById('adminPanel_' + currentQuizIdx);
+  if (!panel) return;
+  const btn = event.target;
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    btn.textContent = '🙈 Ẩn đáp án';
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '👁️ Xem đáp án & phương pháp giải';
+  }
+}
+
+// ========== MOCK TEST ==========
+let mockTimer = null, mockEndTime = 0, isMockTest = false;
+
+const MOCK_PRESETS = [
+  {key:'ams', name:'🌟 Thi thử AMS', subjects:['ams'], count:20, time:45, desc:'Đề thi thử vào lớp 6 trường Hà Nội Amsterdam - 20 câu trong 45 phút'},
+  {key:'archimedes', name:'🏛️ Thi thử Archimedes', subjects:['archimedes'], count:25, time:90, desc:'Đề thi vào trường Archimedes - 25 câu trong 90 phút'},
+  {key:'caugiay', name:'🌸 Thi thử Cầu Giấy', subjects:['caugiay'], count:15, time:45, desc:'Đề thi THCS Cầu Giấy - 15 câu trong 45 phút'},
+  {key:'ngoaingu', name:'🌍 Thi thử Ngoại Ngữ', subjects:['ngoaingu'], count:15, time:40, desc:'Đề thi THCS Ngoại Ngữ UMC - 15 câu trong 40 phút'},
+  {key:'ntt', name:'🎓 Thi thử Nguyễn Tất Thành', subjects:['nguyentatthanh'], count:15, time:60, desc:'Đề thi THCS Nguyễn Tất Thành - 15 câu trong 60 phút'},
+  {key:'tonghop', name:'🎲 Thi thử Tổng hợp (mọi trường)', subjects:['ams','archimedes','caugiay','ngoaingu','thanhxuan','nguyentatthanh','namtuliem','ngoisao','ums','tonghop'], count:20, time:60, desc:'20 câu ngẫu nhiên từ tất cả các trường - 60 phút (luyện sức bền)'},
+  {key:'quick', name:'⚡ Thi nhanh 10 câu', subjects:['ams','archimedes','caugiay','ngoaingu','thanhxuan','tonghop'], count:10, time:15, desc:'10 câu - 15 phút. Phù hợp luyện hàng ngày'},
+  {key:'review', name:'📝 Kiểm tra ôn tập', subjects:['ontap'], count:20, time:30, desc:'20 câu từ bộ ôn tập nền tảng - 30 phút'},
+];
+
+function renderMockTest() {
+  // Render presets
+  const presets = document.getElementById('mockPresets');
+  presets.innerHTML = MOCK_PRESETS.map(p => {
+    const available = questions.filter(q => p.subjects.includes(q.subject)).length;
+    return '<div class="mock-config-card" onclick="startMockPreset(\'' + p.key + '\')">' +
+      '<h4>' + p.name + '</h4>' +
+      '<p>' + p.desc + '</p>' +
+      '<p style="margin-top:8px;font-size:13px;">📚 Có ' + available + ' câu trong ngân hàng</p>' +
+      '</div>';
+  }).join('');
+
+  // Populate subject dropdown
+  const sel = document.getElementById('mockSubject');
+  sel.innerHTML = '<option value="all">Tất cả trường (ngẫu nhiên)</option>' +
+    Object.entries(SUBJECT_NAMES).map(([k,v]) => {
+      const count = questions.filter(q => q.subject === k).length;
+      return '<option value="' + k + '">' + v + ' (' + count + ' câu)</option>';
+    }).join('');
+}
+
+function startMockPreset(key) {
+  const preset = MOCK_PRESETS.find(p => p.key === key);
+  if (!preset) return;
+  startMockTest(preset.subjects, preset.count, preset.time, preset.name);
+}
+
+function startCustomMock() {
+  const subj = document.getElementById('mockSubject').value;
+  const count = parseInt(document.getElementById('mockCount').value);
+  const time = parseInt(document.getElementById('mockTime').value);
+  const subjects = (subj === 'all') ? Object.keys(SUBJECT_NAMES) : [subj];
+  const name = '🎯 Đề thi tự thiết kế';
+  startMockTest(subjects, count, time, name);
+}
+
+function startMockTest(subjects, count, timeMinutes, name) {
+  // Pick random questions
+  let pool = questions.filter(q => subjects.includes(q.subject));
+  if (pool.length === 0) {
+    alert('Không có câu hỏi trong các trường đã chọn!');
+    return;
+  }
+  if (!confirm('Bắt đầu thi thử "' + name + '"?\n' + count + ' câu - ' + timeMinutes + ' phút.\nKhi hết giờ sẽ tự động nộp bài.')) return;
+  pool = pool.sort(() => Math.random() - 0.5);
+  currentQuiz = pool.slice(0, Math.min(count, pool.length));
+  currentQuizIdx = 0;
+  currentAnswers = new Array(currentQuiz.length).fill(null);
+  currentSubject = 'mocktest';
+  currentTopic = name;
+  quizStartTime = Date.now();
+  isMockTest = true;
+  mockEndTime = Date.now() + timeMinutes * 60 * 1000;
+  document.getElementById('quizTitle').textContent = name;
+  showView('quiz');
+  startMockTimer();
+  renderQuestion();
+}
+
+function startMockTimer() {
+  if (mockTimer) clearInterval(mockTimer);
+  // Add timer to quiz progress area
+  updateMockTimer();
+  mockTimer = setInterval(updateMockTimer, 1000);
+}
+
+function updateMockTimer() {
+  const remaining = Math.max(0, Math.round((mockEndTime - Date.now()) / 1000));
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const display = mins + ':' + String(secs).padStart(2, '0');
+  const progressEl = document.getElementById('quizProgress');
+  if (progressEl) {
+    progressEl.innerHTML = '<span class="timer-display' + (remaining < 60 ? ' warning' : '') + '">' + display + '</span> &nbsp;&nbsp;📍 Câu ' + (currentQuizIdx+1) + '/' + currentQuiz.length;
+  }
+  if (remaining <= 0) {
+    clearInterval(mockTimer);
+    mockTimer = null;
+    alert('⏰ Hết giờ! Bài thi tự động nộp.');
+    finishMockTest();
+  }
+}
+
+function finishMockTest() {
+  if (mockTimer) { clearInterval(mockTimer); mockTimer = null; }
+  isMockTest = false;
+  finishQuiz();
+}
+
+loadData();
+checkAdmin();
+renderHome();
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.view;
+    if (v === 'home') { showView('home'); renderHome(); }
+    else if (v === 'subjects') {
+      document.getElementById('subjectTitle').textContent = '📚 Chọn môn học';
+      document.getElementById('topicListContainer').innerHTML =
+        '<div class="grid grid-2">' +
+        Object.keys(SUBJECT_NAMES).map(s =>
+          '<div class="subject-card ' + SUBJECT_CLASS[s] + '" onclick="showSubjects(\'' + s + '\')"><h3>' + SUBJECT_NAMES[s] + '</h3><p>Bấm để chọn chủ đề</p></div>'
+        ).join('') +
+        '</div>';
+      showView('subjects');
+    }
+    else if (v === 'mocktest') { showView('mocktest'); renderMockTest(); }
+    else if (v === 'stats') { showView('stats'); renderStats(); }
+    else if (v === 'manage') { showView('manage'); renderManage(); }
+  });
+});
+
+document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
+  c.addEventListener('click', () => showSubjects(c.dataset.subject));
+});
+</script>
+</body>
+</html>
