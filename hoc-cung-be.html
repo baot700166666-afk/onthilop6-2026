@@ -203,6 +203,15 @@
   .st-card.done .st-count { background: #059669; color: white; }
   .st-legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 8px; align-items: center; flex-wrap: wrap; }
   .st-legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: middle; }
+  /* Subject grid when picking student */
+  .subj-panel { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 16px 18px; border-radius: 14px; border: 3px solid #fbbf24; margin-top: 12px; animation: pop 0.3s; }
+  .subj-panel h4 { font-family: 'Baloo 2', cursive; font-size: 17px; color: #92400e; margin-bottom: 10px; }
+  .subj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .subj-card { padding: 10px 12px; border-radius: 10px; border: 2px solid #e2e8f0; background: white; cursor: pointer; text-align: center; font-weight: 700; font-size: 13px; transition: all 0.2s; position: relative; }
+  .subj-card:hover { transform: translateY(-2px); border-color: #f59e0b; }
+  .subj-card.done { background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444; color: #991b1b; }
+  .subj-card.done::before { content: '✓'; position: absolute; top: -6px; right: -4px; background: #ef4444; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .subj-card.done .subj-score { display: block; font-family: 'Baloo 2', cursive; font-size: 18px; color: #dc2626; margin-top: 2px; }
   /* Answers library */
   .ans-subj-btn { padding: 12px 10px; text-align: center; cursor: pointer; border-radius: 12px; font-weight: 700; border: 2px solid #e9d5ff; background: white; transition: all 0.2s; font-size: 13px; }
   .ans-subj-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -2045,18 +2054,52 @@ function pickStudent(id) {
   const sel = document.getElementById('reportStudent');
   if (sel) sel.value = id;
   const student = getStudentById(id);
-  if (student) {
-    // Cuộn xuống form
-    document.getElementById('reportContent').scrollIntoView({behavior:'smooth', block:'center'});
-    // Copy date filter to form
-    const df = document.getElementById('stGridDate');
-    const rd = document.getElementById('reportDate');
-    if (df && df.value && rd) rd.value = df.value;
-    const sf = document.getElementById('stGridSubject');
-    const rs = document.getElementById('reportSubject');
-    if (sf && sf.value && rs) rs.value = sf.value;
+  if (!student) return;
+  // Copy date filter
+  const df = document.getElementById('stGridDate');
+  const rd = document.getElementById('reportDate');
+  if (df && df.value && rd) rd.value = df.value;
+  window._selectedStudentId = id;
+  renderStudentGrid();
+  renderSubjectPanel(id);
+}
+
+const ALL_SUBJECTS = ['Toán','Tiếng Việt','Tiếng Anh','Khoa học','Lịch sử - Địa lý','Tin học','Đạo đức','Mỹ thuật','Âm nhạc','Thể dục','Khác'];
+const SUBJECT_ICONS = {'Toán':'📊','Tiếng Việt':'📖','Tiếng Anh':'🔤','Khoa học':'🔬','Lịch sử - Địa lý':'🌏','Tin học':'💻','Đạo đức':'💖','Mỹ thuật':'🎨','Âm nhạc':'🎵','Thể dục':'⚽','Khác':'📝'};
+
+function renderSubjectPanel(studentId) {
+  loadTeacherReports();
+  const student = getStudentById(studentId);
+  if (!student) return;
+  const dateFilter = (document.getElementById('stGridDate') || {}).value || new Date().toISOString().slice(0,10);
+  let panel = document.getElementById('subjectPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'subjectPanel';
+    panel.className = 'subj-panel';
+    const grid = document.getElementById('studentGrid');
+    grid.parentNode.insertBefore(panel, grid.nextSibling);
   }
-  renderStudentGrid(); // update selected highlight
+  const dtStr = new Date(dateFilter).toLocaleDateString('vi-VN');
+  let html = '<h4>🧑‍🎓 ' + escapeHtml(student.name) + ' — 📅 Ngày ' + dtStr + ' — Bấm môn để chấm điểm</h4>';
+  html += '<div class="subj-grid">';
+  ALL_SUBJECTS.forEach(subj => {
+    const done = teacherReports.find(r => r.studentId === studentId && r.date === dateFilter && r.subject === subj);
+    const cls = done ? 'subj-card done' : 'subj-card';
+    const scoreDisp = done ? '<span class="subj-score">' + done.score + '</span>' : '';
+    html += '<div class="' + cls + '" onclick="pickSubject(\'' + subj + '\')">' + (SUBJECT_ICONS[subj]||'') + ' ' + escapeHtml(subj) + scoreDisp + '</div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:8px;font-size:12px;color:#92400e;font-weight:700;"><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#fee2e2,#fecaca);border:2px solid #ef4444;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>Môn đã có điểm ngày này (bấm để chấm lại) — <span style="display:inline-block;width:12px;height:12px;background:white;border:2px solid #e2e8f0;border-radius:3px;vertical-align:middle;margin-right:4px;margin-left:8px;"></span>Chưa có điểm</div>';
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+function pickSubject(subj) {
+  const rs = document.getElementById('reportSubject');
+  if (rs) rs.value = subj;
+  // Cuộn xuống form
+  document.getElementById('reportScore').scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 function submitTeacherReport() {
@@ -2084,6 +2127,7 @@ function submitTeacherReport() {
   saveTeacherReports();
   alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
   renderStudentGrid();
+  if (window._selectedStudentId) renderSubjectPanel(window._selectedStudentId);
   document.getElementById('reportContent').value = '';
   document.getElementById('reportHomework').value = '';
   document.getElementById('reportEval').value = '';
@@ -2121,6 +2165,7 @@ function submitQuickEval() {
   saveTeacherReports();
   alert('✅ Đã gửi báo cáo cho phụ huynh của bé ' + student.name + '!');
   renderStudentGrid();
+  if (window._selectedStudentId) renderSubjectPanel(window._selectedStudentId);
   document.getElementById('dqEval').value = '';
   renderDailyReport();
 }
