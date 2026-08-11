@@ -264,6 +264,9 @@
       <div class="login-role-btn" id="roleAdmin" onclick="selectRole('admin')">
         <span class="emoji">🔐</span>Admin
       </div>
+      <div class="login-role-btn" id="roleData" onclick="selectRole('data')">
+        <span class="emoji">🏆</span>DATA
+      </div>
     </div>
     <div class="login-form">
       <div id="childForm">
@@ -301,6 +304,12 @@
         <input type="password" id="teacherPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doTeacherLogin()">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>giaovien</code></div>
         <button class="btn login-submit" style="background:linear-gradient(135deg,#8b5cf6,#a855f7);box-shadow:0 4px 0 #7c3aed;" onclick="doTeacherLogin()">👩‍🏫 Đăng nhập</button>
+      </div>
+      <div id="dataForm" style="display:none;">
+        <label>🏆 Mật khẩu DATA (Chuyên đề đặc biệt):</label>
+        <input type="password" id="dataPassIn" placeholder="Nhập mật khẩu chuyên đề..." onkeypress="if(event.key==='Enter')doDataLogin()">
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>cup2026</code> — Đăng nhập vào kho bài giảng nâng cao</div>
+        <button class="btn login-submit" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 0 #b45309;" onclick="doDataLogin()">🏆 Vào kho DATA</button>
       </div>
       <div id="adminForm" style="display:none;">
         <label>🔐 Mật khẩu Admin:</label>
@@ -1185,7 +1194,7 @@ let currentRole = 'child'; // 'child' | 'parent' | 'admin'
 
 function selectRole(r) {
   selectedRole = r;
-  ['child','student','parent','teacher','admin'].forEach(x => {
+  ['child','student','parent','teacher','admin','data'].forEach(x => {
     const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
     if (btn) btn.classList.toggle('active', r === x);
     const form = document.getElementById(x + 'Form');
@@ -1323,6 +1332,20 @@ function doStudentLogin() {
   renderMyScores();
 }
 
+function doDataLogin() {
+  const pw = document.getElementById('dataPassIn').value;
+  if (pw !== getTrophyPass()) { alert('❌ Mật khẩu DATA sai! (mặc định: cup2026)'); return; }
+  isAdmin = false;
+  currentRole = 'data';
+  sessionStorage.setItem('hoccungbe_role', 'data');
+  sessionStorage.setItem('hoccungbe_trophy_unlocked', '1');
+  sessionStorage.removeItem('hoccungbe_admin');
+  hideLoginScreen();
+  updateUserBadge();
+  showView('trophy');
+  renderTrophy();
+}
+
 function doAdminLogin() {
   const pw = document.getElementById('adminPassIn').value;
   if (pw !== getAdminPass()) { alert('❌ Mật khẩu Admin sai! (mặc định: 868686)'); return; }
@@ -1415,6 +1438,9 @@ function updateUserBadge() {
     if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + ((currentUser && currentUser.name) || 'bé');
     html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
+  } else if (currentRole === 'data') {
+    html += '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #b45309;">🏆 DATA — Kho Chuyên đề</div>';
+    if (sub) sub.textContent = '🏆 Kho bài giảng chuyên đề đặc biệt';
   } else if (currentRole === 'teacher') {
     html += '<div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #7c3aed;">👩‍🏫 ' + escapeHtml((teacherInfo && teacherInfo.name) || 'Giáo viên') + '</div>';
     loadStudents();
@@ -1462,6 +1488,13 @@ function updateUserBadge() {
   if (dataBtn) dataBtn.style.display = hasDataAccess() ? 'inline-block' : 'none';
   const trBtn = document.getElementById('trophyBtn');
   if (trBtn) trBtn.style.display = 'inline-block'; // Ai cũng thấy nút Trophy, nội dung locked
+
+  // Role DATA: chỉ hiện Trophy, ẩn hết
+  if (currentRole === 'data') {
+    document.querySelectorAll('.nav-btn').forEach(b => { b.style.display = 'none'; });
+    if (trBtn) trBtn.style.display = 'inline-block';
+    // Cho phép ai đã login DATA cũng có thể thoát
+  }
   if (currentRole === 'student') {
     // Ẩn hết trừ myScores + vinschool (và data nếu có quyền)
     defaultBtns.forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
