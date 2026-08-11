@@ -212,6 +212,23 @@
   .subj-card.done { background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444; color: #991b1b; }
   .subj-card.done::before { content: '✓'; position: absolute; top: -6px; right: -4px; background: #ef4444; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
   .subj-card.done .subj-score { display: block; font-family: 'Baloo 2', cursive; font-size: 18px; color: #dc2626; margin-top: 2px; }
+  /* Learning path / Trophy sessions */
+  .path-container { display: grid; gap: 12px; }
+  .session-card { background: white; border-radius: 14px; border: 3px solid #e2e8f0; padding: 16px 18px; transition: all 0.2s; cursor: pointer; position: relative; }
+  .session-card:hover { border-color: #f59e0b; box-shadow: 0 4px 0 #fbbf24; transform: translateY(-2px); }
+  .session-card.completed { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-color: #10b981; box-shadow: 0 4px 0 #059669; }
+  .session-card.completed::after { content: '✓'; position: absolute; top: -8px; right: -8px; background: #10b981; color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+  .session-card .sess-num { display: inline-block; background: #f59e0b; color: white; padding: 4px 10px; border-radius: 8px; font-family: 'Baloo 2', cursive; font-size: 15px; font-weight: 800; margin-right: 8px; }
+  .session-card.completed .sess-num { background: #059669; }
+  .session-card .sess-title { font-family: 'Baloo 2', cursive; font-size: 17px; color: #b45309; margin-top: 4px; font-weight: 700; }
+  .session-card.completed .sess-title { color: #065f46; }
+  .session-card .sess-date { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 3px; }
+  .session-card .sess-files { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+  .session-detail { background: white; padding: 20px; border-radius: 14px; border: 3px solid #fbbf24; margin-top: 16px; }
+  .sess-file-item { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid #f59e0b; }
+  .sess-file-item.dapan { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-left-color: #2563eb; }
+  .sess-file-item.de-thi { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-left-color: #6366f1; }
+  .path-progress { background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 14px 18px; border-radius: 12px; border: 2px solid #86efac; margin-bottom: 14px; text-align: center; font-weight: 700; color: #065f46; }
   /* Answers library */
   .ans-subj-btn { padding: 12px 10px; text-align: center; cursor: pointer; border-radius: 12px; font-weight: 700; border: 2px solid #e9d5ff; background: white; transition: all 0.2s; font-size: 13px; }
   .ans-subj-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -308,7 +325,7 @@
       <div id="dataForm" style="display:none;">
         <label>🏆 Mật khẩu DATA (Chuyên đề đặc biệt):</label>
         <input type="password" id="dataPassIn" placeholder="Nhập mật khẩu chuyên đề..." onkeypress="if(event.key==='Enter')doDataLogin()">
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>cup2026</code> — Đăng nhập vào kho bài giảng nâng cao</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Đăng nhập vào kho bài giảng nâng cao</div>
         <button class="btn login-submit" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 0 #b45309;" onclick="doDataLogin()">🏆 Vào kho DATA</button>
       </div>
       <div id="adminForm" style="display:none;">
@@ -661,7 +678,7 @@
               <input type="text" id="trophyNewPass" placeholder="Mật khẩu mới" style="flex:1;padding:8px 12px;border:2px solid #fbbf24;border-radius:8px;font-family:Quicksand;font-weight:600;">
               <button class="btn" onclick="changeTrophyPass()" style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:8px 14px;">💾 Đổi</button>
             </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:6px;">Mặc định: <code>cup2026</code></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;">Đổi mật khẩu để bảo mật</div>
           </div>
           <h3 style="font-size:16px;margin-bottom:10px;color:#78350f;">➕ Thêm bài giảng chuyên đề</h3>
           <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;">
@@ -785,6 +802,7 @@
   </div>
 </div>
 <script src="review-bank.js"></script>
+<script src="trophy-presets.js"></script>
 <script src="questions-bank.js"></script>
 <script>
 const SUBJECT_NAMES = { ontap: '📝 Ôn tập nền tảng', toan: 'Toán', tiengviet: 'Tiếng Việt', tienganh: 'Tiếng Anh', ams: 'Luyện thi AMS', tonghop: 'Đề tổng hợp', archimedes: 'Archimedes', caugiay: 'THCS Cầu Giấy', ngoaingu: 'THCS Ngoại Ngữ', thanhxuan: 'THCS Thanh Xuân', nguyentatthanh: 'Nguyễn Tất Thành', namtuliem: 'THCS Nam Từ Liêm', ngoisao: 'Học bổng Ngôi Sao', ums: 'UMS' };
@@ -1334,7 +1352,7 @@ function doStudentLogin() {
 
 function doDataLogin() {
   const pw = document.getElementById('dataPassIn').value;
-  if (pw !== getTrophyPass()) { alert('❌ Mật khẩu DATA sai! (mặc định: cup2026)'); return; }
+  if (pw !== getTrophyPass()) { alert('❌ Mật khẩu DATA sai! '); return; }
   isAdmin = false;
   currentRole = 'data';
   sessionStorage.setItem('hoccungbe_role', 'data');
@@ -2038,15 +2056,24 @@ function renderMyScores() {
 }
 
 // ========== 🏆 CHUYÊN ĐỀ (LOCKED) ==========
-const TROPHY_PASS_DEFAULT = 'cup2026';
+const TROPHY_PASS_DEFAULT = 'trung86';
 let trophyMaterials = [];
 
 function loadTrophy() {
   const s = localStorage.getItem('hoccungbe_trophy');
-  trophyMaterials = s ? JSON.parse(s) : [];
+  const userAdded = s ? JSON.parse(s) : [];
+  // Merge với preset materials (đã đóng gói sẵn)
+  const presets = (typeof TROPHY_PRESETS !== 'undefined' && Array.isArray(TROPHY_PRESETS)) ? TROPHY_PRESETS : [];
+  const existingIds = new Set(userAdded.map(m => m.id));
+  const combined = [...userAdded];
+  presets.forEach(p => { if (!existingIds.has(p.id)) combined.push(p); });
+  trophyMaterials = combined;
 }
 function saveTrophy() {
-  localStorage.setItem('hoccungbe_trophy', JSON.stringify(trophyMaterials));
+  // Chỉ lưu các material không phải preset
+  const presetIds = (typeof TROPHY_PRESETS !== 'undefined') ? new Set(TROPHY_PRESETS.map(p => p.id)) : new Set();
+  const userOnly = trophyMaterials.filter(m => !presetIds.has(m.id));
+  localStorage.setItem('hoccungbe_trophy', JSON.stringify(userOnly));
 }
 function getTrophyPass() {
   return localStorage.getItem('hoccungbe_trophy_pass') || TROPHY_PASS_DEFAULT;
@@ -2069,6 +2096,29 @@ function lockTrophy() {
   renderTrophy();
 }
 
+let trophyProgress = {};
+function loadTrophyProgress() {
+  const s = localStorage.getItem('hoccungbe_trophy_progress');
+  trophyProgress = s ? JSON.parse(s) : {};
+}
+function saveTrophyProgress() {
+  localStorage.setItem('hoccungbe_trophy_progress', JSON.stringify(trophyProgress));
+}
+function toggleSessionComplete(sessNum) {
+  loadTrophyProgress();
+  const key = (currentUser && currentUser.name ? currentUser.name : 'guest') + '|' + sessNum;
+  trophyProgress[key] = !trophyProgress[key];
+  saveTrophyProgress();
+  renderTrophy();
+}
+function isSessionCompleted(sessNum) {
+  loadTrophyProgress();
+  const key = (currentUser && currentUser.name ? currentUser.name : 'guest') + '|' + sessNum;
+  return !!trophyProgress[key];
+}
+
+let expandedSession = null;
+
 function renderTrophy() {
   loadTrophy();
   const lockEl = document.getElementById('trophyLockScreen');
@@ -2080,48 +2130,114 @@ function renderTrophy() {
   }
   lockEl.style.display = 'none';
   contentEl.style.display = 'block';
-
-  // Admin panel visible?
   document.getElementById('trophyAdmin').style.display = (currentRole === 'admin') ? 'block' : 'none';
 
   const body = document.getElementById('trophyBody');
-  if (trophyMaterials.length === 0) {
-    body.innerHTML = '<div class="empty-state" style="padding:30px 20px;">🏆<br><br>Chưa có bài giảng chuyên đề nào.<br>' + (currentRole === 'admin' ? 'Dùng form phía dưới để thêm.' : 'Chờ Admin đăng bài.') + '</div>';
+  const sessions = (typeof TROPHY_SESSIONS !== 'undefined') ? TROPHY_SESSIONS : [];
+  if (sessions.length === 0) {
+    body.innerHTML = '<div class="empty-state" style="padding:30px 20px;">🏆<br><br>Chưa có bài giảng nào.</div>';
     return;
   }
-  // Group by chuyên đề
-  const byTopic = {};
+
+  // Group materials by session
+  const bySession = {};
   trophyMaterials.forEach(m => {
-    if (!byTopic[m.subject]) byTopic[m.subject] = [];
-    byTopic[m.subject].push(m);
+    const s = m.session || 'khac';
+    if (!bySession[s]) bySession[s] = [];
+    bySession[s].push(m);
   });
+
+  // Progress bar
+  const completedCount = sessions.filter(s => isSessionCompleted(s.num)).length;
+  const pct = Math.round(completedCount / sessions.length * 100);
+
   let html = '<div style="background:#fef3c7;padding:10px 14px;border-radius:10px;margin-bottom:14px;text-align:center;font-weight:600;color:#78350f;font-size:13px;">🔓 Đã mở khoá — <a href="javascript:void(0)" onclick="lockTrophy()" style="color:#b45309;text-decoration:underline;">Khoá lại</a></div>';
-  Object.entries(byTopic).forEach(([subj, mats]) => {
-    html += '<h3 style="font-family:Baloo 2;font-size:20px;color:#92400e;margin:16px 0 10px;padding:10px 14px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:10px;border-left:6px solid #f59e0b;">🏆 ' + escapeHtml(subj) + ' (' + mats.length + ' bài giảng)</h3>';
-    mats.forEach(m => {
-      html += '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #fde68a;margin-bottom:10px;">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">';
-      html += '<div style="flex:1;"><strong style="color:#b45309;font-size:15px;">🏆 ' + escapeHtml(m.title) + '</strong>';
-      if (m.desc) html += '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + escapeHtml(m.desc) + '</div>';
-      let btnHtml = '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">';
-      if (m.file && m.file.data) {
-        const fileSize = m.file.size ? (m.file.size / 1024).toFixed(0) + ' KB' : '';
-        btnHtml += '<button onclick="viewTrophyFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">👁️ Xem trực tiếp</button>';
-        btnHtml += '<button onclick="downloadTrophyFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">💾 Tải về</button>';
-        btnHtml += '<span style="align-self:center;font-size:12px;color:var(--muted);font-weight:600;">📎 ' + escapeHtml(m.file.name) + ' (' + fileSize + ')</span>';
+  html += '<div class="path-progress">🎯 Tiến độ: <strong>' + completedCount + '/' + sessions.length + ' buổi</strong> đã hoàn thành — ' + pct + '%<div class="progress-bar" style="margin-top:8px;background:white;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+
+  html += '<h3 style="font-family:Baloo 2;font-size:22px;color:#92400e;margin:12px 0;">🗺️ LỘ TRÌNH HỌC ' + sessions.length + ' BUỔI</h3>';
+  html += '<div class="path-container">';
+  sessions.forEach(s => {
+    const files = bySession[s.num] || [];
+    const isComp = isSessionCompleted(s.num);
+    const isExpanded = expandedSession === s.num;
+    const dateStr = new Date(s.date).toLocaleDateString('vi-VN');
+    html += '<div class="session-card ' + (isComp?'completed':'') + '" onclick="toggleExpandSession(\'' + s.num + '\',event)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:start;">';
+    html += '<div style="flex:1;"><span class="sess-num">Buổi ' + escapeHtml(s.num) + '</span><span style="color:var(--muted);font-size:13px;font-weight:600;">' + escapeHtml(s.topic) + '</span>';
+    html += '<div class="sess-title">' + escapeHtml(s.title) + '</div>';
+    html += '<div class="sess-date">📅 ' + dateStr + '</div>';
+    html += '<div class="sess-files">📎 ' + files.length + ' tài liệu (bài giảng + đáp án)</div>';
+    html += '</div>';
+    html += '<button onclick="event.stopPropagation();toggleSessionComplete(\'' + s.num + '\')" style="background:' + (isComp?'#10b981':'#e2e8f0') + ';color:' + (isComp?'white':'#374151') + ';border:none;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;">' + (isComp?'✓ Đã học':'○ Chưa học') + '</button>';
+    html += '</div>';
+    if (isExpanded) {
+      html += '<div class="session-detail" onclick="event.stopPropagation()">';
+      if (files.length === 0) {
+        html += '<div style="color:var(--muted);font-weight:600;">Không có tài liệu cho buổi này.</div>';
+      } else {
+        // Split by ftype
+        const baigiang = files.filter(f => f.ftype === 'baigiang' || !f.ftype);
+        const dapan = files.filter(f => f.ftype === 'dapan');
+        const dethi = files.filter(f => f.ftype === 'de-thi');
+        if (baigiang.length) {
+          html += '<h4 style="color:#b45309;font-family:Baloo 2;font-size:16px;margin-bottom:8px;">📚 Bài giảng</h4>';
+          baigiang.forEach(m => { html += renderFileItem(m); });
+        }
+        if (dethi.length) {
+          html += '<h4 style="color:#4338ca;font-family:Baloo 2;font-size:16px;margin:12px 0 8px;">📝 Đề thi</h4>';
+          dethi.forEach(m => { html += renderFileItem(m); });
+        }
+        if (dapan.length) {
+          html += '<h4 style="color:#1e40af;font-family:Baloo 2;font-size:16px;margin:12px 0 8px;">✅ Đáp án chi tiết</h4>';
+          dapan.forEach(m => { html += renderFileItem(m); });
+        }
       }
-      if (m.link) {
-        if (m.link.startsWith('http')) btnHtml += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;background:#8b5cf6;color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">🔗 Mở link</a>';
-      }
-      btnHtml += '</div>';
-      html += btnHtml + '</div>';
-      if (currentRole === 'admin') {
-        html += '<button onclick="deleteTrophyMaterial(\'' + m.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">🗑️</button>';
-      }
-      html += '</div></div>';
-    });
+      html += '</div>';
+    }
+    html += '</div>';
   });
+  html += '</div>';
+
+  // User-added materials (không thuộc lộ trình)
+  const userAdded = trophyMaterials.filter(m => !m.session);
+  if (userAdded.length > 0) {
+    html += '<h3 style="font-family:Baloo 2;font-size:20px;color:#92400e;margin:20px 0 10px;">📎 Tài liệu bổ sung</h3>';
+    userAdded.forEach(m => { html += renderFileItem(m); });
+  }
+
   body.innerHTML = html;
+}
+
+function renderFileItem(m) {
+  let cls = 'sess-file-item';
+  if (m.ftype === 'dapan') cls += ' dapan';
+  else if (m.ftype === 'de-thi') cls += ' de-thi';
+  let h = '<div class="' + cls + '">';
+  h += '<div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:4px;">' + escapeHtml(m.title) + '</div>';
+  if (m.desc) h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(m.desc) + '</div>';
+  if (m.file) {
+    const src = m.file.data || m.file.url;
+    const fsize = m.file.size ? (m.file.size/1024/1024).toFixed(1) + ' MB' : '';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+    h += '<button onclick="viewTrophyFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">👁️ Xem</button>';
+    h += '<button onclick="downloadTrophyFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">💾 Tải về</button>';
+    h += '<span style="align-self:center;font-size:11px;color:var(--muted);font-weight:600;">' + escapeHtml(m.file.name || '') + (fsize ? ' • ' + fsize : '') + '</span>';
+    h += '</div>';
+  }
+  if (m.link && m.link.startsWith('http')) {
+    h += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;margin-top:6px;background:#8b5cf6;color:white;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;">🔗 Mở link</a>';
+  }
+  if (currentRole === 'admin' && !m.id.startsWith('tp_preset_')) {
+    h += '<button onclick="deleteTrophyMaterial(\'' + m.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px;margin-left:6px;">🗑️</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function toggleExpandSession(sess, evt) {
+  if (evt) evt.stopPropagation();
+  expandedSession = (expandedSession === sess) ? null : sess;
+  renderTrophy();
 }
 
 function addTrophyMaterial() {
@@ -2157,6 +2273,8 @@ function addTrophyMaterial() {
 }
 
 function deleteTrophyMaterial(id) {
+  const presetIds = (typeof TROPHY_PRESETS !== 'undefined') ? new Set(TROPHY_PRESETS.map(p => p.id)) : new Set();
+  if (presetIds.has(id)) { alert('Không thể xóa bài giảng preset (được đóng gói sẵn với app).'); return; }
   if (!confirm('Xoá bài giảng này?')) return;
   loadTrophy();
   trophyMaterials = trophyMaterials.filter(m => m.id !== id);
@@ -2167,19 +2285,29 @@ function deleteTrophyMaterial(id) {
 function viewTrophyFile(id) {
   loadTrophy();
   const m = trophyMaterials.find(x => x.id === id);
-  if (!m || !m.file || !m.file.data) { alert('Không có file!'); return; }
+  if (!m || !m.file) { alert('Không có file!'); return; }
+  const src = m.file.data || m.file.url; // ưu tiên base64, fallback URL
+  if (!src) { alert('Không có source!'); return; }
+  if (m.file.url && !m.file.data) {
+    // File URL: mở trong tab mới thẳng
+    window.open(src, '_blank');
+    return;
+  }
   const w = window.open('', '_blank');
-  if (m.file.type.startsWith('image/')) w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="' + m.file.data + '" style="max-width:100%;max-height:100vh;"></body></html>');
-  else if (m.file.type === 'application/pdf') w.document.write('<html><body style="margin:0;"><embed src="' + m.file.data + '" type="application/pdf" style="width:100%;height:100vh;"></body></html>');
+  if (m.file.type.startsWith('image/')) w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="' + src + '" style="max-width:100%;max-height:100vh;"></body></html>');
+  else if (m.file.type === 'application/pdf') w.document.write('<html><body style="margin:0;"><embed src="' + src + '" type="application/pdf" style="width:100%;height:100vh;"></body></html>');
   else { downloadTrophyFile(id); w.close(); }
 }
 
 function downloadTrophyFile(id) {
   loadTrophy();
   const m = trophyMaterials.find(x => x.id === id);
-  if (!m || !m.file || !m.file.data) return;
+  if (!m || !m.file) return;
+  const src = m.file.data || m.file.url;
+  if (!src) return;
   const a = document.createElement('a');
-  a.href = m.file.data; a.download = m.file.name || (m.title + '.dat');
+  a.href = src; a.download = m.file.name || (m.title + '.dat');
+  if (m.file.url) a.target = '_blank';
   document.body.appendChild(a); a.click(); a.remove();
 }
 
