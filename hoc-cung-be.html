@@ -2209,6 +2209,10 @@ function renderTrophy() {
   body.innerHTML = html;
 }
 
+function hasLessonForSession(sessNum) {
+  return typeof TROPHY_LESSONS !== 'undefined' && TROPHY_LESSONS[sessNum];
+}
+
 function renderFileItem(m) {
   let cls = 'sess-file-item';
   if (m.ftype === 'dapan') cls += ' dapan';
@@ -2216,12 +2220,23 @@ function renderFileItem(m) {
   let h = '<div class="' + cls + '">';
   h += '<div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:4px;">' + escapeHtml(m.title) + '</div>';
   if (m.desc) h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">' + escapeHtml(m.desc) + '</div>';
+  const hasLesson = hasLessonForSession(m.session);
   if (m.file) {
     const src = m.file.data || m.file.url;
     const fsize = m.file.size ? (m.file.size/1024/1024).toFixed(1) + ' MB' : '';
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
-    h += '<button onclick="viewTrophyFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">👁️ Xem</button>';
-    h += '<button onclick="downloadTrophyFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">💾 Tải về</button>';
+    // Chỉ hiện nút Xem/Tải nếu có data (base64) hoặc chưa có lesson nhúng
+    if (m.file.data) {
+      h += '<button onclick="viewTrophyFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">👁️ Xem</button>';
+      h += '<button onclick="downloadTrophyFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">💾 Tải về</button>';
+    } else if (m.file.url && !hasLesson) {
+      // File URL, không có lesson nhúng → hiện nút (có thể 404)
+      h += '<button onclick="viewTrophyFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">👁️ Xem PDF</button>';
+      h += '<button onclick="downloadTrophyFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">💾 Tải PDF</button>';
+    } else if (hasLesson) {
+      // Có lesson nhúng → hiện gợi ý dùng nút xanh
+      h += '<span style="color:#059669;font-weight:700;font-size:12px;background:#d1fae5;padding:6px 10px;border-radius:8px;">✅ Đã có trong "📖 Đọc bài học"</span>';
+    }
     h += '<span style="align-self:center;font-size:11px;color:var(--muted);font-weight:600;">' + escapeHtml(m.file.name || '') + (fsize ? ' • ' + fsize : '') + '</span>';
     h += '</div>';
   }
