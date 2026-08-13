@@ -804,6 +804,7 @@
 <script src="review-bank.js"></script>
 <script src="trophy-presets.js"></script>
 <script src="trophy-lessons.js"></script>
+<script src="trophy-quiz.js"></script>
 <script src="questions-bank.js"></script>
 <script>
 const SUBJECT_NAMES = { ontap: '📝 Ôn tập nền tảng', toan: 'Toán', tiengviet: 'Tiếng Việt', tienganh: 'Tiếng Anh', ams: 'Luyện thi AMS', tonghop: 'Đề tổng hợp', archimedes: 'Archimedes', caugiay: 'THCS Cầu Giấy', ngoaingu: 'THCS Ngoại Ngữ', thanhxuan: 'THCS Thanh Xuân', nguyentatthanh: 'Nguyễn Tất Thành', namtuliem: 'THCS Nam Từ Liêm', ngoisao: 'Học bổng Ngôi Sao', ums: 'UMS' };
@@ -2277,12 +2278,97 @@ function showLessonContent(sessNum) {
     html += '<p style="color:#78350f;font-weight:600;margin-bottom:14px;">Bài giảng gốc dạng PDF ảnh (không trích được text tự động).<br>Bạn có thể tải file PDF gốc bên dưới để xem.</p>';
     html += '</div>';
   }
-  html += '<div style="margin-top:20px;padding-top:14px;border-top:2px dashed #e5e7eb;text-align:center;">';
-  html += '<button onclick="document.getElementById(\'lessonModal\').remove()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:12px 24px;border-radius:12px;cursor:pointer;font-weight:800;font-size:15px;">✓ Đã đọc xong - Đóng</button>';
+  html += '<div style="margin-top:20px;padding-top:14px;border-top:2px dashed #e5e7eb;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">';
+  // Nút Làm bài kiểm tra nếu có quiz cho buổi này
+  if (typeof TROPHY_QUIZ !== 'undefined' && TROPHY_QUIZ[sessNum] && TROPHY_QUIZ[sessNum].length > 0) {
+    html += '<button onclick="startTrophyQuiz(\'' + sessNum + '\')" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;padding:14px 24px;border-radius:12px;cursor:pointer;font-weight:800;font-size:16px;box-shadow:0 4px 0 #b45309;">🎯 Làm bài kiểm tra (' + TROPHY_QUIZ[sessNum].length + ' câu)</button>';
+  }
+  html += '<button onclick="document.getElementById(\'lessonModal\').remove()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:14px 24px;border-radius:12px;cursor:pointer;font-weight:800;font-size:16px;">✓ Đã đọc xong - Đóng</button>';
   html += '</div>';
   html += '</div>';
   overlay.innerHTML = html;
   document.body.appendChild(overlay);
+}
+
+function startTrophyQuiz(sessNum) {
+  const quiz = (typeof TROPHY_QUIZ !== 'undefined') ? TROPHY_QUIZ[sessNum] : null;
+  if (!quiz || quiz.length === 0) { alert('Chưa có quiz cho buổi này.'); return; }
+  const sess = (typeof TROPHY_SESSIONS !== 'undefined') ? TROPHY_SESSIONS.find(s => s.num === sessNum) : null;
+  // Đóng modal lesson nếu đang mở
+  const m = document.getElementById('lessonModal');
+  if (m) m.remove();
+  // Tạo quiz modal
+  const overlay = document.createElement('div');
+  overlay.id = 'quizModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;';
+  let html = '<div style="background:white;max-width:800px;width:100%;padding:24px 28px;border-radius:16px;max-height:90vh;overflow-y:auto;margin:20px 0;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;border-bottom:3px solid #f59e0b;padding-bottom:12px;margin-bottom:16px;">';
+  html += '<div><h2 style="font-family:Baloo 2;color:#d97706;font-size:24px;margin-bottom:4px;">🎯 Bài kiểm tra ' + (sess ? sess.num + ' - ' + sess.title : sessNum) + '</h2>';
+  html += '<div style="color:var(--muted);font-weight:600;font-size:13px;">' + quiz.length + ' câu • Điền đáp án và bấm Nộp bài để chấm điểm</div></div>';
+  html += '<button onclick="if(confirm(\'Thoát? Bài làm sẽ mất!\')){document.getElementById(\'quizModal\').remove()}" style="background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;">✖ Thoát</button>';
+  html += '</div>';
+  // List questions
+  quiz.forEach((q, i) => {
+    html += '<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:16px 18px;border-radius:12px;margin-bottom:12px;border-left:4px solid #f59e0b;">';
+    html += '<div style="font-weight:800;color:#92400e;margin-bottom:6px;font-family:Baloo 2;font-size:16px;">Câu ' + q.num + ':</div>';
+    html += '<div style="font-size:14px;color:#1f2937;line-height:1.6;margin-bottom:10px;">' + escapeHtml(q.text) + '</div>';
+    html += '<input type="text" id="tq_ans_' + i + '" placeholder="✏️ Nhập đáp án của con..." style="width:100%;padding:12px;border:3px solid #fbbf24;border-radius:10px;font-family:Quicksand;font-weight:600;font-size:15px;">';
+    html += '</div>';
+  });
+  html += '<div style="text-align:center;margin-top:20px;">';
+  html += '<button onclick="submitTrophyQuiz(\'' + sessNum + '\')" style="background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:16px 32px;border-radius:14px;cursor:pointer;font-weight:800;font-size:18px;box-shadow:0 5px 0 #047857;font-family:Baloo 2;">🎉 NỘP BÀI</button>';
+  html += '</div>';
+  html += '</div>';
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+}
+
+function submitTrophyQuiz(sessNum) {
+  const quiz = TROPHY_QUIZ[sessNum] || [];
+  let correct = 0;
+  const results = [];
+  quiz.forEach((q, i) => {
+    const inp = document.getElementById('tq_ans_' + i);
+    const userAns = (inp ? inp.value : '').trim();
+    // Chấm: normalize + match số
+    const isCorrect = checkQuizAnswer(userAns, q.answer);
+    if (isCorrect) correct++;
+    results.push({q, userAns, isCorrect});
+  });
+  const pct = quiz.length ? Math.round(correct/quiz.length*100) : 0;
+  // Render results
+  let html = '<div style="background:white;max-width:800px;width:100%;padding:24px 28px;border-radius:16px;max-height:90vh;overflow-y:auto;margin:20px 0;">';
+  html += '<div style="text-align:center;padding:20px;background:linear-gradient(135deg,' + (pct>=70?'#d1fae5':pct>=50?'#fef3c7':'#fee2e2') + ',white);border-radius:14px;margin-bottom:16px;">';
+  html += '<h2 style="font-family:Baloo 2;font-size:32px;color:' + (pct>=70?'#059669':pct>=50?'#d97706':'#dc2626') + ';">' + (pct>=70?'🎉 Tuyệt vời!':pct>=50?'👍 Khá!':'💪 Cố lên!') + '</h2>';
+  html += '<div style="font-family:Baloo 2;font-size:40px;color:' + (pct>=70?'#059669':pct>=50?'#d97706':'#dc2626') + ';font-weight:800;">' + correct + '/' + quiz.length + '</div>';
+  html += '<div style="font-size:20px;color:' + (pct>=70?'#059669':pct>=50?'#d97706':'#dc2626') + ';font-weight:800;">' + pct + '%</div></div>';
+  html += '<h3 style="font-family:Baloo 2;margin-bottom:10px;">📋 Chi tiết:</h3>';
+  results.forEach(r => {
+    const bg = r.isCorrect ? '#d1fae5' : '#fee2e2';
+    const icon = r.isCorrect ? '✅' : '❌';
+    html += '<div style="background:' + bg + ';padding:12px 16px;border-radius:10px;margin-bottom:8px;border-left:4px solid ' + (r.isCorrect?'#10b981':'#ef4444') + ';">';
+    html += '<div style="font-weight:800;margin-bottom:4px;">' + icon + ' Câu ' + r.q.num + '</div>';
+    html += '<div style="font-size:13px;margin-bottom:4px;color:#374151;">' + escapeHtml(r.q.text.slice(0,150)) + (r.q.text.length>150?'...':'') + '</div>';
+    html += '<div style="font-size:13px;"><strong>Con trả lời:</strong> ' + escapeHtml(r.userAns || '(bỏ trống)') + '</div>';
+    html += '<div style="font-size:13px;"><strong>Đáp án đúng:</strong> <span style="color:#059669;font-weight:700;">' + escapeHtml(r.q.answer) + '</span></div>';
+    html += '</div>';
+  });
+  html += '<div style="text-align:center;margin-top:16px;"><button onclick="document.getElementById(\'quizModal\').remove()" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:14px 28px;border-radius:12px;cursor:pointer;font-weight:800;font-size:16px;">✓ Đóng</button></div>';
+  html += '</div>';
+  document.getElementById('quizModal').innerHTML = html;
+  if (pct >= 70 && typeof showConfetti === 'function') showConfetti();
+}
+
+function checkQuizAnswer(user, correct) {
+  if (!user || !correct) return false;
+  const clean = s => String(s).toLowerCase().trim().replace(/\s+/g,' ').replace(/[.,]/g,'');
+  const u = clean(user), c = clean(correct);
+  if (u === c) return true;
+  // So sánh chỉ số (loại đơn vị)
+  const numU = u.match(/[\d]+([.,][\d]+)?/g);
+  const numC = c.match(/[\d]+([.,][\d]+)?/g);
+  if (numU && numC && numU[0] === numC[0]) return true;
+  return false;
 }
 
 function toggleExpandSession(sess, evt) {
