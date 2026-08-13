@@ -1571,21 +1571,53 @@ function updateUserBadge() {
   const dataBtn = document.getElementById('dataBtn');
   if (dataBtn) dataBtn.style.display = hasDataAccess() ? 'inline-block' : 'none';
   const trBtn = document.getElementById('trophyBtn');
-  if (trBtn) trBtn.style.display = 'inline-block'; // Ai cũng thấy nút Trophy, nội dung locked
+  // Chuyên đề: CHỈ admin/teacher hoặc account được cấp quyền (trophy whitelist)
+  if (trBtn) trBtn.style.display = hasTrophyAccess() ? 'inline-block' : 'none';
 
+  // ==== ẨN TAB THEO ROLE ====
+  // Phụ huynh CHỈ thấy: Tài liệu Vinschool, Báo cáo con, Báo cáo ngày, Tiến độ
+  if (currentRole === 'parent') {
+    ['home','subjects','mocktest','manage','answers','adminDash','teacher','students','myScores'].forEach(v => {
+      const b = document.querySelector('[data-view="' + v + '"]');
+      if (b) b.style.display = 'none';
+    });
+  }
+  // Học sinh xem điểm CHỈ thấy: Tài liệu Vinschool, Xem điểm, Tiến độ
+  if (currentRole === 'student') {
+    defaultBtns.forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
+    ['manage','parent','adminDash','answers','teacher','daily','students'].forEach(v => {
+      const b = document.querySelector('[data-view="' + v + '"]');
+      if (b) b.style.display = 'none';
+    });
+  }
   // Role DATA: chỉ hiện Trophy, ẩn hết
   if (currentRole === 'data') {
     document.querySelectorAll('.nav-btn').forEach(b => { b.style.display = 'none'; });
     if (trBtn) trBtn.style.display = 'inline-block';
-    // Cho phép ai đã login DATA cũng có thể thoát
   }
-  if (currentRole === 'student') {
-    // Ẩn hết trừ myScores + vinschool (và data nếu có quyền)
-    defaultBtns.forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
-    ['manage','parent','adminDash','answers','teacher','daily','students'].forEach(v => { const b = document.querySelector('[data-view="' + v + '"]'); if (b) b.style.display = 'none'; });
-    // DATA button vẫn hiện nếu student có quyền
-    // Trophy button hiện cho student (nội dung locked)
-  }
+}
+
+// ==== TROPHY ACCESS CONTROL ====
+function hasTrophyAccess() {
+  if (currentRole === 'admin' || currentRole === 'teacher' || currentRole === 'data') return true;
+  const wl = JSON.parse(localStorage.getItem('hoccungbe_trophy_wl') || '[]');
+  const name = (typeof getCurrentIdentityName === 'function') ? getCurrentIdentityName() : null;
+  if (!name) return false;
+  return wl.some(w => (w.role === currentRole || w.role === 'any') && w.name.toLowerCase() === name.toLowerCase());
+}
+function loadTrophyWhitelist() { return JSON.parse(localStorage.getItem('hoccungbe_trophy_wl') || '[]'); }
+function saveTrophyWhitelist(list) { localStorage.setItem('hoccungbe_trophy_wl', JSON.stringify(list)); }
+function addTrophyAccess(role, name) {
+  const wl = loadTrophyWhitelist();
+  if (wl.some(w => w.role === role && w.name.toLowerCase() === name.toLowerCase())) return false;
+  wl.push({role, name, addedAt: new Date().toISOString()});
+  saveTrophyWhitelist(wl);
+  return true;
+}
+function removeTrophyAccess(idx) {
+  const wl = loadTrophyWhitelist();
+  wl.splice(idx, 1);
+  saveTrophyWhitelist(wl);
 }
 
 function checkAdmin() {
@@ -1990,6 +2022,27 @@ function renderData() {
   html += '<pre style="background:#0f172a;color:#94a3b8;padding:14px;border-radius:10px;font-size:11px;overflow:auto;max-height:400px;font-family:monospace;">' + escapeHtml(JSON.stringify(preview, null, 2)) + '</pre>';
 
   body.innerHTML = html;
+}
+
+function addTrophyAccessUI() {
+  const role = document.getElementById('twlRole').value;
+  const name = document.getElementById('twlName').value.trim();
+  if (!name) { alert('Nhập tên!'); return; }
+  if (addTrophyAccess(role, name)) {
+    document.getElementById('twlName').value = '';
+    alert('✅ Đã cấp quyền Chuyên đề cho: ' + name);
+    renderData();
+    updateUserBadge();
+  } else {
+    alert('Người này đã có quyền rồi!');
+  }
+}
+
+function removeTrophyAccessUI(i) {
+  if (!confirm('Thu hồi quyền Chuyên đề?')) return;
+  removeTrophyAccess(i);
+  renderData();
+  updateUserBadge();
 }
 
 function addWhitelist() {
