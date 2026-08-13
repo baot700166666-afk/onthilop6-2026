@@ -2173,25 +2173,13 @@ function renderTrophy() {
     html += '</div>';
     if (isExpanded) {
       html += '<div class="session-detail" onclick="event.stopPropagation()">';
-      if (files.length === 0) {
-        html += '<div style="color:var(--muted);font-weight:600;">Không có tài liệu cho buổi này.</div>';
-      } else {
-        // Split by ftype
-        const baigiang = files.filter(f => f.ftype === 'baigiang' || !f.ftype);
-        const dapan = files.filter(f => f.ftype === 'dapan');
-        const dethi = files.filter(f => f.ftype === 'de-thi');
-        if (baigiang.length) {
-          html += '<h4 style="color:#b45309;font-family:Baloo 2;font-size:16px;margin-bottom:8px;">📚 Bài giảng</h4>';
-          baigiang.forEach(m => { html += renderFileItem(m); });
-        }
-        if (dethi.length) {
-          html += '<h4 style="color:#4338ca;font-family:Baloo 2;font-size:16px;margin:12px 0 8px;">📝 Đề thi</h4>';
-          dethi.forEach(m => { html += renderFileItem(m); });
-        }
-        if (dapan.length) {
-          html += '<h4 style="color:#1e40af;font-family:Baloo 2;font-size:16px;margin:12px 0 8px;">✅ Đáp án chi tiết</h4>';
-          dapan.forEach(m => { html += renderFileItem(m); });
-        }
+      // NÚT TO XANH LÁ - LUÔN HIỆN, cho tất cả buổi
+      html += '<button onclick="showLessonContent(\'' + s.num + '\')" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:20px 24px;border-radius:16px;cursor:pointer;font-weight:800;font-size:20px;box-shadow:0 6px 0 #047857;margin-bottom:16px;font-family:\'Baloo 2\',cursive;display:flex;align-items:center;justify-content:center;gap:12px;">📖 ĐỌC BÀI HỌC TRỰC TIẾP — Bấm vào đây!</button>';
+      // Chỉ hiện file list nếu KHÔNG có content nhúng - để bé biết còn PDF gốc
+      const hasEmbedded = (typeof TROPHY_LESSONS !== 'undefined') && TROPHY_LESSONS[s.num];
+      if (!hasEmbedded && files.length > 0) {
+        html += '<div style="background:#fef3c7;padding:10px 14px;border-radius:10px;font-size:13px;color:#78350f;font-weight:600;margin-bottom:10px;">📌 Buổi này chưa có nội dung nhúng, chỉ có file PDF gốc:</div>';
+        files.forEach(m => { html += renderFileItem(m); });
       }
       html += '</div>';
     }
