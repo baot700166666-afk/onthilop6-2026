@@ -1406,21 +1406,81 @@ function getTeacherPass() { return localStorage.getItem('hoccungbe_pass_teacher'
 function getAdminPass() { return localStorage.getItem('hoccungbe_pass_admin') || ADMIN_PASS; }
 
 function changeMyPassword() {
-  let role, currentPass, setter;
-  if (currentRole === 'parent') { role = 'phụ huynh'; currentPass = getParentPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_parent', p); }
-  else if (currentRole === 'teacher') { role = 'giáo viên'; currentPass = getTeacherPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_teacher', p); }
-  else if (currentRole === 'admin') { role = 'admin'; currentPass = getAdminPass(); setter = (p) => localStorage.setItem('hoccungbe_pass_admin', p); }
+  let roleLabel, getCurrent, setter;
+  if (currentRole === 'parent') { roleLabel = '👨‍👩‍👧 Phụ huynh'; getCurrent = getParentPass; setter = (p) => localStorage.setItem('hoccungbe_pass_parent', p); }
+  else if (currentRole === 'teacher') { roleLabel = '👩‍🏫 Giáo viên'; getCurrent = getTeacherPass; setter = (p) => localStorage.setItem('hoccungbe_pass_teacher', p); }
+  else if (currentRole === 'admin') { roleLabel = '🔐 Admin'; getCurrent = getAdminPass; setter = (p) => localStorage.setItem('hoccungbe_pass_admin', p); }
+  else if (currentRole === 'child' && currentUser) {
+    roleLabel = '👦 Học sinh (Con): ' + currentUser.name;
+    getCurrent = () => {
+      const accs = loadChildAccounts();
+      const acc = accs[currentUser.name.toLowerCase()];
+      return acc ? acc.pass : null;
+    };
+    setter = (p) => {
+      const accs = loadChildAccounts();
+      const key = currentUser.name.toLowerCase();
+      if (accs[key]) { accs[key].pass = p; saveChildAccounts(accs); }
+    };
+  }
+  else if (currentRole === 'student' && currentUser) {
+    // Học sinh xem điểm: đổi pass = đổi pass phụ huynh gắn với bé
+    loadStudents();
+    const stu = students.find(s => s.name.toLowerCase() === currentUser.name.toLowerCase());
+    if (!stu) { alert('Không tìm thấy tài khoản.'); return; }
+    roleLabel = '🧑‍🎓 Học sinh: ' + currentUser.name;
+    getCurrent = () => stu.parentPass || getParentPass();
+    setter = (p) => { stu.parentPass = p; saveStudents(); };
+  }
   else return;
-  const old = prompt('🔑 Nhập mật khẩu ' + role + ' hiện tại:');
-  if (old === null) return;
-  if (old !== currentPass) { alert('❌ Mật khẩu hiện tại sai!'); return; }
-  const newPass = prompt('🆕 Nhập mật khẩu MỚI (tối thiểu 4 ký tự):');
-  if (newPass === null) return;
-  if (newPass.length < 4) { alert('❌ Mật khẩu quá ngắn!'); return; }
-  const confirm2 = prompt('🔁 Nhập lại mật khẩu MỚI:');
-  if (confirm2 !== newPass) { alert('❌ Xác nhận không khớp!'); return; }
-  setter(newPass);
-  alert('✅ Đã đổi mật khẩu ' + role + ' thành công!');
+
+  // Tạo modal HTML
+  const overlay = document.createElement('div');
+  overlay.id = 'pwdChangeModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:white;padding:28px 32px;border-radius:20px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:50px;margin-bottom:8px;">🔑</div>
+        <h2 style="font-family:Baloo 2;color:var(--primary);font-size:22px;">Đổi mật khẩu</h2>
+        <div style="color:var(--muted);font-weight:600;font-size:13px;margin-top:4px;">Tài khoản: ${roleLabel}</div>
+      </div>
+      <label style="font-weight:700;font-size:13px;color:var(--muted);">🔑 Mật khẩu hiện tại:</label>
+      <input type="password" id="pwdOld" placeholder="Nhập mật khẩu hiện tại" style="width:100%;padding:12px 14px;border:3px solid #e9d5ff;border-radius:12px;font-family:Quicksand;font-weight:600;font-size:15px;margin-top:6px;margin-bottom:14px;" autofocus>
+      <label style="font-weight:700;font-size:13px;color:var(--muted);">🆕 Mật khẩu mới (≥ 4 ký tự):</label>
+      <input type="password" id="pwdNew1" placeholder="Nhập mật khẩu mới" style="width:100%;padding:12px 14px;border:3px solid #e9d5ff;border-radius:12px;font-family:Quicksand;font-weight:600;font-size:15px;margin-top:6px;margin-bottom:14px;">
+      <label style="font-weight:700;font-size:13px;color:var(--muted);">🔁 Nhập lại mật khẩu mới:</label>
+      <input type="password" id="pwdNew2" placeholder="Xác nhận mật khẩu mới" style="width:100%;padding:12px 14px;border:3px solid #e9d5ff;border-radius:12px;font-family:Quicksand;font-weight:600;font-size:15px;margin-top:6px;margin-bottom:8px;" onkeypress="if(event.key==='Enter')submitChangePassword()">
+      <div id="pwdErr" style="color:#dc2626;font-weight:700;font-size:13px;margin-bottom:8px;min-height:18px;"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button onclick="submitChangePassword()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer;font-size:16px;box-shadow:0 4px 0 #047857;font-family:Quicksand;">✅ OK</button>
+        <button onclick="document.getElementById('pwdChangeModal').remove()" style="flex:1;background:#e5e7eb;color:#374151;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer;font-size:16px;box-shadow:0 4px 0 #9ca3af;font-family:Quicksand;">✖ Huỷ</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('pwdOld').focus();
+  // Lưu setter + getCurrent vào window để submit dùng
+  window._pwdSetter = setter;
+  window._pwdGetCurrent = getCurrent;
+  window._pwdRoleLabel = roleLabel;
+}
+
+function submitChangePassword() {
+  const old = document.getElementById('pwdOld').value;
+  const n1 = document.getElementById('pwdNew1').value;
+  const n2 = document.getElementById('pwdNew2').value;
+  const err = document.getElementById('pwdErr');
+  err.textContent = '';
+  const current = window._pwdGetCurrent();
+  if (!old) { err.textContent = '❌ Vui lòng nhập mật khẩu hiện tại'; return; }
+  if (old !== current) { err.textContent = '❌ Mật khẩu hiện tại sai!'; return; }
+  if (!n1) { err.textContent = '❌ Vui lòng nhập mật khẩu mới'; return; }
+  if (n1.length < 4) { err.textContent = '❌ Mật khẩu mới phải ≥ 4 ký tự'; return; }
+  if (n1 !== n2) { err.textContent = '❌ 2 lần nhập không khớp!'; return; }
+  window._pwdSetter(n1);
+  document.getElementById('pwdChangeModal').remove();
+  alert('✅ Đã đổi mật khẩu ' + window._pwdRoleLabel + ' thành công!\n\nLần sau đăng nhập với mật khẩu mới.');
 }
 
 function hideLoginScreen() { document.getElementById('loginScreen').style.display = 'none'; }
@@ -1469,9 +1529,13 @@ function updateUserBadge() {
   } else if (currentRole === 'student' && currentUser) {
     html += '<div style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #be185d;">🧑‍🎓 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🌟 Xem điểm & phần thưởng của ' + currentUser.name;
+    html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
   } else if (currentRole === 'child' && currentUser) {
     html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '🚀 Chào ' + currentUser.name + '! Cùng chinh phục kỳ thi nào!';
+    html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
+  } else if (currentRole === 'student' && currentUser) {
+    // Add change password button for student role too (already exists but re-check)
   }
   html += '<button onclick="logout()" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;padding:10px 18px;border-radius:14px;font-weight:700;cursor:pointer;font-size:14px;font-family:Quicksand;box-shadow:0 3px 0 #b91c1c;position:relative;z-index:100;">🚪 Đăng xuất</button>';
   el.innerHTML = html;
