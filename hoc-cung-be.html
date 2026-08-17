@@ -1354,7 +1354,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1215]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1316]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1404,7 +1404,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1215]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1316]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -3098,8 +3098,22 @@ async function syncGradesFromSheet() {
     if (!student && name) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
     if (!student) { skipped++; continue; }
     let isoDate = new Date().toISOString().slice(0,10);
-    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-    if (m) isoDate = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+    if (dateStr) {
+      // Thử parseDate chuẩn trước
+      const parsed = parseDate(dateStr);
+      if (parsed) {
+        isoDate = parsed;
+      } else {
+        // Format ngắn "17/8" hoặc "17.8" → thêm năm hiện tại
+        const yr = new Date().getFullYear();
+        let mShort = dateStr.match(/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?$/);
+        if (mShort) {
+          let y = mShort[3] || yr;
+          if (String(y).length === 2) y = '20' + y;
+          isoDate = y + '-' + mShort[2].padStart(2,'0') + '-' + mShort[1].padStart(2,'0');
+        }
+      }
+    }
     // Với sheet không có ngày/môn → chỉ có 1 record/HS (dupe = cùng HS + cùng môn, bất kể ngày)
     let dupeIdx;
     if (!dateStr) {
@@ -4615,6 +4629,18 @@ loadParentInfo();
 loadTeacherInfo();
 loadStudents();
 checkAdmin();
+// Auto-clean: xóa record 'Tổng hợp' cũ do bản trước tạo khi Sheet chưa có cột Môn
+(function cleanupOldReports() {
+  try {
+    loadTeacherReports();
+    const before = teacherReports.length;
+    teacherReports = teacherReports.filter(r => !(r.teacher === 'Cô giáo (Sheet)' && r.subject === 'Tổng hợp'));
+    if (teacherReports.length !== before) {
+      saveTeacherReports();
+      console.log('🧹 Đã xóa ' + (before - teacherReports.length) + ' record Tổng hợp cũ');
+    }
+  } catch(e) {}
+})();
 // Auto pull from cloud on startup (for parent/student roles)
 setTimeout(() => { if (typeof autoPullIfConfigured === 'function') autoPullIfConfigured(); if (typeof autoPullGsheet === 'function') autoPullGsheet(); }, 1000);
 renderHome();
@@ -4653,6 +4679,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1215</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1316</div>
 </body>
 </html>
