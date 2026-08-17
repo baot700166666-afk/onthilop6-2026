@@ -338,7 +338,7 @@
         <input type="text" id="teacherNameIn" placeholder="Ví dụ: Cô Lan, Thầy Nam..." maxlength="50">
         <label>🔑 Mật khẩu giáo viên:</label>
         <input type="password" id="teacherPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doTeacherLogin()">
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>giaovien</code></div>
+        
         <button class="btn login-submit" style="background:linear-gradient(135deg,#8b5cf6,#a855f7);box-shadow:0 4px 0 #7c3aed;" onclick="doTeacherLogin()">👩‍🏫 Đăng nhập</button>
       </div>
       <div id="dataForm" style="display:none;">
@@ -348,10 +348,10 @@
         <button class="btn login-submit" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 0 #b45309;" onclick="doDataLogin()">🏆 Vào kho DATA</button>
       </div>
       <div id="adminForm" style="display:none;">
-        <label>🔐 Mật khẩu Admin:</label>
+        <label>🔐 Đăng nhập Admin:</label>
         <input type="text" id="adminUserIn" placeholder="Tên đăng nhập..." style="margin-bottom:8px;" autocomplete="off">
         <input type="password" id="adminPassIn" placeholder="Mật khẩu..." onkeypress="if(event.key==='Enter')doAdminLogin()" autocomplete="off">
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>868686</code></div>
+        
         <button class="btn login-submit" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 4px 0 #d97706;" onclick="doAdminLogin()">🔐 Đăng nhập Admin</button>
       </div>
     </div>
@@ -1418,7 +1418,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1440]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1443]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1468,7 +1468,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1440]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1443]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -4936,6 +4936,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1440</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1443</div>
 </body>
 </html>
