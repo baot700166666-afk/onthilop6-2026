@@ -342,8 +342,9 @@
         <button class="btn login-submit" style="background:linear-gradient(135deg,#8b5cf6,#a855f7);box-shadow:0 4px 0 #7c3aed;" onclick="doTeacherLogin()">👩‍🏫 Đăng nhập</button>
       </div>
       <div id="dataForm" style="display:none;">
-        <label>🏆 Mật khẩu DATA (Chuyên đề đặc biệt):</label>
-        <input type="password" id="dataPassIn" placeholder="Nhập mật khẩu chuyên đề..." onkeypress="if(event.key==='Enter')doDataLogin()">
+        <label>🏆 Đăng nhập DATA (Chuyên đề đặc biệt):</label>
+        <input type="text" id="dataNameIn" placeholder="Tên đăng nhập..." style="margin-bottom:8px;" autocomplete="off">
+        <input type="password" id="dataPassIn" placeholder="Mật khẩu..." onkeypress="if(event.key==='Enter')doDataLogin()" autocomplete="off">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Đăng nhập vào kho bài giảng nâng cao</div>
         <button class="btn login-submit" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 0 #b45309;" onclick="doDataLogin()">🏆 Vào kho DATA</button>
       </div>
@@ -1419,7 +1420,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1516]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1530]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1469,7 +1470,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1516]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1530]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -3304,99 +3305,120 @@ async function syncGradesFromSheet() {
   let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.gradesUrl : '') || localStorage.getItem('hoccungbe_gsheet_url');
   if (!url) { console.warn('Chưa cấu hình URL Sheet điểm'); return 0; }
   console.log('🔗 Fetching grades URL:', url);
-  let rows;
-  try {
-    rows = await fetchCSV(url);
-  } catch(e) {
-    console.error('Lỗi tải Sheet điểm:', e);
-    return 0;
-  }
-  if (!rows || rows.length < 2) { console.warn('Sheet điểm rỗng'); return 0; }
-  console.log('✓ Loaded ' + rows.length + ' rows from grades sheet');
-  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
-  const header = rows[0].map(h => stripVi(h));
-  const findCol = (...keywords) => {
-    for (let i = 0; i < header.length; i++) {
-      for (const kw of keywords) { if (header[i].includes(stripVi(kw))) return i; }
-    }
-    return -1;
-  };
-  const codeIdx  = findCol('ma hoc sinh', 'ma hs', 'ma hoc', 'code');
-  const nameIdx  = findCol('ho va ten', 'ten hoc sinh', 'ten hs', 'ho ten', 'ten con');
-  const dateIdx  = findCol('ngay', 'date');
-  const subjIdx  = findCol('mon hoc', 'mon', 'subject');
-  const scoreIdx = findCol('diem so', 'diem', 'score', 'mark');
-  const noteIdx  = findCol('nhan xet', 'ghi chu', 'note', 'comment', 'danh gia');
-  console.log('📋 Header sheet điểm:', header);
-  console.log('📍 Mapping:', {code:codeIdx, name:nameIdx, date:dateIdx, subj:subjIdx, score:scoreIdx, note:noteIdx});
-  if (scoreIdx < 0 || (codeIdx < 0 && nameIdx < 0)) {
-    console.warn('⚠️ Sheet điểm thiếu cột bắt buộc');
-    return 0;
-  }
-  loadStudents(); loadTeacherReports();
-  let added = 0, skipped = 0;
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r || r.length === 0) continue;
-    const code = codeIdx >= 0 ? String(r[codeIdx]||'').trim() : '';
-    const name = nameIdx >= 0 ? String(r[nameIdx]||'').trim() : '';
-    const dateStr = dateIdx >= 0 ? String(r[dateIdx]||'').trim() : '';
-    const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '';
-    const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx]||'').trim() : '';
-    const notes = noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '';
-    // Chỉ cần có điểm là được (môn/ngày optional)
-    if (!scoreStr) continue;
-    const score = parseFloat(scoreStr.replace(',','.'));
-    if (isNaN(score)) continue;
-    // Nếu không có môn → mặc định "Tổng hợp"
-    const subj = subject || 'Tổng hợp';
-    // Match HS theo mã trước, sau đó tên
-    let student = null;
-    if (code) student = students.find(s => s.code && s.code.toLowerCase() === code.toLowerCase());
-    if (!student && name) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
-    if (!student) { skipped++; continue; }
-    let isoDate = new Date().toISOString().slice(0,10);
-    if (dateStr) {
-      // Thử parseDate chuẩn trước
-      const parsed = parseDate(dateStr);
-      if (parsed) {
-        isoDate = parsed;
-      } else {
-        // Format ngắn "17/8" hoặc "17.8" → thêm năm hiện tại
-        const yr = new Date().getFullYear();
-        let mShort = dateStr.match(/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?$/);
-        if (mShort) {
-          let y = mShort[3] || yr;
-          if (String(y).length === 2) y = '20' + y;
-          isoDate = y + '-' + mShort[2].padStart(2,'0') + '-' + mShort[1].padStart(2,'0');
+  
+  // Nếu URL là XLSX → đọc TẤT CẢ tab, mỗi tab = 1 ngày
+  const isXlsx = url.includes('format=xlsx');
+  let allDailyRows = []; // [{date, sheetName, rows}]
+  
+  if (isXlsx) {
+    if (typeof XLSX === 'undefined') { console.error('❌ SheetJS chưa load'); return 0; }
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const buf = await res.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      console.log('✓ Workbook có ' + wb.SheetNames.length + ' tab(s):', wb.SheetNames);
+      wb.SheetNames.forEach(sheetName => {
+        const ws = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        // Skip banner row nếu có ("Ngày 17.8.2026")
+        let dataStartIdx = 1;
+        let dateFromBanner = '';
+        // Nếu row 2 (index 1) có ô nào chứa "Ngày " → skip
+        if (rows.length > 2 && rows[1].some(c => /Ngày\s*\d/i.test(String(c||'')))) {
+          const bannerText = rows[1].find(c => /Ngày\s*\d/i.test(String(c||''))) || '';
+          const m = String(bannerText).match(/(\d{1,2})[\.\/-](\d{1,2})[\.\/-]?(\d{2,4})?/);
+          if (m) {
+            const y = m[3] ? (String(m[3]).length === 2 ? '20' + m[3] : m[3]) : new Date().getFullYear();
+            dateFromBanner = y + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+          }
+          dataStartIdx = 2;
         }
-      }
+        // Nếu sheet name là dạng "17.8" → dùng làm date
+        let dateFromName = '';
+        const mn = sheetName.match(/^(\d{1,2})[\.\/-](\d{1,2})(?:[\.\/-](\d{2,4}))?$/);
+        if (mn) {
+          const y = mn[3] ? (String(mn[3]).length === 2 ? '20' + mn[3] : mn[3]) : new Date().getFullYear();
+          dateFromName = y + '-' + mn[2].padStart(2,'0') + '-' + mn[1].padStart(2,'0');
+        }
+        const finalDate = dateFromName || dateFromBanner || new Date().toISOString().slice(0,10);
+        // Header row + data rows
+        const headerRow = rows[0] || [];
+        const dataRows = rows.slice(dataStartIdx).filter(r => r.some(c => String(c||'').trim() !== ''));
+        allDailyRows.push({ date: finalDate, sheetName, header: headerRow, rows: dataRows });
+      });
+    } catch(e) {
+      console.error('❌ Lỗi đọc XLSX:', e);
+      return 0;
     }
-    // Với sheet không có ngày/môn → chỉ có 1 record/HS (dupe = cùng HS + cùng môn, bất kể ngày)
-    let dupeIdx;
-    if (!dateStr) {
-      // Không có ngày → update record cũ nếu có (điểm mới nhất)
-      dupeIdx = teacherReports.findIndex(rp => rp.studentId === student.id && rp.subject === subj && rp.teacher === 'Cô giáo (Sheet)');
-      if (dupeIdx >= 0) {
-        teacherReports[dupeIdx].score = score;
-        teacherReports[dupeIdx].eval = notes;
-        teacherReports[dupeIdx].date = isoDate;
-        continue;
+  } else {
+    // CSV single sheet (legacy)
+    let rows;
+    try { rows = await fetchCSV(url); } catch(e) { console.error(e); return 0; }
+    if (!rows || rows.length < 2) return 0;
+    allDailyRows.push({ date: '', sheetName: 'default', header: rows[0], rows: rows.slice(1) });
+  }
+  
+  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+  loadStudents(); loadTeacherReports();
+  // Xóa hết record cũ từ Sheet
+  teacherReports = teacherReports.filter(r => r.teacher !== 'Cô giáo (Sheet)');
+  let added = 0, skipped = 0;
+  
+  for (const daily of allDailyRows) {
+    const header = daily.header.map(h => stripVi(h));
+    const findCol = (...kws) => {
+      for (let i = 0; i < header.length; i++) for (const k of kws) if (header[i].includes(stripVi(k))) return i;
+      return -1;
+    };
+    const codeIdx  = findCol('ma hoc sinh', 'ma hs', 'ma hoc', 'code');
+    const nameIdx  = findCol('ho va ten', 'ten hoc sinh', 'ten hs', 'ho ten', 'ten con');
+    const dateIdx  = findCol('ngay', 'date');
+    const subjIdx  = findCol('mon hoc', 'mon', 'subject');
+    const scoreIdx = findCol('diem so', 'diem', 'score', 'mark');
+    const noteIdx  = findCol('nhan xet', 'ghi chu', 'note', 'comment', 'danh gia');
+    console.log('📅 Tab "' + daily.sheetName + '" (ngày ' + daily.date + ') - Header:', header);
+    if (scoreIdx < 0 || (codeIdx < 0 && nameIdx < 0)) { console.warn('⚠️ Tab thiếu cột'); continue; }
+    
+    for (let i = 0; i < daily.rows.length; i++) {
+      const r = daily.rows[i];
+      const code = codeIdx >= 0 ? String(r[codeIdx]||'').trim() : '';
+      const name = nameIdx >= 0 ? String(r[nameIdx]||'').trim() : '';
+      const dateStr = dateIdx >= 0 ? String(r[dateIdx]||'').trim() : '';
+      const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '';
+      const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx]||'').trim() : '';
+      const notes = noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '';
+      if (!scoreStr) continue;
+      const score = parseFloat(scoreStr.replace(',','.'));
+      if (isNaN(score)) continue;
+      const subj = subject || 'Tổng hợp';
+      // Match HS
+      let student = null;
+      if (code) student = students.find(s => s.code && s.code.toLowerCase() === code.toLowerCase());
+      if (!student && name) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (!student) { skipped++; continue; }
+      // Ưu tiên ngày từ tab, fallback ngày trong row, fallback hôm nay
+      let isoDate = daily.date;
+      if (dateStr) {
+        const parsed = parseDate(dateStr);
+        if (parsed) isoDate = parsed;
       }
-    } else {
-      const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subj);
+      if (!isoDate) isoDate = new Date().toISOString().slice(0,10);
+      // Dupe check
+      const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subj && rp.teacher === 'Cô giáo (Sheet)');
       if (dupe) continue;
+      teacherReports.push({
+        id: 'gs_' + Date.now() + Math.random().toString(36).slice(2,6),
+        studentId: student.id, studentName: student.name, parentName: student.parentName,
+        date: isoDate, teacher: 'Cô giáo (Sheet)', subject: subj, score, eval: notes,
+        sourceTab: daily.sheetName,
+        createdAt: new Date().toISOString()
+      });
+      added++;
     }
-    teacherReports.push({
-      id: 'gs_' + Date.now() + Math.random().toString(36).slice(2,6),
-      studentId: student.id, studentName: student.name, parentName: student.parentName,
-      date: isoDate, teacher: 'Cô giáo (Sheet)', subject: subj, score, eval: notes,
-      createdAt: new Date().toISOString()
-    });
-    added++;
   }
   saveStudents(); saveTeacherReports();
-  console.log('✓ Sync điểm: +' + added + ' mới, ' + skipped + ' bỏ qua (không match HS)');
+  console.log('✓ Sync điểm xong: +' + added + ' mới, ' + skipped + ' bỏ qua (không match HS)');
   return added;
 }
 
@@ -4937,6 +4959,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1516</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1530</div>
 </body>
 </html>

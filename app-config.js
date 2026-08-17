@@ -5,9 +5,11 @@ const APP_CONFIG = {
   // Format cột: Mã HS | Tên HS | Ngày sinh | Giới tính | Tên PH | Mật khẩu | SĐT
   studentsUrl: "https://docs.google.com/spreadsheets/d/13tYbsLSqccF9goWmtipkmUdVeR7RYqoywqNpWvKGeQI/export?format=csv&gid=0",
   
-  // URL Google Sheet CHẤM ĐIỂM của cô
-  // Format cột: STT | Ngày | Mã HS | Họ tên | Giới tính | Môn | Điểm | Nhận xét
-  gradesUrl: "https://docs.google.com/spreadsheets/d/1jHxHH1jJFQAYC855cAYPjJC4w6-hZ5_M7vWqtRxgE7U/export?format=csv&gid=0",
+  // URL Google Sheet CHẤM ĐIỂM (đọc TẤT CẢ tab dưới dạng XLSX)
+  // Mỗi tab = 1 ngày (VD tên tab: "17.8", "18.8", "19.8"...)
+  // Cột: STT | Mã HS | Họ tên | Giới tính | Điểm | Nhận xét | Môn học
+  // Row 2 có thể là banner "Ngày 17.8.2026" (app tự skip)
+  gradesUrl: "https://docs.google.com/spreadsheets/d/1jHxHH1jJFQAYC855cAYPjJC4w6-hZ5_M7vWqtRxgE7U/export?format=xlsx",
 
   // URL Google Sheet DANH SÁCH GIÁO VIÊN (tài khoản login)
   // Format cột: Tên GV | Mật khẩu | Môn (optional) | Ghi chú (optional)
