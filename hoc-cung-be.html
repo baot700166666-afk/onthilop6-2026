@@ -2892,23 +2892,24 @@ async function syncStudentsFromSheet() {
   if (!url) return 0;
   const rows = await fetchCSV(url);
   if (!rows || rows.length < 2) return 0;
-  // Nhận diện cột theo TÊN header (không hardcode thứ tự)
-  const header = rows[0].map(h => String(h||'').toLowerCase().trim().replace(/\s+/g,' '));
+  // Nhận diện cột theo TÊN header (bỏ dấu tiếng Việt để match dễ hơn)
+  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+  const header = rows[0].map(h => stripVi(h));
   const findCol = (...keywords) => {
     for (let i = 0; i < header.length; i++) {
       for (const kw of keywords) {
-        if (header[i].includes(kw)) return i;
+        if (header[i].includes(stripVi(kw))) return i;
       }
     }
     return -1;
   };
-  const codeIdx   = findCol('mã hs', 'ma hs', 'mã hoc', 'ma hoc', 'code', 'id hs');
-  const nameIdx   = findCol('tên hs', 'ten hs', 'tên học', 'ten hoc', 'họ và tên', 'ho va ten', 'họ tên', 'ho ten', 'tên hs', 'name');
-  const dobIdx    = findCol('ngày sinh', 'ngay sinh', 'dob', 'birthday');
-  const genderIdx = findCol('giới tính', 'gioi tinh', 'gender', 'nam/nữ', 'nam/nu');
-  const parentIdx = findCol('tên ph', 'ten ph', 'tên phụ huynh', 'ten phu huynh', 'phụ huynh', 'phu huynh', 'parent');
-  const passIdx   = findCol('mật khẩu', 'mat khau', 'password', 'pass');
-  const phoneIdx  = findCol('sđt', 'sdt', 'điện thoại', 'dien thoai', 'phone', 'số điện');
+  const codeIdx   = findCol('ma hoc sinh', 'ma hs', 'ma hoc', 'code', 'id hs', 'ma');
+  const nameIdx   = findCol('ten hoc sinh', 'ten hs', 'ho va ten', 'ho ten', 'ten con', 'name');
+  const dobIdx    = findCol('ngay sinh', 'sinh nhat', 'dob', 'birthday');
+  const genderIdx = findCol('gioi tinh', 'gender', 'nam nu');
+  const parentIdx = findCol('ten ph', 'ten phu huynh', 'phu huynh', 'parent');
+  const passIdx   = findCol('mat khau', 'password', 'pass');
+  const phoneIdx  = findCol('sdt', 'so dien thoai', 'dien thoai', 'phone');
   console.log('📋 Header sheet HS:', header);
   console.log('📍 Mapping cột:', {code:codeIdx, name:nameIdx, dob:dobIdx, parent:parentIdx, pass:passIdx, phone:phoneIdx});
   loadStudents();
@@ -2962,19 +2963,20 @@ async function syncGradesFromSheet() {
   if (!url) return 0;
   const rows = await fetchCSV(url);
   if (!rows || rows.length < 2) return 0;
-  const header = rows[0].map(h => String(h||'').toLowerCase().trim().replace(/\s+/g,' '));
+  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+  const header = rows[0].map(h => stripVi(h));
   const findCol = (...keywords) => {
     for (let i = 0; i < header.length; i++) {
-      for (const kw of keywords) { if (header[i].includes(kw)) return i; }
+      for (const kw of keywords) { if (header[i].includes(stripVi(kw))) return i; }
     }
     return -1;
   };
-  const codeIdx  = findCol('mã hs', 'ma hs', 'mã học', 'ma hoc', 'code');
-  const nameIdx  = findCol('tên hs', 'ten hs', 'họ tên', 'ho ten', 'tên học');
-  const dateIdx  = findCol('ngày', 'ngay', 'date');
-  const subjIdx  = findCol('môn', 'mon', 'subject');
-  const scoreIdx = findCol('điểm', 'diem', 'score', 'mark');
-  const noteIdx  = findCol('nhận xét', 'nhan xet', 'ghi chú', 'ghi chu', 'note', 'comment');
+  const codeIdx  = findCol('ma hoc sinh', 'ma hs', 'ma hoc', 'code');
+  const nameIdx  = findCol('ten hoc sinh', 'ten hs', 'ho ten', 'ten con');
+  const dateIdx  = findCol('ngay', 'date');
+  const subjIdx  = findCol('mon', 'subject');
+  const scoreIdx = findCol('diem', 'score', 'mark');
+  const noteIdx  = findCol('nhan xet', 'ghi chu', 'note', 'comment');
   console.log('📋 Header sheet điểm:', header);
   console.log('📍 Mapping:', {code:codeIdx, name:nameIdx, date:dateIdx, subj:subjIdx, score:scoreIdx, note:noteIdx});
   loadStudents(); loadTeacherReports();
