@@ -348,17 +348,17 @@
     <button class="nav-btn" id="dataBtn" data-view="data" style="display:none;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border-color:#020617;box-shadow:0 3px 0 #020617;">📊 DATA</button>
     <button class="nav-btn" id="trophyBtn" data-view="trophy" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border-color:#b45309;box-shadow:0 3px 0 #b45309;">🏆 Chuyên đề 🔒</button>
     <button class="nav-btn" id="vinschoolBtn" data-view="vinschool" style="display:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border-color:#1d4ed8;box-shadow:0 3px 0 #1d4ed8;">🎓 Tài liệu Vinschool</button>
-    <button class="nav-btn active" data-view="home">🏠 Trang chủ</button>
-    <button class="nav-btn" data-view="subjects">📚 Học &amp; ôn tập</button>
-    <button class="nav-btn" data-view="mocktest">🎯 Thi thử</button>
-    <button class="nav-btn" data-view="stats">📊 Tiến độ</button>
+    <button class="nav-btn active" id="homeBtn" data-view="home">🏠 Trang chủ</button>
+    <button class="nav-btn" id="subjectsBtn" data-view="subjects">📚 Học &amp; ôn tập</button>
+    <button class="nav-btn" id="mocktestBtn" data-view="mocktest">🎯 Thi thử</button>
+    <button class="nav-btn" id="statsBtn" data-view="stats">📊 Tiến độ</button>
     <button class="nav-btn" id="teacherBtn" data-view="teacher" style="display:none;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border-color:#7c3aed;box-shadow:0 3px 0 #7c3aed;">👩‍🏫 Giáo viên</button>
     <button class="nav-btn" id="dailyReportBtn" data-view="daily" style="display:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border-color:#0369a1;box-shadow:0 3px 0 #0369a1;">📅 Báo cáo ngày</button>
     <button class="nav-btn" id="studentMgmtBtn" data-view="students" style="display:none;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border-color:#be185d;box-shadow:0 3px 0 #be185d;">🧑‍🎓 Học sinh</button>
     <button class="nav-btn" id="adminDashBtn" data-view="adminDash" style="display:none;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border-color:#7c3aed;box-shadow:0 3px 0 #7c3aed;">📊 Thống kê Admin</button>
     <button class="nav-btn" id="parentReportBtn" data-view="parent" style="display:none;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;border-color:#059669;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 Báo cáo con</button>
     <button class="nav-btn" id="adminAnswerBtn" data-view="answers" style="display:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border-color:#d97706;box-shadow:0 3px 0 #d97706;">📖 Đáp án</button>
-    <button class="nav-btn" data-view="manage">⚙️ Quản lý đề</button>
+    <button class="nav-btn" id="manageBtn" data-view="manage">⚙️ Quản lý đề</button>
   </nav>
   <div id="view-home">
     <div class="card">
@@ -1313,6 +1313,10 @@ async function doParentLogin() {
   const input = document.getElementById('parentNameIn').value.trim();
   const pw = document.getElementById('parentPassIn').value;
   if (!input) { alert('Nhập mã HS của con nhé! (VD: HS001)'); return; }
+  const btn = document.querySelector('[onclick*="doParentLogin"]');
+  if (btn) { btn.textContent = '⏳ Đang tải danh sách...'; btn.disabled = true; }
+  try { if (typeof syncStudentsFromSheet === 'function') await syncStudentsFromSheet(); } catch(e){ console.error(e); }
+  if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
   loadStudents();
   const findFn = () => {
     let s = students.find(x => x.code && x.code.toLowerCase() === input.toLowerCase());
@@ -1331,7 +1335,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1144]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1148]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1358,6 +1362,11 @@ async function doStudentLogin() {
   const input = document.getElementById('studentNameIn').value.trim();
   const pw = document.getElementById('studentPassIn').value;
   if (!input) { alert('Nhập mã học sinh nhé! (VD: HS001)'); return; }
+  // Force sync trước để đảm bảo data mới nhất
+  const btn = document.querySelector('[onclick*="doStudentLogin"]');
+  if (btn) { btn.textContent = '⏳ Đang tải danh sách...'; btn.disabled = true; }
+  try { if (typeof syncStudentsFromSheet === 'function') await syncStudentsFromSheet(); } catch(e){ console.error(e); }
+  if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
   loadStudents();
   const findFn = () => {
     let s = students.find(x => x.code && x.code.toLowerCase() === input.toLowerCase());
@@ -1376,7 +1385,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1144]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1148]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -1615,6 +1624,20 @@ function updateUserBadge() {
   const myScoresBtn = document.getElementById('myScoresBtn');
   const vinschoolBtn = document.getElementById('vinschoolBtn');
   if (myScoresBtn) myScoresBtn.style.display = (currentRole === 'student' || currentRole === 'child') ? 'inline-block' : 'none';
+  // Role-based tab visibility
+  const homeBtn = document.getElementById('homeBtn');
+  const subjectsBtn = document.getElementById('subjectsBtn');
+  const mocktestBtn = document.getElementById('mocktestBtn');
+  const statsBtn = document.getElementById('statsBtn');
+  const manageBtn2 = document.getElementById('manageBtn');
+  // Học sinh chỉ thấy: Xem điểm - Tài liệu Vinschool - Tiến độ
+  // Phụ huynh chỉ thấy: Báo cáo con - Tài liệu Vinschool - Tiến độ
+  const isViewOnly = (currentRole === 'student' || currentRole === 'parent');
+  if (homeBtn) homeBtn.style.display = isViewOnly ? 'none' : 'inline-block';
+  if (subjectsBtn) subjectsBtn.style.display = isViewOnly ? 'none' : 'inline-block';
+  if (mocktestBtn) mocktestBtn.style.display = isViewOnly ? 'none' : 'inline-block';
+  if (statsBtn) statsBtn.style.display = 'inline-block'; // Ai cũng xem được
+  if (manageBtn2) manageBtn2.style.display = isViewOnly ? 'none' : 'inline-block';
   if (vinschoolBtn) vinschoolBtn.style.display = (currentRole === 'student' || currentRole === 'child' || currentRole === 'parent' || currentRole === 'teacher' || currentRole === 'admin') ? 'inline-block' : 'none';
   const dataBtn = document.getElementById('dataBtn');
   if (dataBtn) dataBtn.style.display = hasDataAccess() ? 'inline-block' : 'none';
@@ -4597,6 +4620,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1144</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1148</div>
 </body>
 </html>
