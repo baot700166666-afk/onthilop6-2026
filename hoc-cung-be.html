@@ -300,7 +300,7 @@
       </div>
       <div id="studentForm" style="display:none;">
         <label>🧑‍🎓 Tên học sinh:</label>
-        <input type="text" id="studentNameIn" placeholder="Tên (như trong danh sách lớp)" maxlength="50">
+        <input type="text" id="studentNameIn" placeholder="Mã học sinh (VD: HS001)" maxlength="50">
         <label>🔑 Mật khẩu:</label>
         <input type="password" id="studentPassIn" placeholder="Mật khẩu (do cô/PH cung cấp)" onkeypress="if(event.key==='Enter')doStudentLogin()">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Dùng mật khẩu phụ huynh (cô giáo cung cấp) hoặc <code>hocsinh</code></div>
@@ -308,7 +308,7 @@
       </div>
       <div id="parentForm" style="display:none;">
         <label>👨‍👩‍👧 Tên phụ huynh:</label>
-        <input type="text" id="parentNameIn" placeholder="Ví dụ: Nguyễn Văn A" maxlength="50">
+        <input type="text" id="parentNameIn" placeholder="Mã HS của con (VD: HS001)" maxlength="50">
         <label>🔑 Mật khẩu phụ huynh:</label>
         <input type="password" id="parentPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doParentLogin()">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>phuhuynh</code></div>
@@ -513,6 +513,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn" onclick="resetMyReports()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 3px 0 #d97706;padding:10px 14px;font-size:13px;">🗑️ Xóa báo cáo của tôi</button>
           <button class="btn" onclick="resetAllReports()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:white;box-shadow:0 3px 0 #c2410c;padding:10px 14px;font-size:13px;">🗑️ Xóa TẤT CẢ báo cáo</button>
+          <button class="btn" onclick="exportAllReportsForParents()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;box-shadow:0 3px 0 #1d4ed8;padding:10px 14px;font-size:13px;">📤 Xuất báo cáo gửi PH (JSON)</button>
           <button class="btn" onclick="resetAllStudents()" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 3px 0 #b91c1c;padding:10px 14px;font-size:13px;">💥 Reset toàn bộ (HS + báo cáo)</button>
         </div>
         <div style="margin-top:8px;font-size:12px;color:#7f1d1d;font-weight:600;">💡 Học sinh &amp; phụ huynh KHÔNG có quyền xóa gì. Chỉ giáo viên/admin dùng chức năng này.</div>
@@ -745,6 +746,26 @@
         <div style="font-weight:600;font-size:15px;">🧑‍🎓 Học sinh: <span id="parentChildName">Chưa có</span> — 🎂 Ngày sinh: <span id="parentChildDOB">--</span></div>
       </div>
       <div style="margin-bottom:12px;color:var(--muted);font-size:13px;font-weight:600;font-style:italic;">📌 Đây là báo cáo do <strong>cô giáo chủ nhiệm</strong> đánh giá bé <strong>trên lớp học</strong>. Không liên quan đến việc bé tự học trên app.</div>
+      <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:14px 18px;border-radius:12px;border:3px solid #86efac;margin-bottom:16px;">
+        <div style="font-weight:800;color:#166534;margin-bottom:6px;">☁️ Đồng bộ điểm từ cô giáo:</div>
+        <div style="font-size:13px;color:#166534;margin-bottom:8px;font-weight:600;">App tự động tải điểm mới nhất từ Google Sheet của cô. Bấm nút để làm mới thủ công.</div>
+        <button class="btn btn-success" onclick="syncFromGsheet()" style="padding:10px 20px;font-size:14px;">🔄 Làm mới điểm ngay</button>
+      </div>
+      <div style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);padding:14px 18px;border-radius:12px;border:3px solid #60a5fa;margin-bottom:16px;">
+        <div style="font-weight:800;color:#1e40af;margin-bottom:6px;">☁️ Nhận báo cáo tự động từ Cloud:</div>
+        <div style="font-size:13px;color:#1e40af;margin-bottom:8px;font-weight:600;">Cô giáo cho bạn <strong>Bin ID</strong> → nhập vào đây → app tự đọc báo cáo bất cứ khi nào cô cập nhật.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="parentBinId" placeholder="Nhập Bin ID cô giáo cấp..." style="flex:1;min-width:200px;padding:10px;border:2px solid #60a5fa;border-radius:8px;font-family:monospace;font-size:12px;" onfocus="this.value=this.value||localStorage.getItem('hoccungbe_jsonbin_id')||''">
+          <button class="btn btn-success" onclick="parentConnectCloud()" style="padding:10px 16px;font-size:14px;">☁️ Kết nối &amp; Tải báo cáo</button>
+        </div>
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer;font-weight:600;color:#1e40af;font-size:12px;">Hoặc dùng file JSON (cũ)</summary>
+          <label class="btn btn-success" style="cursor:pointer;margin:8px 0 0;padding:8px 14px;font-size:13px;display:inline-block;">
+            📥 Chọn file .json từ cô
+            <input type="file" accept=".json" onchange="importParentReport(event)" style="display:none;">
+          </label>
+        </details>
+      </div>
       <div id="parentReportBody"></div>
     </div>
   </div>
@@ -801,6 +822,7 @@
     </div>
   </div>
 </div>
+<script src="app-config.js"></script>
 <script src="review-bank.js"></script>
 <script src="trophy-presets.js"></script>
 <script src="trophy-lessons.js"></script>
@@ -1288,38 +1310,28 @@ function doChildLogin() {
 }
 
 function doParentLogin() {
-  const name = document.getElementById('parentNameIn').value.trim();
+  const input = document.getElementById('parentNameIn').value.trim();
   const pw = document.getElementById('parentPassIn').value;
-  if (!name) { alert('Nhập tên phụ huynh nhé!'); return; }
-  // Kiểm tra pass: nếu tên PH có trong danh sách học sinh với pass riêng thì check pass đó, 
-  // nếu không thì dùng pass PH chung
+  if (!input) { alert('Nhập mã HS của con nhé! (VD: HS001)'); return; }
   loadStudents();
-  const linkedStudents = students.filter(s => s.parentName && s.parentName.trim().toLowerCase() === name.toLowerCase());
+  // Tìm HS theo mã (chính); nếu không thấy fallback theo tên HS hoặc tên PH
+  let student = students.find(s => s.code && s.code.toLowerCase() === input.toLowerCase());
+  if (!student) student = students.find(s => s.name.toLowerCase() === input.toLowerCase());
+  if (!student) student = students.find(s => s.parentName && s.parentName.toLowerCase() === input.toLowerCase());
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '"! Kiểm tra lại hoặc nhờ cô giáo thêm con vào danh sách.'); return; }
+  // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
-  if (linkedStudents.length > 0) {
-    // Match với pass riêng của phụ huynh (nếu có)
-    const withCustomPass = linkedStudents.find(s => s.parentPass && s.parentPass === pw);
-    if (withCustomPass) passOk = true;
-    else if (pw === getParentPass()) passOk = true;
-  } else {
-    if (pw === getParentPass()) passOk = true;
-  }
-  if (!passOk) { alert('❌ Mật khẩu không đúng!\n\n- Nếu bạn có trong danh sách học sinh: dùng mật khẩu riêng do Admin đặt\n- Nếu chưa: dùng mật khẩu chung: phuhuynh'); return; }
-  parentInfo = { name };
+  if (student.parentPass && student.parentPass === pw) passOk = true;
+  else if (pw === getParentPass()) passOk = true;
+  if (!passOk) { alert('❌ Mật khẩu không đúng!\n\n- Dùng mật khẩu Admin đặt riêng cho con\n- Hoặc mật khẩu chung PH: phuhuynh'); return; }
+  parentInfo = { name: student.parentName || 'Phụ huynh', studentCode: student.code };
   saveParentInfo();
   currentRole = 'parent';
   isAdmin = false;
   sessionStorage.setItem('hoccungbe_role', 'parent');
   sessionStorage.removeItem('hoccungbe_admin');
-  // Auto-detect child from students list
-  if (linkedStudents.length > 0) {
-    const s = linkedStudents[0];
-    currentUser = { role: 'child', name: s.name, dob: s.dob, studentId: s.id };
-    localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
-  } else {
-    const savedUser = localStorage.getItem('hoccungbe_user');
-    if (savedUser) currentUser = JSON.parse(savedUser);
-  }
+  currentUser = { role: 'child', name: student.name, dob: student.dob, studentId: student.id };
+  localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
   hideLoginScreen();
   updateUserBadge();
   showView('parent');
@@ -1327,13 +1339,14 @@ function doParentLogin() {
 }
 
 function doStudentLogin() {
-  const name = document.getElementById('studentNameIn').value.trim();
+  const input = document.getElementById('studentNameIn').value.trim();
   const pw = document.getElementById('studentPassIn').value;
-  if (!name) { alert('Nhập tên học sinh nhé!'); return; }
+  if (!input) { alert('Nhập mã học sinh nhé! (VD: HS001)'); return; }
   loadStudents();
-  // Tìm học sinh theo tên
-  const student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
-  if (!student) { alert('❌ Không tìm thấy tên bạn trong danh sách lớp! Kiểm tra lại tên hoặc nhờ cô giáo thêm.'); return; }
+  // Tìm theo mã HS trước (chính); nếu không thấy thì tìm theo tên (fallback)
+  let student = students.find(s => s.code && s.code.toLowerCase() === input.toLowerCase());
+  if (!student) student = students.find(s => s.name.toLowerCase() === input.toLowerCase());
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '"! Kiểm tra lại hoặc nhờ cô giáo thêm.'); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -1398,6 +1411,7 @@ function doTeacherLogin() {
   updateUserBadge();
   showView('teacher');
   renderTeacher();
+  autoPushIfEnabled();
 }
 
 // Password management (with fallback to defaults)
@@ -2009,6 +2023,57 @@ function renderData() {
   html += '<button class="btn" onclick="exportStudents()">📤 Xuất DS học sinh</button>';
   html += '<button class="btn" onclick="exportReportsExcel()">📤 Xuất tất cả báo cáo</button>';
   html += '</div>';
+  html += '</div>';
+
+    // 3.5 CLOUD SYNC - Google Sheets (đơn giản)
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">☁️ Đồng bộ qua Google Sheets (KHUYÊN DÙNG)</h3>';
+  html += '<div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:16px 20px;border-radius:14px;border:3px solid #86efac;margin-bottom:16px;">';
+  html += '<div style="margin-bottom:10px;font-size:13px;color:#166534;font-weight:600;">🎯 Đơn giản nhất: Cô nhập điểm vào Google Sheet như Excel, app tự đọc.</div>';
+  const gsUrl = localStorage.getItem('hoccungbe_gsheet_url') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.gsheetUrl : '') || '';
+  html += '<label style="font-weight:700;font-size:13px;color:#166534;display:block;margin-bottom:4px;">🔗 Google Sheet URL (Publish to web → CSV):</label>';
+  html += '<input type="text" id="gsUrl" value="' + escapeHtml(gsUrl) + '" placeholder="https://docs.google.com/spreadsheets/d/e/..../pub?output=csv" style="width:100%;padding:10px;border:2px solid #86efac;border-radius:8px;font-family:monospace;font-size:11px;margin-bottom:8px;">';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">';
+  html += '<button class="btn btn-success" onclick="saveGsheetUrl()" style="padding:10px 16px;">💾 Lưu URL</button>';
+  html += '<button class="btn" onclick="syncFromGsheet()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:10px 16px;">☁️⬇️ Tải điểm từ Google Sheet</button>';
+  html += '<button class="btn" onclick="downloadGsheetTemplate()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:10px 16px;">📄 Tải template Excel mẫu</button>';
+  html += '</div>';
+  html += '<details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;color:#166534;font-size:13px;">📖 Hướng dẫn setup Google Sheets (5 phút)</summary>';
+  html += '<div style="background:white;padding:12px;border-radius:8px;margin-top:8px;font-size:13px;line-height:1.7;color:#065f46;">';
+  html += '<b>Bước 1:</b> Vào <a href="https://sheets.google.com" target="_blank" style="color:#059669;">Google Sheets</a> → tạo Sheet mới<br>';
+  html += '<b>Bước 2:</b> Tải file mẫu (nút vàng trên) → mở → copy toàn bộ nội dung sang Google Sheet mới<br>';
+  html += '<b>Bước 3:</b> Nhập/chỉnh sửa điểm cho các bé theo cột: <b>Tên HS | Tên PH | Ngày | Môn | Điểm | Nhận xét</b><br>';
+  html += '<b>Bước 4:</b> File → <b>Share</b> → <b>Publish to web</b> → <b>Comma-separated values (.csv)</b> → Publish → copy URL<br>';
+  html += '<b>Bước 5:</b> Paste URL vào ô trên → Lưu → bấm Tải điểm<br>';
+  html += '<b>Bước 6:</b> Gửi URL cho PH/HS để họ nhập vào app tại tab của họ';
+  html += '</div></details>';
+  html += '</div>';
+
+  // 3.6 CLOUD SYNC - JSONBin.io (advanced)
+  html += '<h3 style="font-size:18px;margin:20px 0 10px;">☁️ Hoặc dùng JSONBin.io (tự động)</h3>';
+  html += '<div style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);padding:16px 20px;border-radius:14px;border:3px solid #60a5fa;margin-bottom:16px;">';
+  const binId = localStorage.getItem('hoccungbe_jsonbin_id') || '';
+  const apiKey = localStorage.getItem('hoccungbe_jsonbin_key') || '';
+  const autoSync = localStorage.getItem('hoccungbe_autosync') === '1';
+  html += '<div style="margin-bottom:10px;font-size:13px;color:#1e40af;font-weight:600;">📌 Setup 1 lần → mọi thiết bị tự động đồng bộ dữ liệu.</div>';
+  html += '<label style="font-weight:700;font-size:13px;color:#1e40af;display:block;margin-bottom:4px;">🔑 API Key (X-Master-Key):</label>';
+  html += '<input type="text" id="jbApiKey" value="' + escapeHtml(apiKey) + '" placeholder="$2a$10$..." style="width:100%;padding:10px;border:2px solid #60a5fa;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:8px;">';
+  html += '<label style="font-weight:700;font-size:13px;color:#1e40af;display:block;margin-bottom:4px;">📦 Bin ID:</label>';
+  html += '<input type="text" id="jbBinId" value="' + escapeHtml(binId) + '" placeholder="65a1b2c3d4e5f6..." style="width:100%;padding:10px;border:2px solid #60a5fa;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:8px;">';
+  html += '<label style="display:flex;align-items:center;gap:6px;font-weight:700;color:#1e40af;margin:8px 0;font-size:13px;"><input type="checkbox" id="jbAuto" ' + (autoSync?'checked':'') + '> Tự động đồng bộ khi có dữ liệu mới</label>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">';
+  html += '<button class="btn btn-success" onclick="saveJsonBinConfig()" style="padding:10px 16px;">💾 Lưu cấu hình</button>';
+  html += '<button class="btn" onclick="pushToCloud()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:10px 16px;">☁️⬆️ Đẩy dữ liệu lên Cloud</button>';
+  html += '<button class="btn" onclick="pullFromCloud()" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:10px 16px;">☁️⬇️ Kéo dữ liệu về</button>';
+  html += '</div>';
+  html += '<details style="margin-top:12px;"><summary style="cursor:pointer;font-weight:700;color:#1e40af;font-size:13px;">📖 Hướng dẫn setup JSONBin.io (2 phút)</summary>';
+  html += '<div style="background:white;padding:12px;border-radius:8px;margin-top:8px;font-size:13px;line-height:1.7;color:#1e3a8a;">';
+  html += '<b>Bước 1:</b> Vào <a href="https://jsonbin.io/login" target="_blank" style="color:#2563eb;">https://jsonbin.io/login</a> → đăng ký bằng email (free)<br>';
+  html += '<b>Bước 2:</b> Vào <b>Api Keys</b> → copy <b>X-Master-Key</b> (chuỗi bắt đầu $2a$10$...)<br>';
+  html += '<b>Bước 3:</b> Vào <b>Bins</b> → bấm <b>Create bin</b> → paste <code>{}</code> → Save → copy <b>Bin ID</b> (chuỗi dài trong URL)<br>';
+  html += '<b>Bước 4:</b> Paste 2 giá trị trên vào 2 ô, tick "Tự động đồng bộ", bấm Lưu → xong!<br>';
+  html += '<b>Bước 5:</b> Bấm "☁️⬆️ Đẩy dữ liệu lên Cloud" để đẩy dữ liệu hiện có lên<br>';
+  html += '<b>Bước 6:</b> Gửi <b>Bin ID</b> (không cần API Key) cho PH/HS để họ nhập vào app → tự động đọc dữ liệu';
+  html += '</div></details>';
   html += '</div>';
 
   // 4. Preview raw data
@@ -2727,11 +2792,401 @@ function saveParentInfo() {
   if (parentInfo) localStorage.setItem('hoccungbe_parent', JSON.stringify(parentInfo));
 }
 function editParentInfo() {
-  const name = prompt('Nhập tên phụ huynh:', parentInfo ? parentInfo.name : '');
+  const name = prompt('Nhập mã HS của con:', parentInfo ? parentInfo.name : '');
   if (name === null) return;
   parentInfo = { name: name.trim() || 'Chưa cập nhật' };
   saveParentInfo();
   renderParentReport();
+}
+
+// ========== CLOUD SYNC (JSONBin.io) ==========
+// ========== GOOGLE SHEETS SYNC (đơn giản nhất) ==========
+function saveGsheetUrl() {
+  let url = document.getElementById('gsUrl').value.trim();
+  url = normalizeGsheetUrl(url);
+  localStorage.setItem('hoccungbe_gsheet_url', url);
+  document.getElementById('gsUrl').value = url;
+  alert('✅ Đã lưu URL Google Sheet!\nURL đã chuẩn hoá: ' + url);
+}
+
+function downloadGsheetTemplate() {
+  loadStudents();
+  const data = [['Tên HS', 'Tên PH', 'Ngày (dd/mm/yyyy)', 'Môn', 'Điểm (1-10)', 'Nhận xét']];
+  const students = JSON.parse(localStorage.getItem('hoccungbe_students')||'[]');
+  const today = new Date().toLocaleDateString('vi-VN');
+  if (students.length > 0) {
+    students.forEach(s => {
+      data.push([s.name, s.parentName||'', today, 'Toán', '', '']);
+    });
+  } else {
+    data.push(['Thành Lâm', 'Nguyễn Thành Trung', today, 'Toán', 9, 'Học tốt']);
+    data.push(['Minh An', 'Trần Văn Hùng', today, 'Toán', 7.5, 'Cần cố gắng thêm']);
+  }
+  if (typeof XLSX !== 'undefined') {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:20},{wch:22},{wch:14},{wch:14},{wch:10},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, ws, 'DiemHS');
+    XLSX.writeFile(wb, 'template-diem-cho-google-sheet.xlsx');
+  } else {
+    const csv = data.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadBlob(new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'}), 'template-diem.csv');
+  }
+}
+
+function normalizeGsheetUrl(url) {
+  if (!url) return url;
+  url = String(url).trim();
+  // Nếu là edit URL: /edit hoặc /edit?gid=xxx → chuyển sang export CSV
+  const editMatch = url.match(/\/spreadsheets\/d\/([^\/]+)/);
+  if (editMatch && !url.includes('/pub') && !url.includes('/export') && !url.includes('/gviz')) {
+    const id = editMatch[1];
+    const gidMatch = url.match(/[?&#]gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+    return 'https://docs.google.com/spreadsheets/d/' + id + '/export?format=csv&gid=' + gid;
+  }
+  // Nếu là pubhtml → pub?output=csv
+  if (url.includes('/pubhtml')) {
+    return url.replace(/\/pubhtml.*$/, '/pub?output=csv');
+  }
+  return url;
+}
+
+async function fetchCSV(url) {
+  if (!url) return null;
+  url = normalizeGsheetUrl(url);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return parseCSV(await res.text());
+}
+
+async function syncStudentsFromSheet() {
+  let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.studentsUrl : '') || localStorage.getItem('hoccungbe_gsheet_students_url');
+  if (!url) return 0;
+  const rows = await fetchCSV(url);
+  if (!rows || rows.length < 2) return 0;
+  const header = rows[0].map(h => String(h).toLowerCase().trim());
+  const hasCode = header.some(h => h.includes('mã') || h.includes('ma hoc') || h.includes('code'));
+  const codeIdx = hasCode ? 0 : -1;
+  const nameIdx = hasCode ? 1 : 0;
+  const dobIdx  = hasCode ? 2 : 1;
+  const parentIdx = hasCode ? 3 : 2;
+  const passIdx = hasCode ? 4 : 3;
+  const phoneIdx = hasCode ? 5 : 4;
+  loadStudents();
+  const existingByName = {}; students.forEach(s => existingByName[s.name.toLowerCase()] = s);
+  let added = 0, updated = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const name = String(r[nameIdx]||'').trim();
+    if (!name) continue;
+    const code = hasCode ? String(r[codeIdx]||'').trim() : '';
+    const dob = String(r[dobIdx]||'').trim();
+    const parentName = String(r[parentIdx]||'').trim();
+    const parentPass = String(r[passIdx]||'').trim();
+    const parentPhone = String(r[phoneIdx]||'').trim();
+    const existing = existingByName[name.toLowerCase()];
+    if (existing) {
+      // update
+      if (code) existing.code = code;
+      if (dob) existing.dob = parseDate(dob) || existing.dob;
+      if (parentName) existing.parentName = parentName;
+      if (parentPass) existing.parentPass = parentPass;
+      if (parentPhone) existing.parentPhone = parentPhone;
+      updated++;
+    } else {
+      students.push({
+        id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
+        code: code || 'HS' + String(students.length + 1).padStart(3,'0'),
+        name,
+        dob: parseDate(dob) || '',
+        parentName, parentPass: parentPass || 'phuhuynh', parentPhone,
+        createdAt: new Date().toISOString()
+      });
+      added++;
+    }
+  }
+  saveStudents();
+  return added + updated;
+}
+
+async function syncGradesFromSheet() {
+  let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.gradesUrl : '') || localStorage.getItem('hoccungbe_gsheet_url');
+  if (!url) return 0;
+  const rows = await fetchCSV(url);
+  if (!rows || rows.length < 2) return 0;
+  loadStudents(); loadTeacherReports();
+  let added = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[0] || !String(r[0]).trim()) continue;
+    // Format: Tên HS | Ngày | Môn | Điểm | Nhận xét  (không cần tên PH vì lấy từ sheet HS)
+    // Hoặc: Tên HS | Tên PH | Ngày | Môn | Điểm | Nhận xét (6 cột như cũ)
+    const name = String(r[0]).trim();
+    let dateStr, subject, scoreStr, notes;
+    if (r.length >= 6) {
+      dateStr = String(r[2]||'').trim();
+      subject = String(r[3]||'').trim();
+      scoreStr = String(r[4]||'').trim();
+      notes = String(r[5]||'').trim();
+    } else {
+      dateStr = String(r[1]||'').trim();
+      subject = String(r[2]||'').trim();
+      scoreStr = String(r[3]||'').trim();
+      notes = String(r[4]||'').trim();
+    }
+    if (!scoreStr) continue;
+    const score = parseFloat(scoreStr.replace(',','.'));
+    if (isNaN(score)) continue;
+    let student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (!student) {
+      // Auto-create nếu không có
+      student = {
+        id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
+        code: 'HS' + String(students.length + 1).padStart(3,'0'),
+        name, parentName:'', dob:'', parentPass:'phuhuynh', parentPhone:'',
+        createdAt: new Date().toISOString()
+      };
+      students.push(student);
+    }
+    let isoDate = new Date().toISOString().slice(0,10);
+    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (m) isoDate = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+    const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subject);
+    if (dupe) continue;
+    teacherReports.push({
+      id: 'gs_' + Date.now() + Math.random().toString(36).slice(2,6),
+      studentId: student.id, studentName: student.name, parentName: student.parentName,
+      date: isoDate, teacher: 'Cô giáo (Sheet)', subject, score, eval: notes,
+      createdAt: new Date().toISOString()
+    });
+    added++;
+  }
+  saveStudents(); saveTeacherReports();
+  return added;
+}
+
+async function syncFromGsheet() {
+  try {
+    let msg = '';
+    let n1 = 0, n2 = 0;
+    try { n1 = await syncStudentsFromSheet(); msg += '👥 Danh sách HS: cập nhật ' + n1 + '\n'; } catch(e) { msg += '⚠️ Lỗi sheet HS: ' + e.message + '\n'; }
+    try { n2 = await syncGradesFromSheet(); msg += '📝 Báo cáo: thêm mới ' + n2 + '\n'; } catch(e) { msg += '⚠️ Lỗi sheet điểm: ' + e.message + '\n'; }
+    alert('✅ Đã đồng bộ từ Google Sheet!\n\n' + msg);
+    location.reload();
+  } catch(err) {
+    alert('❌ Lỗi: ' + err.message);
+  }
+}
+
+async function parentConnectGsheet() {
+  let url = document.getElementById('parentGsUrl').value.trim();
+  if (!url) { alert('Paste URL Google Sheet trước!'); return; }
+  url = normalizeGsheetUrl(url);
+  localStorage.setItem('hoccungbe_gsheet_url', url);
+  await syncFromGsheet();
+}
+
+// Auto pull Google Sheet on start (nếu có URL)
+async function autoPullGsheet() {
+  // Auto pull cho MỌI role trừ admin
+  if (currentRole === 'admin') return;
+  // Có APP_CONFIG với 2 URL riêng biệt
+  const hasConfig = (typeof APP_CONFIG !== 'undefined') && (APP_CONFIG.studentsUrl || APP_CONFIG.gradesUrl);
+  if (hasConfig) {
+    try {
+      const n1 = await syncStudentsFromSheet();
+      const n2 = await syncGradesFromSheet();
+      if (n1 || n2) console.log('☁️ Auto-loaded: ' + n1 + ' HS + ' + n2 + ' reports');
+    } catch(e) { console.error('Auto sync failed:', e); }
+    return;
+  }
+  // Fallback: URL cũ 1 sheet
+  let url = localStorage.getItem('hoccungbe_gsheet_url');
+  if (!url) return;
+  url = normalizeGsheetUrl(url);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const csvText = await res.text();
+    const rows = parseCSV(csvText);
+    if (rows.length < 2) return;
+    loadStudents(); loadTeacherReports();
+    let added = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r[0] || !String(r[0]).trim()) continue;
+      const name = String(r[0]).trim();
+      const parentName = String(r[1]||'').trim();
+      const dateStr = String(r[2]||'').trim();
+      const subject = String(r[3]||'').trim();
+      const scoreStr = String(r[4]||'').trim();
+      const notes = String(r[5]||'').trim();
+      if (!scoreStr) continue;
+      const score = parseFloat(scoreStr.replace(',','.'));
+      if (isNaN(score)) continue;
+      let student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (!student) {
+        student = { id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6), code: 'HS' + String(students.length + 1).padStart(3,'0'), name, parentName, dob:'', parentPass:'phuhuynh', parentPhone:'', createdAt: new Date().toISOString() };
+        students.push(student);
+      }
+      let isoDate = new Date().toISOString().slice(0,10);
+      const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m) isoDate = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+      const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subject);
+      if (dupe) continue;
+      teacherReports.push({
+        id: 'gs_' + Date.now() + Math.random().toString(36).slice(2,6),
+        studentId: student.id, studentName: student.name, parentName: student.parentName,
+        date: isoDate, teacher: 'Cô giáo (Sheet)', subject, score, eval: notes,
+        createdAt: new Date().toISOString()
+      });
+      added++;
+    }
+    if (added > 0) { saveStudents(); saveTeacherReports(); console.log('☁️ Auto-loaded ' + added + ' reports from Google Sheet'); }
+  } catch(e) {}
+}
+
+function saveJsonBinConfig() {
+  const key = document.getElementById('jbApiKey').value.trim();
+  const bin = document.getElementById('jbBinId').value.trim();
+  const auto = document.getElementById('jbAuto').checked;
+  localStorage.setItem('hoccungbe_jsonbin_key', key);
+  localStorage.setItem('hoccungbe_jsonbin_id', bin);
+  localStorage.setItem('hoccungbe_autosync', auto ? '1' : '0');
+  alert('✅ Đã lưu cấu hình Cloud!');
+}
+
+async function pushToCloud() {
+  const key = localStorage.getItem('hoccungbe_jsonbin_key');
+  const bin = localStorage.getItem('hoccungbe_jsonbin_id');
+  if (!key || !bin) { alert('❌ Chưa có API Key và Bin ID! Cần setup ở phần trên.'); return; }
+  loadStudents(); loadTeacherReports();
+  const data = {
+    students: students,
+    teacherReports: teacherReports,
+    updatedAt: new Date().toISOString(),
+    updatedBy: (teacherInfo && teacherInfo.name) || (currentRole === 'admin' ? 'Admin' : 'Unknown')
+  };
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/' + bin, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      alert('✅ Đã đẩy dữ liệu lên Cloud thành công!\n\nPH/HS mở app sẽ tự động thấy dữ liệu mới.');
+    } else {
+      alert('❌ Lỗi: ' + res.status + '. Kiểm tra API Key/Bin ID.');
+    }
+  } catch (err) {
+    alert('❌ Không thể kết nối Cloud: ' + err.message);
+  }
+}
+
+async function pullFromCloud() {
+  const bin = localStorage.getItem('hoccungbe_jsonbin_id');
+  if (!bin) { alert('❌ Chưa có Bin ID!'); return; }
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/' + bin + '/latest');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const record = data.record;
+    if (!record.students && !record.teacherReports) {
+      alert('⚠️ Cloud chưa có dữ liệu, hoặc format không đúng.');
+      return;
+    }
+    if (record.students) localStorage.setItem('hoccungbe_students', JSON.stringify(record.students));
+    if (record.teacherReports) localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(record.teacherReports));
+    alert('✅ Đã tải dữ liệu từ Cloud!\nCập nhật lúc: ' + new Date(record.updatedAt).toLocaleString('vi-VN') + '\nApp sẽ reload.');
+    location.reload();
+  } catch (err) {
+    alert('❌ Lỗi: ' + err.message);
+  }
+}
+
+async function parentConnectCloud() {
+  const bin = document.getElementById('parentBinId').value.trim();
+  if (!bin) { alert('Nhập Bin ID trước!'); return; }
+  localStorage.setItem('hoccungbe_jsonbin_id', bin);
+  // Auto pull
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/' + bin + '/latest');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const record = data.record;
+    if (!record.students && !record.teacherReports) {
+      alert('⚠️ Cloud chưa có dữ liệu.'); return;
+    }
+    if (record.students) localStorage.setItem('hoccungbe_students', JSON.stringify(record.students));
+    if (record.teacherReports) localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(record.teacherReports));
+    alert('✅ Đã kết nối Cloud và tải báo cáo!\nCập nhật gần nhất: ' + (record.updatedAt ? new Date(record.updatedAt).toLocaleString('vi-VN') : 'Không rõ') + '\n\nApp sẽ reload.');
+    location.reload();
+  } catch (err) {
+    alert('❌ Không kết nối được: ' + err.message + '\nKiểm tra Bin ID có đúng không.');
+  }
+}
+
+// Auto sync sau khi teacher submit hoặc bulk import
+async function autoPushIfEnabled() {
+  if (localStorage.getItem('hoccungbe_autosync') !== '1') return;
+  const key = localStorage.getItem('hoccungbe_jsonbin_key');
+  const bin = localStorage.getItem('hoccungbe_jsonbin_id');
+  if (!key || !bin) return;
+  try {
+    loadStudents(); loadTeacherReports();
+    const data = {
+      students, teacherReports,
+      updatedAt: new Date().toISOString(),
+      updatedBy: (teacherInfo && teacherInfo.name) || 'Auto'
+    };
+    await fetch('https://api.jsonbin.io/v3/b/' + bin, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
+      body: JSON.stringify(data)
+    });
+    console.log('☁️ Auto synced to cloud');
+  } catch(e) { console.error('Sync failed:', e); }
+}
+
+// Auto pull khi PH/HS mở app (nếu có Bin ID)
+async function autoPullIfConfigured() {
+  const bin = localStorage.getItem('hoccungbe_jsonbin_id');
+  if (!bin) return;
+  // Chỉ auto pull cho PH/HS/Con (không phải admin/teacher — họ tự push)
+  if (currentRole === 'admin' || currentRole === 'teacher') return;
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/' + bin + '/latest');
+    if (!res.ok) return;
+    const data = await res.json();
+    const record = data.record;
+    if (record.students) localStorage.setItem('hoccungbe_students', JSON.stringify(record.students));
+    if (record.teacherReports) localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(record.teacherReports));
+    console.log('☁️ Auto pulled from cloud');
+  } catch(e) {}
+}
+
+function importParentReport(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.students || !data.teacherReports) {
+        alert('❌ File không đúng định dạng!'); return;
+      }
+      if (!confirm('📥 Nhập báo cáo từ file này?\n\nTừ: ' + (data.exportedBy || 'Không rõ') + '\nNgày xuất: ' + new Date(data.exportedAt).toLocaleString('vi-VN') + '\nSố HS: ' + data.students.length + '\nSố báo cáo: ' + data.teacherReports.length + '\n\nSẽ ghi đè danh sách hiện có.')) return;
+      localStorage.setItem('hoccungbe_students', JSON.stringify(data.students));
+      localStorage.setItem('hoccungbe_teacher_reports', JSON.stringify(data.teacherReports));
+      alert('✅ Đã nhập ' + data.teacherReports.length + ' báo cáo!\n\nApp sẽ reload để hiển thị dữ liệu.');
+      location.reload();
+    } catch (err) {
+      alert('❌ Lỗi đọc file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
 }
 
 function loadDemoData() {
@@ -3046,7 +3501,7 @@ function showImportPreview(parsed) {
     html += '<div style="margin-bottom:10px;color:#b91c1c;font-weight:700;font-size:14px;">⚠️ Có ' + dupNames.length + ' học sinh trùng tên trong danh sách cũ (sẽ được thêm mới, không ghi đè)</div>';
   }
   html += '<div style="max-height:300px;overflow-y:auto;background:white;padding:8px;border-radius:8px;">';
-  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;"><th style="padding:6px;text-align:left;">Mã HS</th><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:left;">Ngày sinh</th><th style="padding:6px;text-align:left;">PH</th><th style="padding:6px;text-align:left;">Pass</th><th style="padding:6px;text-align:left;">SĐT</th></tr></thead><tbody>';
+  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;"><th style="padding:6px;text-align:left;">Mã HS</th><th style="padding:6px;text-align:left;">Mã HS</th><th style="padding:6px;text-align:left;">Ngày sinh</th><th style="padding:6px;text-align:left;">PH</th><th style="padding:6px;text-align:left;">Pass</th><th style="padding:6px;text-align:left;">SĐT</th></tr></thead><tbody>';
   parsed.forEach((p,i) => {
     const dupClass = students.some(s => s.name.toLowerCase() === p.name.toLowerCase()) ? 'background:#fee2e2;' : '';
     const dob = p.dob ? new Date(p.dob).toLocaleDateString('vi-VN') : '<span style="color:red;">(sai định dạng)</span>';
@@ -3133,6 +3588,20 @@ function renderStudents() {
   }).join('');
 }
 
+function exportAllReportsForParents() {
+  loadStudents(); loadTeacherReports();
+  const data = {
+    students: students,
+    teacherReports: teacherReports,
+    exportedAt: new Date().toISOString(),
+    exportedBy: (teacherInfo && teacherInfo.name) || 'Giáo viên',
+    note: 'File này chứa danh sách học sinh + báo cáo cô chấm. Gửi cho phụ huynh, họ vào 🏠 → mở app → 📊 DATA → Import.'
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  downloadBlob(blob, 'bao-cao-lop-' + new Date().toISOString().slice(0,10) + '.json');
+  alert('✅ Đã xuất file báo cáo!\n\nGửi file này cho phụ huynh qua Zalo/Email.\nPH mở app → 📊 DATA → 📥 Import dữ liệu → chọn file.');
+}
+
 function resetMyReports() {
   const teacherName = (teacherInfo && teacherInfo.name) || null;
   if (!teacherName) { alert('Chưa xác định tên giáo viên!'); return; }
@@ -3189,8 +3658,8 @@ function saveStudent() {
   const parentName = document.getElementById('sParent').value.trim();
   const parentPass = document.getElementById('sParentPass').value.trim();
   const parentPhone = document.getElementById('sParentPhone').value.trim();
-  if (!name) { alert('Nhập tên học sinh!'); return; }
-  if (!parentName) { alert('Nhập tên phụ huynh!'); return; }
+  if (!name) { alert('Nhập mã học sinh!'); return; }
+  if (!parentName) { alert('Nhập mã HS của con!'); return; }
   loadStudents();
   if (editingStudentId) {
     const s = students.find(x => x.id === editingStudentId);
@@ -3385,7 +3854,7 @@ function showBulkPreview(parsed) {
   html += '<h3 style="margin-bottom:10px;color:#92400e;">👁️ Xem trước bảng điểm</h3>';
   html += '<div style="margin-bottom:10px;font-weight:700;">✅ Hợp lệ: <span style="color:#059669;">' + validCount + '</span> — ⚠️ Có vấn đề: <span style="color:#dc2626;">' + invalidCount + '</span></div>';
   html += '<div style="max-height:400px;overflow-y:auto;background:white;padding:8px;border-radius:8px;">';
-  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;position:sticky;top:0;"><th style="padding:6px;text-align:left;">Tên HS</th><th style="padding:6px;text-align:center;">Điểm</th><th style="padding:6px;text-align:left;">Nhận xét</th><th style="padding:6px;text-align:center;">Trạng thái</th></tr></thead><tbody>';
+  html += '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="background:#f3e8ff;font-weight:700;position:sticky;top:0;"><th style="padding:6px;text-align:left;">Mã HS</th><th style="padding:6px;text-align:center;">Điểm</th><th style="padding:6px;text-align:left;">Nhận xét</th><th style="padding:6px;text-align:center;">Trạng thái</th></tr></thead><tbody>';
   parsed.forEach(p => {
     let status = '';
     let rowStyle = '';
@@ -3834,7 +4303,8 @@ function pickSubject(subj) {
   document.getElementById('reportScore').scrollIntoView({behavior:'smooth', block:'center'});
 }
 
-function submitTeacherReport() {
+async function submitTeacherReport() {
+  // Auto push after submission handled below
   const studentId = document.getElementById('reportStudent').value;
   if (!studentId) { alert('Chọn học sinh trước!'); return; }
   const student = getStudentById(studentId);
@@ -3983,6 +4453,8 @@ loadParentInfo();
 loadTeacherInfo();
 loadStudents();
 checkAdmin();
+// Auto pull from cloud on startup (for parent/student roles)
+setTimeout(() => { if (typeof autoPullIfConfigured === 'function') autoPullIfConfigured(); if (typeof autoPullGsheet === 'function') autoPullGsheet(); }, 1000);
 renderHome();
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
