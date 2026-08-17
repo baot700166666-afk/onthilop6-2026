@@ -747,12 +747,12 @@
       </div>
       <div style="margin-bottom:12px;color:var(--muted);font-size:13px;font-weight:600;font-style:italic;">📌 Đây là báo cáo do <strong>cô giáo chủ nhiệm</strong> đánh giá bé <strong>trên lớp học</strong>. Không liên quan đến việc bé tự học trên app.</div>
       <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:14px 18px;border-radius:12px;border:3px solid #86efac;margin-bottom:16px;">
-        <div style="font-weight:800;color:#166534;margin-bottom:6px;">☁️ Đồng bộ điểm từ cô giáo:</div>
+        
         <div style="font-size:13px;color:#166534;margin-bottom:8px;font-weight:600;">App tự động tải điểm mới nhất từ Google Sheet của cô. Bấm nút để làm mới thủ công.</div>
         <button class="btn btn-success" onclick="syncFromGsheet()" style="padding:10px 20px;font-size:14px;">🔄 Làm mới điểm ngay</button>
       </div>
       <div style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);padding:14px 18px;border-radius:12px;border:3px solid #60a5fa;margin-bottom:16px;">
-        <div style="font-weight:800;color:#1e40af;margin-bottom:6px;">☁️ Nhận báo cáo tự động từ Cloud:</div>
+        
         <div style="font-size:13px;color:#1e40af;margin-bottom:8px;font-weight:600;">Cô giáo cho bạn <strong>Bin ID</strong> → nhập vào đây → app tự đọc báo cáo bất cứ khi nào cô cập nhật.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <input type="text" id="parentBinId" placeholder="Nhập Bin ID cô giáo cấp..." style="flex:1;min-width:200px;padding:10px;border:2px solid #60a5fa;border-radius:8px;font-family:monospace;font-size:12px;" onfocus="this.value=this.value||localStorage.getItem('hoccungbe_jsonbin_id')||''">
@@ -1335,7 +1335,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1148]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1204]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1385,7 +1385,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1148]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1204]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -1571,7 +1571,16 @@ function updateUserBadge() {
     html += '<div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #d97706;">🔐 Admin</div>';
     if (sub) sub.textContent = '⚙️ Chế độ quản trị - Thống kê tổng & Quản lý đề';
   } else if (currentRole === 'parent') {
-    html += '<div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 ' + escapeHtml((parentInfo && parentInfo.name) || 'Phụ huynh') + '</div>';
+    // Refresh parentName từ students mới nhất (tránh dùng data cũ trong parentInfo)
+    if (parentInfo && parentInfo.studentCode) {
+      loadStudents();
+      const s = students.find(x => x.code === parentInfo.studentCode);
+      if (s && s.parentName && !/^(nam|nữ|nu)$/i.test(s.parentName.trim())) {
+        parentInfo.name = s.parentName;
+      }
+    }
+    const displayName = (parentInfo && parentInfo.name && !/^(nam|nữ|nu)$/i.test(parentInfo.name.trim())) ? parentInfo.name : 'Phụ huynh';
+    html += '<div style="background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:8px 14px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:0 3px 0 #059669;">👨‍👩‍👧 ' + escapeHtml(displayName) + '</div>';
     if (currentUser && currentUser.name) html += '<div class="greeting-child">👶 ' + escapeHtml(currentUser.name) + '</div>';
     if (sub) sub.textContent = '👨‍👩‍👧 Theo dõi tiến độ học của ' + ((currentUser && currentUser.name) || 'bé');
     html += '<button onclick="changeMyPassword()" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4338ca;border:none;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;font-size:12px;font-family:Quicksand;box-shadow:0 3px 0 #a5b4fc;position:relative;z-index:100;">🔑 Đổi mật khẩu</button>';
@@ -2985,17 +2994,22 @@ async function syncStudentsFromSheet() {
       if (code) existing.code = code;
       if (name) existing.name = name;
       if (dob) existing.dob = parseDate(dob) || existing.dob;
-      if (parentName) existing.parentName = parentName;
+      const cleanPN = /^(nam|nữ|nu)$/i.test(parentName.trim()) ? '' : parentName;
+      if (cleanPN) existing.parentName = cleanPN;
+      // Nếu parentName cũ bị nhiễm Nam/Nữ → xóa
+      if (existing.parentName && /^(nam|nữ|nu)$/i.test(existing.parentName.trim())) existing.parentName = cleanPN || '';
       if (parentPass) existing.parentPass = parentPass;
       if (parentPhone) existing.parentPhone = parentPhone;
       updated++;
     } else {
+      // Reject parentName = "Nam"/"Nữ" (do detect nhầm cột Giới tính)
+      const cleanParentName = /^(nam|nữ|nu)$/i.test(parentName.trim()) ? '' : parentName;
       students.push({
         id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
         code: code || 'HS' + String(students.length + 1).padStart(3,'0'),
         name: name || code,
         dob: parseDate(dob) || '',
-        parentName, 
+        parentName: cleanParentName, 
         parentPass: parentPass || 'phuhuynh', 
         parentPhone,
         createdAt: new Date().toISOString()
@@ -4620,6 +4634,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1148</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1204</div>
 </body>
 </html>
