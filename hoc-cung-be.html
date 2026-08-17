@@ -1309,16 +1309,29 @@ function doChildLogin() {
   renderHome();
 }
 
-function doParentLogin() {
+async function doParentLogin() {
   const input = document.getElementById('parentNameIn').value.trim();
   const pw = document.getElementById('parentPassIn').value;
   if (!input) { alert('Nhập mã HS của con nhé! (VD: HS001)'); return; }
   loadStudents();
-  // Tìm HS theo mã (chính); nếu không thấy fallback theo tên HS hoặc tên PH
-  let student = students.find(s => s.code && s.code.toLowerCase() === input.toLowerCase());
-  if (!student) student = students.find(s => s.name.toLowerCase() === input.toLowerCase());
-  if (!student) student = students.find(s => s.parentName && s.parentName.toLowerCase() === input.toLowerCase());
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '"! Kiểm tra lại hoặc nhờ cô giáo thêm con vào danh sách.'); return; }
+  const findFn = () => {
+    let s = students.find(x => x.code && x.code.toLowerCase() === input.toLowerCase());
+    if (!s) s = students.find(x => x.name.toLowerCase() === input.toLowerCase());
+    if (!s) s = students.find(x => x.parentName && x.parentName.toLowerCase() === input.toLowerCase());
+    return s;
+  };
+  let student = findFn();
+  if (!student && typeof syncStudentsFromSheet === 'function') {
+    try {
+      const btn = document.querySelector('[onclick*="doParentLogin"]');
+      if (btn) { btn.textContent = '⏳ Đang tải danh sách...'; btn.disabled = true; }
+      await syncStudentsFromSheet();
+      loadStudents();
+      student = findFn();
+      if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
+    } catch(e) { console.error(e); }
+  }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên'); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1338,15 +1351,29 @@ function doParentLogin() {
   renderParentReport();
 }
 
-function doStudentLogin() {
+async function doStudentLogin() {
   const input = document.getElementById('studentNameIn').value.trim();
   const pw = document.getElementById('studentPassIn').value;
   if (!input) { alert('Nhập mã học sinh nhé! (VD: HS001)'); return; }
   loadStudents();
-  // Tìm theo mã HS trước (chính); nếu không thấy thì tìm theo tên (fallback)
-  let student = students.find(s => s.code && s.code.toLowerCase() === input.toLowerCase());
-  if (!student) student = students.find(s => s.name.toLowerCase() === input.toLowerCase());
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '"! Kiểm tra lại hoặc nhờ cô giáo thêm.'); return; }
+  const findFn = () => {
+    let s = students.find(x => x.code && x.code.toLowerCase() === input.toLowerCase());
+    if (!s) s = students.find(x => x.name.toLowerCase() === input.toLowerCase());
+    return s;
+  };
+  let student = findFn();
+  // Nếu chưa có → thử sync từ Sheet rồi tìm lại
+  if (!student && typeof syncStudentsFromSheet === 'function') {
+    try {
+      const btn = document.querySelector('[onclick*="doStudentLogin"]');
+      if (btn) { btn.textContent = '⏳ Đang tải danh sách...'; btn.disabled = true; }
+      await syncStudentsFromSheet();
+      loadStudents();
+      student = findFn();
+      if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
+    } catch(e) { console.error(e); }
+  }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên'); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
