@@ -1354,7 +1354,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1316]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1351]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1404,7 +1404,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1316]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1351]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -1456,11 +1456,105 @@ function doAdminLogin() {
   renderAdminDash();
 }
 
-function doTeacherLogin() {
+
+async function syncTeachersFromSheet() {
+  let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.teachersUrl : '');
+  if (!url) return [];
+  url = normalizeGsheetUrl(url);
+  console.log('🔗 Fetching teachers URL:', url);
+  let rows;
+  try {
+    rows = await fetchCSV(url);
+  } catch(e) {
+    console.error('Lỗi tải Sheet GV:', e);
+    return [];
+  }
+  if (!rows || rows.length < 2) return [];
+  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+  const header = rows[0].map(h => stripVi(h));
+  const findCol = (...kws) => {
+    for (let i = 0; i < header.length; i++) for (const k of kws) if (header[i].includes(stripVi(k))) return i;
+    return -1;
+  };
+  const nameIdx = findCol('ten gv', 'ten giao vien', 'ho ten', 'ten', 'name');
+  const passIdx = findCol('mat khau', 'password', 'pass');
+  const subjIdx = findCol('mon');
+  const noteIdx = findCol('ghi chu', 'note');
+  if (nameIdx < 0 || passIdx < 0) {
+    console.warn('Sheet GV thiếu cột Tên hoặc Mật khẩu');
+    return [];
+  }
+  const teachers = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const name = String(r[nameIdx]||'').trim();
+    const pw = String(r[passIdx]||'').trim();
+    if (!name || !pw) continue;
+    teachers.push({
+      name, password: pw,
+      subject: subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '',
+      note: noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '',
+      source: 'sheet'
+    });
+  }
+  console.log('✓ Loaded ' + teachers.length + ' GV từ Sheet');
+  // Cache
+  localStorage.setItem('hoccungbe_teacher_list_sheet', JSON.stringify(teachers));
+  return teachers;
+}
+
+function loadTeacherWhitelist() {
+  try { return JSON.parse(localStorage.getItem('hoccungbe_teacher_list') || '[]'); } catch(e) { return []; }
+}
+function saveTeacherWhitelist(list) {
+  localStorage.setItem('hoccungbe_teacher_list', JSON.stringify(list));
+}
+
+
+function addTeacherAccount() {
+  const name = document.getElementById('newTName').value.trim();
+  const pw = document.getElementById('newTPass').value.trim();
+  if (!name || !pw) { alert('Nhập cả tên và mật khẩu!'); return; }
+  const list = loadTeacherWhitelist();
+  if (list.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+    alert('❌ Đã có GV tên này rồi!'); return;
+  }
+  list.push({ name, password: pw, createdAt: new Date().toISOString() });
+  saveTeacherWhitelist(list);
+  document.getElementById('newTName').value = '';
+  document.getElementById('newTPass').value = '';
+  renderAdminDash();
+}
+
+function removeTeacherAccount(idx) {
+  if (!confirm('Xóa tài khoản GV này?')) return;
+  const list = loadTeacherWhitelist();
+  list.splice(idx, 1);
+  saveTeacherWhitelist(list);
+  renderAdminDash();
+}
+
+async function doTeacherLogin() {
   const name = document.getElementById('teacherNameIn').value.trim();
   const pw = document.getElementById('teacherPassIn').value;
   if (!name) { alert('Nhập tên giáo viên nhé!'); return; }
-  if (pw !== getTeacherPass()) { alert('❌ Mật khẩu giáo viên sai! (mặc định: giaovien)'); return; }
+  // Force sync teachers từ Sheet trước
+  const btn = document.querySelector('[onclick*="doTeacherLogin"]');
+  if (btn) { btn.textContent = '⏳ Đang tải danh sách GV...'; btn.disabled = true; }
+  let sheetList = [];
+  try { sheetList = await syncTeachersFromSheet(); } catch(e){ console.error(e); }
+  if (btn) { btn.textContent = '👩‍🏫 Đăng nhập'; btn.disabled = false; }
+  const localList = loadTeacherWhitelist();
+  const combined = [...sheetList, ...localList];
+  if (combined.length === 0) {
+    alert('❌ Chưa có tài khoản GV nào!\n\nAdmin cần thêm GV vào Google Sheet hoặc vào Thống kê Admin → tạo tài khoản.');
+    return;
+  }
+  const acc = combined.find(t => t.name.toLowerCase() === name.toLowerCase() && t.password === pw);
+  if (!acc) {
+    alert('❌ Tài khoản không có trong danh sách hoặc mật khẩu sai!\n\n[' + combined.length + ' GV trong danh sách]\n\nLiên hệ Admin để được cấp tài khoản.');
+    return;
+  }
   teacherInfo = { name };
   saveTeacherInfo();
   currentRole = 'teacher';
@@ -2028,6 +2122,47 @@ function renderAdminDash() {
   html += '<button class="btn" onclick="showView(\'answers\');renderAnswers();">📖 Xem kho đáp án</button>';
   html += '<button class="btn btn-success" onclick="showView(\'manage\');renderManage();">⚙️ Quản lý câu hỏi</button>';
   html += '<button class="btn btn-secondary" onclick="showView(\'stats\');renderStats();">📊 Xem tiến độ chi tiết</button>';
+  html += '</div>';
+
+  
+  // Teacher whitelist management
+  const teachers = loadTeacherWhitelist();
+  const sheetTeachers = JSON.parse(localStorage.getItem('hoccungbe_teacher_list_sheet') || '[]');
+  html += '<h3 style="font-size:18px;margin:25px 0 12px;color:#8b5cf6;">👩‍🏫 Danh sách tài khoản giáo viên</h3>';
+  if (sheetTeachers.length > 0) {
+    html += '<div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);padding:12px 16px;border-radius:12px;border:2px solid #86efac;margin-bottom:12px;">';
+    html += '<div style="font-weight:800;color:#065f46;">☁️ ' + sheetTeachers.length + ' GV từ Google Sheet</div>';
+    html += '<div style="font-size:12px;color:#047857;margin-top:4px;">Cập nhật: sửa trực tiếp trong Google Sheet, app tự sync khi GV login.</div>';
+    html += '<details style="margin-top:8px;"><summary style="cursor:pointer;font-weight:700;color:#047857;">Xem danh sách</summary>';
+    html += '<div style="margin-top:8px;font-size:13px;">';
+    sheetTeachers.forEach(t => {
+      html += '• <b>' + escapeHtml(t.name) + '</b> — pass: <code>' + escapeHtml(t.password) + '</code>' + (t.subject ? ' — 📚 ' + escapeHtml(t.subject) : '') + '<br>';
+    });
+    html += '</div></details></div>';
+  }
+  html += '<div style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);padding:16px;border-radius:14px;border:2px solid #c4b5fd;margin-bottom:20px;">';
+  html += '<div style="font-weight:800;color:#6b21a8;margin-bottom:8px;">➕ Thêm GV thủ công (chỉ máy Admin này)</div>';
+  html += '<div style="font-size:13px;color:#6b21a8;margin-bottom:12px;">💡 Ưu tiên: quản lý GV trong Google Sheet để đồng bộ nhiều máy. Danh sách dưới đây chỉ trên máy Admin hiện tại.</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
+  html += '<input type="text" id="newTName" placeholder="Tên GV (VD: Cô Lan)" style="flex:1;min-width:150px;padding:10px;border:2px solid #c4b5fd;border-radius:10px;font-family:Quicksand;">';
+  html += '<input type="text" id="newTPass" placeholder="Mật khẩu" style="flex:1;min-width:120px;padding:10px;border:2px solid #c4b5fd;border-radius:10px;font-family:Quicksand;">';
+  html += '<button onclick="addTeacherAccount()" style="background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:800;cursor:pointer;font-family:Quicksand;box-shadow:0 3px 0 #7c3aed;">➕ Thêm GV</button>';
+  html += '</div>';
+  if (teachers.length === 0) {
+    html += '<div style="color:#6b21a8;font-style:italic;text-align:center;padding:12px;">⚠️ Chưa có tài khoản GV nào - Admin cần tạo trước khi cho login</div>';
+  } else {
+    html += '<table style="width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;">';
+    html += '<thead><tr style="background:#8b5cf6;color:white;"><th style="padding:10px;text-align:left;">Tên GV</th><th style="padding:10px;text-align:left;">Mật khẩu</th><th style="padding:10px;text-align:center;width:80px;">Xóa</th></tr></thead>';
+    html += '<tbody>';
+    teachers.forEach((t, idx) => {
+      html += '<tr style="border-bottom:1px solid #ede9fe;">';
+      html += '<td style="padding:10px;font-weight:700;">' + escapeHtml(t.name) + '</td>';
+      html += '<td style="padding:10px;font-family:monospace;color:#6b21a8;">' + escapeHtml(t.password) + '</td>';
+      html += '<td style="padding:10px;text-align:center;"><button onclick="removeTeacherAccount(' + idx + ')" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-weight:700;">🗑️</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
   html += '</div>';
 
   body.innerHTML = html;
@@ -4679,6 +4814,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1316</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1351</div>
 </body>
 </html>
