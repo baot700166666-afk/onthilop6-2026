@@ -258,6 +258,25 @@
     .card { padding: 18px; }
     .stat-value { font-size: 32px; }
   }
+
+/* Locked role button - hiện nhưng ko click được */
+.login-role-btn.locked {
+  opacity: 0.35;
+  filter: grayscale(60%);
+  position: relative;
+  cursor: not-allowed;
+}
+.login-role-btn.locked::after {
+  content: "🔒";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 16px;
+}
+.login-role-btn.locked:hover {
+  transform: none !important;
+  background: initial !important;
+}
 </style>
 </head>
 <body>
@@ -266,7 +285,7 @@
     <h1>Học cùng bé</h1>
     <div class="subtitle">Chào mừng đến với ứng dụng ôn thi vào lớp 6!</div>
     <div class="login-role" style="grid-template-columns:1fr 1fr;">
-      <div class="login-role-btn active" id="roleChild" onclick="selectRole('child')">
+      <div class="login-role-btn" id="roleChild" style="" onclick="selectRole('child')">
         <span class="emoji">👦</span>Con tự học
       </div>
       <div class="login-role-btn" id="roleStudent" onclick="selectRole('student')">
@@ -278,10 +297,10 @@
       <div class="login-role-btn" id="roleTeacher" onclick="selectRole('teacher')">
         <span class="emoji">👩‍🏫</span>Giáo viên
       </div>
-      <div class="login-role-btn" id="roleAdmin" onclick="selectRole('admin')">
+      <div class="login-role-btn locked" id="roleAdmin" style="" onclick="selectRole('admin')">
         <span class="emoji">🔐</span>Admin
       </div>
-      <div class="login-role-btn" id="roleData" onclick="selectRole('data')">
+      <div class="login-role-btn" id="roleData" style="" onclick="selectRole('data')">
         <span class="emoji">🏆</span>DATA
       </div>
     </div>
@@ -293,7 +312,7 @@
         <input type="password" id="childPass" placeholder="Mật khẩu do con tự đặt" maxlength="30" onkeypress="if(event.key==='Enter')doChildLogin()">
         <div id="childPass2Wrap" style="display:none;">
           <label>🔁 Nhập lại mật khẩu (chỉ lần đầu):</label>
-          <input type="password" id="childPass2" placeholder="Xác nhận mật khẩu" maxlength="30" onkeypress="if(event.key==='Enter')doChildLogin()">
+          <input type="password" id="childPass2" placeholder="Xác nhận mật khẩu" maxlength="30" onkeypress="if(event.key==='Enter')doChildLogin()" style="display:none">
         </div>
         <div id="childStatus" style="font-size:12px;color:var(--muted);margin-top:8px;font-weight:600;">💡 Con nhập tên trước để hệ thống kiểm tra</div>
         <button class="btn login-submit" onclick="doChildLogin()">🚀 Bắt đầu học</button>
@@ -330,7 +349,8 @@
       </div>
       <div id="adminForm" style="display:none;">
         <label>🔐 Mật khẩu Admin:</label>
-        <input type="password" id="adminPassIn" placeholder="Nhập mật khẩu..." onkeypress="if(event.key==='Enter')doAdminLogin()">
+        <input type="text" id="adminUserIn" placeholder="Tên đăng nhập..." style="margin-bottom:8px;" autocomplete="off">
+        <input type="password" id="adminPassIn" placeholder="Mật khẩu..." onkeypress="if(event.key==='Enter')doAdminLogin()" autocomplete="off">
         <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Mặc định: <code>868686</code></div>
         <button class="btn login-submit" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);box-shadow:0 4px 0 #d97706;" onclick="doAdminLogin()">🔐 Đăng nhập Admin</button>
       </div>
@@ -1254,6 +1274,12 @@ function saveTeacherInfo(){ if(teacherInfo) localStorage.setItem('hoccungbe_teac
 let currentRole = 'child'; // 'child' | 'parent' | 'admin'
 
 function selectRole(r) {
+  // Admin: chỉ mở qua URL ?admin
+  const params = new URLSearchParams(location.search);
+  if (r === 'admin' && !params.has('admin')) {
+    alert('🔒 Chức năng Admin đang bị khóa!\n\nLiên hệ Admin nếu bạn cần truy cập.');
+    return;
+  }
   selectedRole = r;
   ['child','student','parent','teacher','admin','data'].forEach(x => {
     const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
@@ -1297,27 +1323,65 @@ function checkChildAccount() {
   }
 }
 
+function loadChildWhitelist() {
+  try { return JSON.parse(localStorage.getItem('hoccungbe_child_whitelist') || '[]'); } catch(e) { return []; }
+}
+function saveChildWhitelist(list) {
+  localStorage.setItem('hoccungbe_child_whitelist', JSON.stringify(list));
+}
+function addChildAccount() {
+  const name = document.getElementById('newChildName').value.trim();
+  const pw = document.getElementById('newChildPass').value.trim();
+  if (!name || !pw) { alert('Nhập cả tên và mật khẩu!'); return; }
+  const list = loadChildWhitelist();
+  if (list.some(t => t.name.toLowerCase() === name.toLowerCase())) { alert('❌ Đã có tên này rồi!'); return; }
+  list.push({ name, password: pw, createdAt: new Date().toISOString() });
+  saveChildWhitelist(list);
+  document.getElementById('newChildName').value = '';
+  document.getElementById('newChildPass').value = '';
+  renderAdminDash();
+}
+function removeChildAccount(idx) {
+  if (!confirm('Xóa tài khoản này?')) return;
+  const l = loadChildWhitelist(); l.splice(idx, 1); saveChildWhitelist(l); renderAdminDash();
+}
+function loadDataWhitelist() {
+  try { return JSON.parse(localStorage.getItem('hoccungbe_data_whitelist') || '[]'); } catch(e) { return []; }
+}
+function saveDataWhitelist(list) {
+  localStorage.setItem('hoccungbe_data_whitelist', JSON.stringify(list));
+}
+function addDataAccount() {
+  const name = document.getElementById('newDataName').value.trim();
+  const pw = document.getElementById('newDataPass').value.trim();
+  if (!name || !pw) { alert('Nhập cả tên và mật khẩu!'); return; }
+  const list = loadDataWhitelist();
+  if (list.some(t => t.name.toLowerCase() === name.toLowerCase())) { alert('❌ Đã có tên này rồi!'); return; }
+  list.push({ name, password: pw, createdAt: new Date().toISOString() });
+  saveDataWhitelist(list);
+  document.getElementById('newDataName').value = '';
+  document.getElementById('newDataPass').value = '';
+  renderAdminDash();
+}
+function removeDataAccount(idx) {
+  if (!confirm('Xóa tài khoản này?')) return;
+  const l = loadDataWhitelist(); l.splice(idx, 1); saveDataWhitelist(l); renderAdminDash();
+}
+
 function doChildLogin() {
   const name = document.getElementById('childName').value.trim();
   const pass = document.getElementById('childPass').value;
-  const pass2 = document.getElementById('childPass2').value;
-  if (!name) { alert('Con nhập tên trước nhé!'); return; }
-  if (!pass) { alert('Con nhập mật khẩu nhé!'); return; }
-  if (pass.length < 3) { alert('Mật khẩu phải dài ít nhất 3 ký tự!'); return; }
-  const accs = loadChildAccounts();
-  const key = name.toLowerCase();
-  if (accs[key]) {
-    // Đăng nhập
-    if (accs[key].pass !== pass) { alert('❌ Sai mật khẩu! Nếu con quên, nhờ bố mẹ giúp reset.'); return; }
-  } else {
-    // Đăng ký mới - cần pass2
-    if (!pass2) { alert('Con nhập lại mật khẩu để xác nhận!'); return; }
-    if (pass !== pass2) { alert('❌ Mật khẩu 2 lần không khớp! Con nhập lại nhé.'); return; }
-    accs[key] = { name, pass, createdAt: new Date().toISOString() };
-    saveChildAccounts(accs);
-    alert('✅ Tạo tài khoản thành công! Từ nay con dùng tên + mật khẩu này để vào học.');
+  if (!name) { alert('Nhập tên nhé!'); return; }
+  if (!pass) { alert('Nhập mật khẩu nhé!'); return; }
+  // Chỉ user có trong whitelist do Admin cấp mới vào được
+  const whitelist = loadChildWhitelist();
+  if (whitelist.length === 0) {
+    alert('❌ Chức năng "Con tự học" chưa được kích hoạt!\n\nAdmin cần cấp tài khoản trước.');
+    return;
   }
-  currentUser = { role: 'child', name: accs[key].name, loginAt: new Date().toISOString() };
+  const acc = whitelist.find(a => a.name.toLowerCase() === name.toLowerCase() && a.password === pass);
+  if (!acc) { alert('❌ Tài khoản không có trong danh sách hoặc mật khẩu sai!'); return; }
+  currentUser = { role: 'child', name: acc.name, loginAt: new Date().toISOString() };
   localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
   isAdmin = false;
   currentRole = 'child';
@@ -1354,7 +1418,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1351]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1440]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1404,7 +1468,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1351]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1440]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -1428,8 +1492,17 @@ async function doStudentLogin() {
 }
 
 function doDataLogin() {
+  const nameEl = document.getElementById('dataNameIn');
+  const name = nameEl ? nameEl.value.trim() : '';
   const pw = document.getElementById('dataPassIn').value;
-  if (pw !== getTrophyPass()) { alert('❌ Mật khẩu DATA sai! '); return; }
+  const whitelist = loadDataWhitelist();
+  if (whitelist.length === 0) {
+    alert('❌ Chức năng DATA chưa được kích hoạt!\n\nAdmin cần cấp tài khoản trước.');
+    return;
+  }
+  if (!name) { alert('Nhập tên đăng nhập!'); return; }
+  const acc = whitelist.find(a => a.name.toLowerCase() === name.toLowerCase() && a.password === pw);
+  if (!acc) { alert('❌ Tài khoản không có trong danh sách hoặc mật khẩu sai!'); return; }
   isAdmin = false;
   currentRole = 'data';
   sessionStorage.setItem('hoccungbe_role', 'data');
@@ -1442,8 +1515,13 @@ function doDataLogin() {
 }
 
 function doAdminLogin() {
+  const user = (document.getElementById('adminUserIn') || {}).value || '';
   const pw = document.getElementById('adminPassIn').value;
-  if (pw !== getAdminPass()) { alert('❌ Mật khẩu Admin sai! (mặc định: 868686)'); return; }
+  const ADMIN_USER_LIST = [
+    { user: 'trungnt86', pass: 'trungnt86' }
+  ];
+  const acc = ADMIN_USER_LIST.find(a => a.user.toLowerCase() === user.trim().toLowerCase() && a.pass === pw);
+  if (!acc) { alert('❌ Sai tên đăng nhập hoặc mật khẩu Admin!'); return; }
   isAdmin = true;
   currentRole = 'admin';
   sessionStorage.setItem('hoccungbe_admin', 'zinzu');
@@ -2160,6 +2238,50 @@ function renderAdminDash() {
       html += '<td style="padding:10px;font-family:monospace;color:#6b21a8;">' + escapeHtml(t.password) + '</td>';
       html += '<td style="padding:10px;text-align:center;"><button onclick="removeTeacherAccount(' + idx + ')" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-weight:700;">🗑️</button></td>';
       html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+
+  // ==== Con tự học whitelist ====
+  const childAccs = loadChildWhitelist();
+  html += '<h3 style="font-size:18px;margin:25px 0 12px;color:#f59e0b;">🧒 Danh sách tài khoản Con tự học</h3>';
+  html += '<div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:16px;border-radius:14px;border:2px solid #fbbf24;margin-bottom:20px;">';
+  html += '<div style="font-size:13px;color:#92400e;margin-bottom:12px;">💡 Cấp tài khoản cho con em muốn tự học trong app.</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
+  html += '<input type="text" id="newChildName" placeholder="Tên con" style="flex:1;min-width:150px;padding:10px;border:2px solid #fbbf24;border-radius:10px;font-family:Quicksand;">';
+  html += '<input type="text" id="newChildPass" placeholder="Mật khẩu" style="flex:1;min-width:120px;padding:10px;border:2px solid #fbbf24;border-radius:10px;font-family:Quicksand;">';
+  html += '<button onclick="addChildAccount()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:800;cursor:pointer;font-family:Quicksand;box-shadow:0 3px 0 #b45309;">➕ Thêm</button>';
+  html += '</div>';
+  if (childAccs.length === 0) {
+    html += '<div style="color:#92400e;font-style:italic;text-align:center;padding:12px;">⚠️ Chưa có tài khoản nào. Ai click "Con tự học" sẽ bị chặn.</div>';
+  } else {
+    html += '<table style="width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;">';
+    html += '<thead><tr style="background:#f59e0b;color:white;"><th style="padding:10px;text-align:left;">Tên</th><th style="padding:10px;text-align:left;">Mật khẩu</th><th style="padding:10px;text-align:center;width:80px;">Xóa</th></tr></thead><tbody>';
+    childAccs.forEach((t, idx) => {
+      html += '<tr style="border-bottom:1px solid #fef3c7;"><td style="padding:10px;font-weight:700;">' + escapeHtml(t.name) + '</td><td style="padding:10px;font-family:monospace;color:#92400e;">' + escapeHtml(t.password) + '</td><td style="padding:10px;text-align:center;"><button onclick="removeChildAccount(' + idx + ')" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-weight:700;">🗑️</button></td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+
+  // ==== DATA whitelist ====
+  const dataAccs = loadDataWhitelist();
+  html += '<h3 style="font-size:18px;margin:25px 0 12px;color:#0f172a;">🏆 Danh sách tài khoản DATA (Chuyên đề)</h3>';
+  html += '<div style="background:linear-gradient(135deg,#f8fafc,#e2e8f0);padding:16px;border-radius:14px;border:2px solid #64748b;margin-bottom:20px;">';
+  html += '<div style="font-size:13px;color:#334155;margin-bottom:12px;">💡 Cấp quyền vào kho bài giảng chuyên đề (B1-B25).</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
+  html += '<input type="text" id="newDataName" placeholder="Tên user" style="flex:1;min-width:150px;padding:10px;border:2px solid #64748b;border-radius:10px;font-family:Quicksand;">';
+  html += '<input type="text" id="newDataPass" placeholder="Mật khẩu" style="flex:1;min-width:120px;padding:10px;border:2px solid #64748b;border-radius:10px;font-family:Quicksand;">';
+  html += '<button onclick="addDataAccount()" style="background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:800;cursor:pointer;font-family:Quicksand;box-shadow:0 3px 0 #020617;">➕ Thêm</button>';
+  html += '</div>';
+  if (dataAccs.length === 0) {
+    html += '<div style="color:#334155;font-style:italic;text-align:center;padding:12px;">⚠️ Chưa có tài khoản nào. Ai click "DATA" sẽ bị chặn.</div>';
+  } else {
+    html += '<table style="width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;">';
+    html += '<thead><tr style="background:#0f172a;color:white;"><th style="padding:10px;text-align:left;">Tên</th><th style="padding:10px;text-align:left;">Mật khẩu</th><th style="padding:10px;text-align:center;width:80px;">Xóa</th></tr></thead><tbody>';
+    dataAccs.forEach((t, idx) => {
+      html += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:10px;font-weight:700;">' + escapeHtml(t.name) + '</td><td style="padding:10px;font-family:monospace;color:#334155;">' + escapeHtml(t.password) + '</td><td style="padding:10px;text-align:center;"><button onclick="removeDataAccount(' + idx + ')" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-weight:700;">🗑️</button></td></tr>';
     });
     html += '</tbody></table>';
   }
@@ -4814,6 +4936,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1351</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1440</div>
 </body>
 </html>
