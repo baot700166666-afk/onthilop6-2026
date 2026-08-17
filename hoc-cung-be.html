@@ -1354,7 +1354,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1207]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1215]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1404,7 +1404,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1207]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1215]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -3467,7 +3467,7 @@ function renderParentReport() {
     const dt = new Date(r.date).toLocaleDateString('vi-VN', {weekday:'long', day:'numeric', month:'numeric', year:'numeric'});
     html += '<div style="background:white;padding:14px 16px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;border-left:5px solid #a855f7;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:6px;">';
-    html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <strong>' + escapeHtml(r.subject||'--') + '</strong>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
+    html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <span style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:3px 10px;border-radius:12px;font-weight:800;font-size:13px;margin-left:6px;">📚 ' + escapeHtml(r.subject||'--') + '</span>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
     if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 16px;border-radius:12px;font-family:Baloo 2;font-size:22px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
     html += '</div>';
     if (r.content) html += '<div style="font-size:14px;margin-top:4px;padding:6px 10px;background:#f5f3ff;border-radius:6px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
@@ -4653,6 +4653,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1207</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1215</div>
 </body>
 </html>
