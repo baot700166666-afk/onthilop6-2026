@@ -2896,9 +2896,23 @@ async function fetchCSV(url) {
 
 async function syncStudentsFromSheet() {
   let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.studentsUrl : '') || localStorage.getItem('hoccungbe_gsheet_students_url');
-  if (!url) return 0;
-  const rows = await fetchCSV(url);
-  if (!rows || rows.length < 2) return 0;
+  if (!url) {
+    alert('❌ Chưa cấu hình URL Sheet Danh sách!\n\nCần file app-config.js với studentsUrl.\nKiểm tra file này đã upload lên GitHub chưa.');
+    return 0;
+  }
+  console.log('🔗 Fetching students URL:', url);
+  let rows;
+  try {
+    rows = await fetchCSV(url);
+  } catch(e) {
+    alert('❌ Lỗi tải Sheet Danh sách!\n\n' + e.message + '\n\nURL: ' + url + '\n\nKiểm tra Sheet đã share công khai chưa.');
+    return 0;
+  }
+  if (!rows || rows.length < 2) {
+    alert('⚠️ Sheet Danh sách rỗng hoặc không tải được!\n\nURL: ' + url);
+    return 0;
+  }
+  console.log('✓ Loaded ' + rows.length + ' rows from students sheet');
   // Nhận diện cột theo TÊN header (bỏ dấu tiếng Việt để match dễ hơn)
   const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
   const header = rows[0].map(h => stripVi(h));
@@ -2974,9 +2988,17 @@ async function syncStudentsFromSheet() {
 
 async function syncGradesFromSheet() {
   let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.gradesUrl : '') || localStorage.getItem('hoccungbe_gsheet_url');
-  if (!url) return 0;
-  const rows = await fetchCSV(url);
-  if (!rows || rows.length < 2) return 0;
+  if (!url) { console.warn('Chưa cấu hình URL Sheet điểm'); return 0; }
+  console.log('🔗 Fetching grades URL:', url);
+  let rows;
+  try {
+    rows = await fetchCSV(url);
+  } catch(e) {
+    console.error('Lỗi tải Sheet điểm:', e);
+    return 0;
+  }
+  if (!rows || rows.length < 2) { console.warn('Sheet điểm rỗng'); return 0; }
+  console.log('✓ Loaded ' + rows.length + ' rows from grades sheet');
   const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
   const header = rows[0].map(h => stripVi(h));
   const findCol = (...keywords) => {
