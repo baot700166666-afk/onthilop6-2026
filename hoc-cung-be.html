@@ -297,7 +297,7 @@
       <div class="login-role-btn" id="roleTeacher" onclick="selectRole('teacher')">
         <span class="emoji">👩‍🏫</span>Giáo viên
       </div>
-      <div class="login-role-btn locked" id="roleAdmin" style="" onclick="selectRole('admin')">
+      <div class="login-role-btn" id="roleAdmin" style="" onclick="selectRole('admin')">
         <span class="emoji">🔐</span>Admin
       </div>
       <div class="login-role-btn" id="roleData" style="" onclick="selectRole('data')">
@@ -1274,12 +1274,6 @@ function saveTeacherInfo(){ if(teacherInfo) localStorage.setItem('hoccungbe_teac
 let currentRole = 'child'; // 'child' | 'parent' | 'admin'
 
 function selectRole(r) {
-  // Admin: chỉ mở qua URL ?admin
-  const params = new URLSearchParams(location.search);
-  if (r === 'admin' && !params.has('admin')) {
-    alert('🔒 Chức năng Admin đang bị khóa!\n\nLiên hệ Admin nếu bạn cần truy cập.');
-    return;
-  }
   selectedRole = r;
   ['child','student','parent','teacher','admin','data'].forEach(x => {
     const btn = document.getElementById('role' + x.charAt(0).toUpperCase() + x.slice(1));
@@ -1418,7 +1412,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1443]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1450]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1468,7 +1462,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1443]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1450]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -4936,6 +4930,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1443</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1450</div>
 </body>
 </html>
