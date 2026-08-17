@@ -1219,6 +1219,25 @@ function exportQuestions() {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+// Format nhận xét thành list nếu có ký hiệu " - "
+function formatNotes(text) {
+  if (!text) return '';
+  const t = String(text).trim();
+  // Nếu có nhiều đoạn " - " thì split thành list
+  // Pattern: header trước, sau đó là các mục "- item1 - item2"
+  const parts = t.split(/\s+-\s+/);
+  if (parts.length < 2) return escapeHtml(t);
+  // Phần đầu là header (VD: "Con lưu ý:")
+  const header = parts[0].trim();
+  const items = parts.slice(1).map(p => p.trim()).filter(p => p);
+  let out = '';
+  if (header) out += '<div style="margin-bottom:6px;">' + escapeHtml(header) + '</div>';
+  out += '<ul style="margin:0;padding-left:20px;">';
+  items.forEach(it => { out += '<li style="margin-bottom:3px;">' + escapeHtml(it) + '</li>'; });
+  out += '</ul>';
+  return out;
+}
+
 
 // ========== USER PROFILE & LOGIN ==========
 let isAdmin = false;
@@ -1335,7 +1354,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1204]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1207]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1385,7 +1404,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1204]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1207]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -3453,7 +3472,7 @@ function renderParentReport() {
     html += '</div>';
     if (r.content) html += '<div style="font-size:14px;margin-top:4px;padding:6px 10px;background:#f5f3ff;border-radius:6px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
     if (r.homework) html += '<div style="font-size:14px;margin-top:4px;background:#fef3c7;padding:6px 10px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
-    if (r.eval) html += '<div style="font-size:14px;margin-top:4px;background:#dbeafe;padding:6px 10px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+    if (r.eval) html += '<div style="font-size:14px;margin-top:4px;background:#dbeafe;padding:6px 10px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + formatNotes(r.eval) + '</div>';
     html += '</div>';
   });
 
@@ -3902,7 +3921,7 @@ function renderTeacher() {
       (r.subject ? '<div style="margin-bottom:6px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>' : '') +
       (r.content ? '<div style="margin-bottom:6px;font-size:14px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>' : '') +
       (r.homework ? '<div style="margin-bottom:6px;background:#fef3c7;padding:6px 10px;border-radius:8px;font-size:14px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>' : '') +
-      (r.eval ? '<div style="margin-bottom:6px;background:#dbeafe;padding:6px 10px;border-radius:8px;font-size:14px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>' : '') +
+      (r.eval ? '<div style="margin-bottom:6px;background:#dbeafe;padding:6px 10px;border-radius:8px;font-size:14px;"><strong>💬 Nhận xét:</strong> ' + formatNotes(r.eval) + '</div>' : '') +
       '<button onclick="deleteTeacherReport(\'' + r.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;margin-top:6px;">🗑️ Xóa</button>' +
       '</div>';
   }).join('');
@@ -4583,7 +4602,7 @@ function renderDailyReport() {
       html += '</div>';
       if (r.content) html += '<div style="font-size:13px;margin-top:4px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
       if (r.homework) html += '<div style="font-size:13px;margin-top:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
-      if (r.eval) html += '<div style="font-size:13px;margin-top:4px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
+      if (r.eval) html += '<div style="font-size:13px;margin-top:4px;background:#dbeafe;padding:5px 8px;border-radius:6px;"><strong>💬 Nhận xét:</strong> ' + formatNotes(r.eval) + '</div>';
       html += '</div>';
     });
     html += '</div>';
@@ -4634,6 +4653,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1204</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1207</div>
 </body>
 </html>
