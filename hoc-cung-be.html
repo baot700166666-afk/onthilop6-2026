@@ -1345,6 +1345,9 @@ async function doParentLogin() {
   sessionStorage.removeItem('hoccungbe_admin');
   currentUser = { role: 'child', name: student.name, dob: student.dob, studentId: student.id };
   localStorage.setItem('hoccungbe_user', JSON.stringify(currentUser));
+  if (typeof syncGradesFromSheet === 'function') {
+    try { await syncGradesFromSheet(); } catch(e){ console.error(e); }
+  }
   hideLoginScreen();
   updateUserBadge();
   showView('parent');
@@ -1386,6 +1389,10 @@ async function doStudentLogin() {
   isAdmin = false;
   sessionStorage.setItem('hoccungbe_role', 'student');
   sessionStorage.removeItem('hoccungbe_admin');
+  // Sync điểm ngay để hiển thị đầy đủ
+  if (typeof syncGradesFromSheet === 'function') {
+    try { await syncGradesFromSheet(); } catch(e){ console.error(e); }
+  }
   hideLoginScreen();
   updateUserBadge();
   showView('myScores');
@@ -2912,7 +2919,13 @@ async function syncStudentsFromSheet() {
   const phoneIdx  = findCol('sdt', 'so dien thoai', 'dien thoai', 'phone');
   console.log('📋 Header sheet HS:', header);
   console.log('📍 Mapping cột:', {code:codeIdx, name:nameIdx, dob:dobIdx, parent:parentIdx, pass:passIdx, phone:phoneIdx});
+  if (nameIdx < 0 || codeIdx < 0) {
+    alert('⚠️ Sheet Danh sách có header lạ:\n\n' + JSON.stringify(header) + '\n\nCần có cột "Mã học sinh" và "Tên học sinh" (dòng 1).\nVui lòng sửa header trong sheet cho đúng.');
+    return 0;
+  }
   loadStudents();
+  // Xóa HS ảo (được auto-tạo với name=code từ bản cũ) trước khi sync
+  students = students.filter(s => !(s.name === s.code || /^(VS|HS)\d+$/i.test(s.name)));
   const existingByCode = {}, existingByName = {};
   students.forEach(s => { 
     if (s.code) existingByCode[s.code.toLowerCase()] = s; 
@@ -2955,6 +2968,7 @@ async function syncStudentsFromSheet() {
   }
   saveStudents();
   console.log('✓ Sync HS: +' + added + ' mới, ~' + updated + ' cập nhật');
+  console.log('📝 3 HS đầu:', students.slice(0,3).map(s=>({code:s.code,name:s.name,parentPass:s.parentPass})));
   return added + updated;
 }
 
@@ -2972,13 +2986,17 @@ async function syncGradesFromSheet() {
     return -1;
   };
   const codeIdx  = findCol('ma hoc sinh', 'ma hs', 'ma hoc', 'code');
-  const nameIdx  = findCol('ten hoc sinh', 'ten hs', 'ho ten', 'ten con');
+  const nameIdx  = findCol('ho va ten', 'ten hoc sinh', 'ten hs', 'ho ten', 'ten con');
   const dateIdx  = findCol('ngay', 'date');
-  const subjIdx  = findCol('mon', 'subject');
-  const scoreIdx = findCol('diem', 'score', 'mark');
-  const noteIdx  = findCol('nhan xet', 'ghi chu', 'note', 'comment');
+  const subjIdx  = findCol('mon hoc', 'mon', 'subject');
+  const scoreIdx = findCol('diem so', 'diem', 'score', 'mark');
+  const noteIdx  = findCol('nhan xet', 'ghi chu', 'note', 'comment', 'danh gia');
   console.log('📋 Header sheet điểm:', header);
   console.log('📍 Mapping:', {code:codeIdx, name:nameIdx, date:dateIdx, subj:subjIdx, score:scoreIdx, note:noteIdx});
+  if (scoreIdx < 0 || (codeIdx < 0 && nameIdx < 0)) {
+    console.warn('⚠️ Sheet điểm thiếu cột bắt buộc');
+    return 0;
+  }
   loadStudents(); loadTeacherReports();
   let added = 0, skipped = 0;
   for (let i = 1; i < rows.length; i++) {
@@ -2990,9 +3008,12 @@ async function syncGradesFromSheet() {
     const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '';
     const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx]||'').trim() : '';
     const notes = noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '';
-    if (!scoreStr && !subject) continue;
+    // Chỉ cần có điểm là được (môn/ngày optional)
+    if (!scoreStr) continue;
     const score = parseFloat(scoreStr.replace(',','.'));
     if (isNaN(score)) continue;
+    // Nếu không có môn → mặc định "Tổng hợp"
+    const subj = subject || 'Tổng hợp';
     // Match HS theo mã trước, sau đó tên
     let student = null;
     if (code) student = students.find(s => s.code && s.code.toLowerCase() === code.toLowerCase());
@@ -3001,12 +3022,25 @@ async function syncGradesFromSheet() {
     let isoDate = new Date().toISOString().slice(0,10);
     const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
     if (m) isoDate = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
-    const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subject);
-    if (dupe) continue;
+    // Với sheet không có ngày/môn → chỉ có 1 record/HS (dupe = cùng HS + cùng môn, bất kể ngày)
+    let dupeIdx;
+    if (!dateStr) {
+      // Không có ngày → update record cũ nếu có (điểm mới nhất)
+      dupeIdx = teacherReports.findIndex(rp => rp.studentId === student.id && rp.subject === subj && rp.teacher === 'Cô giáo (Sheet)');
+      if (dupeIdx >= 0) {
+        teacherReports[dupeIdx].score = score;
+        teacherReports[dupeIdx].eval = notes;
+        teacherReports[dupeIdx].date = isoDate;
+        continue;
+      }
+    } else {
+      const dupe = teacherReports.some(rp => rp.studentId === student.id && rp.date === isoDate && rp.subject === subj);
+      if (dupe) continue;
+    }
     teacherReports.push({
       id: 'gs_' + Date.now() + Math.random().toString(36).slice(2,6),
       studentId: student.id, studentName: student.name, parentName: student.parentName,
-      date: isoDate, teacher: 'Cô giáo (Sheet)', subject, score, eval: notes,
+      date: isoDate, teacher: 'Cô giáo (Sheet)', subject: subj, score, eval: notes,
       createdAt: new Date().toISOString()
     });
     added++;
