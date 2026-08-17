@@ -2892,30 +2892,47 @@ async function syncStudentsFromSheet() {
   if (!url) return 0;
   const rows = await fetchCSV(url);
   if (!rows || rows.length < 2) return 0;
-  const header = rows[0].map(h => String(h).toLowerCase().trim());
-  const hasCode = header.some(h => h.includes('mã') || h.includes('ma hoc') || h.includes('code'));
-  const codeIdx = hasCode ? 0 : -1;
-  const nameIdx = hasCode ? 1 : 0;
-  const dobIdx  = hasCode ? 2 : 1;
-  const parentIdx = hasCode ? 3 : 2;
-  const passIdx = hasCode ? 4 : 3;
-  const phoneIdx = hasCode ? 5 : 4;
+  // Nhận diện cột theo TÊN header (không hardcode thứ tự)
+  const header = rows[0].map(h => String(h||'').toLowerCase().trim().replace(/\s+/g,' '));
+  const findCol = (...keywords) => {
+    for (let i = 0; i < header.length; i++) {
+      for (const kw of keywords) {
+        if (header[i].includes(kw)) return i;
+      }
+    }
+    return -1;
+  };
+  const codeIdx   = findCol('mã hs', 'ma hs', 'mã hoc', 'ma hoc', 'code', 'id hs');
+  const nameIdx   = findCol('tên hs', 'ten hs', 'tên học', 'ten hoc', 'họ và tên', 'ho va ten', 'họ tên', 'ho ten', 'tên hs', 'name');
+  const dobIdx    = findCol('ngày sinh', 'ngay sinh', 'dob', 'birthday');
+  const genderIdx = findCol('giới tính', 'gioi tinh', 'gender', 'nam/nữ', 'nam/nu');
+  const parentIdx = findCol('tên ph', 'ten ph', 'tên phụ huynh', 'ten phu huynh', 'phụ huynh', 'phu huynh', 'parent');
+  const passIdx   = findCol('mật khẩu', 'mat khau', 'password', 'pass');
+  const phoneIdx  = findCol('sđt', 'sdt', 'điện thoại', 'dien thoai', 'phone', 'số điện');
+  console.log('📋 Header sheet HS:', header);
+  console.log('📍 Mapping cột:', {code:codeIdx, name:nameIdx, dob:dobIdx, parent:parentIdx, pass:passIdx, phone:phoneIdx});
   loadStudents();
-  const existingByName = {}; students.forEach(s => existingByName[s.name.toLowerCase()] = s);
+  const existingByCode = {}, existingByName = {};
+  students.forEach(s => { 
+    if (s.code) existingByCode[s.code.toLowerCase()] = s; 
+    existingByName[s.name.toLowerCase()] = s; 
+  });
   let added = 0, updated = 0;
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
-    const name = String(r[nameIdx]||'').trim();
-    if (!name) continue;
-    const code = hasCode ? String(r[codeIdx]||'').trim() : '';
-    const dob = String(r[dobIdx]||'').trim();
-    const parentName = String(r[parentIdx]||'').trim();
-    const parentPass = String(r[passIdx]||'').trim();
-    const parentPhone = String(r[phoneIdx]||'').trim();
-    const existing = existingByName[name.toLowerCase()];
+    const name = nameIdx >= 0 ? String(r[nameIdx]||'').trim() : '';
+    const code = codeIdx >= 0 ? String(r[codeIdx]||'').trim() : '';
+    if (!name && !code) continue;
+    const dob = dobIdx >= 0 ? String(r[dobIdx]||'').trim() : '';
+    const parentName = parentIdx >= 0 ? String(r[parentIdx]||'').trim() : '';
+    const parentPass = passIdx >= 0 ? String(r[passIdx]||'').trim() : '';
+    const parentPhone = phoneIdx >= 0 ? String(r[phoneIdx]||'').trim() : '';
+    // Tìm HS đã có theo mã trước, sau đó theo tên
+    let existing = code ? existingByCode[code.toLowerCase()] : null;
+    if (!existing && name) existing = existingByName[name.toLowerCase()];
     if (existing) {
-      // update
       if (code) existing.code = code;
+      if (name) existing.name = name;
       if (dob) existing.dob = parseDate(dob) || existing.dob;
       if (parentName) existing.parentName = parentName;
       if (parentPass) existing.parentPass = parentPass;
@@ -2925,15 +2942,18 @@ async function syncStudentsFromSheet() {
       students.push({
         id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
         code: code || 'HS' + String(students.length + 1).padStart(3,'0'),
-        name,
+        name: name || code,
         dob: parseDate(dob) || '',
-        parentName, parentPass: parentPass || 'phuhuynh', parentPhone,
+        parentName, 
+        parentPass: parentPass || 'phuhuynh', 
+        parentPhone,
         createdAt: new Date().toISOString()
       });
       added++;
     }
   }
   saveStudents();
+  console.log('✓ Sync HS: +' + added + ' mới, ~' + updated + ' cập nhật');
   return added + updated;
 }
 
@@ -2942,37 +2962,40 @@ async function syncGradesFromSheet() {
   if (!url) return 0;
   const rows = await fetchCSV(url);
   if (!rows || rows.length < 2) return 0;
+  const header = rows[0].map(h => String(h||'').toLowerCase().trim().replace(/\s+/g,' '));
+  const findCol = (...keywords) => {
+    for (let i = 0; i < header.length; i++) {
+      for (const kw of keywords) { if (header[i].includes(kw)) return i; }
+    }
+    return -1;
+  };
+  const codeIdx  = findCol('mã hs', 'ma hs', 'mã học', 'ma hoc', 'code');
+  const nameIdx  = findCol('tên hs', 'ten hs', 'họ tên', 'ho ten', 'tên học');
+  const dateIdx  = findCol('ngày', 'ngay', 'date');
+  const subjIdx  = findCol('môn', 'mon', 'subject');
+  const scoreIdx = findCol('điểm', 'diem', 'score', 'mark');
+  const noteIdx  = findCol('nhận xét', 'nhan xet', 'ghi chú', 'ghi chu', 'note', 'comment');
+  console.log('📋 Header sheet điểm:', header);
+  console.log('📍 Mapping:', {code:codeIdx, name:nameIdx, date:dateIdx, subj:subjIdx, score:scoreIdx, note:noteIdx});
   loadStudents(); loadTeacherReports();
-  let added = 0;
+  let added = 0, skipped = 0;
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
-    if (!r[0] || !String(r[0]).trim()) continue;
-    // Format: Tên HS | Ngày | Môn | Điểm | Nhận xét  (không cần tên PH vì lấy từ sheet HS)
-    // Hoặc: Tên HS | Tên PH | Ngày | Môn | Điểm | Nhận xét (6 cột như cũ)
-    const name = String(r[0]).trim();
-    let dateStr, subject, scoreStr, notes;
-    if (r.length >= 6) {
-      dateStr = String(r[2]||'').trim();
-      subject = String(r[3]||'').trim();
-      scoreStr = String(r[4]||'').trim();
-      notes = String(r[5]||'').trim();
-    } else {
-      dateStr = String(r[1]||'').trim();
-      subject = String(r[2]||'').trim();
-      scoreStr = String(r[3]||'').trim();
-      notes = String(r[4]||'').trim();
-    }
-    if (!scoreStr) continue;
+    if (!r || r.length === 0) continue;
+    const code = codeIdx >= 0 ? String(r[codeIdx]||'').trim() : '';
+    const name = nameIdx >= 0 ? String(r[nameIdx]||'').trim() : '';
+    const dateStr = dateIdx >= 0 ? String(r[dateIdx]||'').trim() : '';
+    const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '';
+    const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx]||'').trim() : '';
+    const notes = noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '';
+    if (!scoreStr && !subject) continue;
     const score = parseFloat(scoreStr.replace(',','.'));
     if (isNaN(score)) continue;
-    // Tìm HS theo mã trước, sau đó tên (Sheet điểm có thể là mã hoặc tên)
-    let student = students.find(s => s.code && s.code.toLowerCase() === name.toLowerCase());
-    if (!student) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
-    if (!student) {
-      // KHÔNG auto-create nữa để tránh lệch data. Bỏ qua dòng này.
-      console.warn('Bỏ qua điểm: không tìm thấy HS "' + name + '" trong Sheet danh sách');
-      continue;
-    }
+    // Match HS theo mã trước, sau đó tên
+    let student = null;
+    if (code) student = students.find(s => s.code && s.code.toLowerCase() === code.toLowerCase());
+    if (!student && name) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (!student) { skipped++; continue; }
     let isoDate = new Date().toISOString().slice(0,10);
     const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
     if (m) isoDate = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
@@ -2987,6 +3010,7 @@ async function syncGradesFromSheet() {
     added++;
   }
   saveStudents(); saveTeacherReports();
+  console.log('✓ Sync điểm: +' + added + ' mới, ' + skipped + ' bỏ qua (không match HS)');
   return added;
 }
 
