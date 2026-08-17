@@ -2938,16 +2938,13 @@ async function syncGradesFromSheet() {
     if (!scoreStr) continue;
     const score = parseFloat(scoreStr.replace(',','.'));
     if (isNaN(score)) continue;
-    let student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
+    // Tìm HS theo mã trước, sau đó tên (Sheet điểm có thể là mã hoặc tên)
+    let student = students.find(s => s.code && s.code.toLowerCase() === name.toLowerCase());
+    if (!student) student = students.find(s => s.name.toLowerCase() === name.toLowerCase());
     if (!student) {
-      // Auto-create nếu không có
-      student = {
-        id: 'st_' + Date.now() + Math.random().toString(36).slice(2,6),
-        code: 'HS' + String(students.length + 1).padStart(3,'0'),
-        name, parentName:'', dob:'', parentPass:'phuhuynh', parentPhone:'',
-        createdAt: new Date().toISOString()
-      };
-      students.push(student);
+      // KHÔNG auto-create nữa để tránh lệch data. Bỏ qua dòng này.
+      console.warn('Bỏ qua điểm: không tìm thấy HS "' + name + '" trong Sheet danh sách');
+      continue;
     }
     let isoDate = new Date().toISOString().slice(0,10);
     const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
