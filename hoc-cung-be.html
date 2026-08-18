@@ -368,7 +368,7 @@
     <button class="nav-btn" id="myScoresBtn" data-view="myScores" style="display:none;background:linear-gradient(135deg,#ec4899,#db2777);color:white;border-color:#be185d;box-shadow:0 3px 0 #be185d;">🌟 Xem điểm của tôi</button>
     <button class="nav-btn" id="dataBtn" data-view="data" style="display:none;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border-color:#020617;box-shadow:0 3px 0 #020617;">📊 DATA</button>
     <button class="nav-btn" id="trophyBtn" data-view="trophy" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border-color:#b45309;box-shadow:0 3px 0 #b45309;">🏆 Chuyên đề 🔒</button>
-    <button class="nav-btn" id="vinschoolBtn" data-view="vinschool" style="display:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border-color:#1d4ed8;box-shadow:0 3px 0 #1d4ed8;">🎓 Tài liệu Vinschool</button>
+    <button class="nav-btn" id="vinschoolBtn" data-view="vinschool" style="display:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border-color:#1d4ed8;box-shadow:0 3px 0 #1d4ed8;">🎓 Tài liệu & Bài kiểm tra</button>
     <button class="nav-btn active" id="homeBtn" data-view="home">🏠 Trang chủ</button>
     <button class="nav-btn" id="subjectsBtn" data-view="subjects">📚 Học &amp; ôn tập</button>
     <button class="nav-btn" id="mocktestBtn" data-view="mocktest">🎯 Thi thử</button>
@@ -736,12 +736,13 @@
       </div>
       <div id="vinschoolBody"></div>
       <div id="vinschoolAdmin" style="display:none;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);padding:16px 20px;border-radius:14px;border:3px solid #7dd3fc;margin-top:16px;">
-        <h3 style="font-size:16px;margin-bottom:10px;color:#075985;">➕ Thêm tài liệu (chỉ Admin/GV)</h3>
+        <h3 style="font-size:16px;margin-bottom:10px;color:#075985;">➕ Thêm tài liệu / Đề kiểm tra (chỉ Admin/GV)</h3>
+        <div style="font-size:12px;color:#0369a1;background:#e0f2fe;padding:8px 12px;border-radius:8px;margin-bottom:10px;">💡 Có thể upload ảnh chụp đề bài (PNG/JPG) hoặc file PDF. PH/HS bấm "Xem trực tiếp" để đọc ngay không cần tải về.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-weight:700;font-size:13px;color:var(--muted);">📚 Môn:</label>
             <select id="vsSubject" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;font-weight:600;">
-              <option>Toán</option><option>Tiếng Việt</option><option>Khoa học</option><option>Lịch sử và Địa lý</option><option>Tiếng Anh</option><option>Kỹ năng sống</option><option>Khác</option>
+              <option>📝 Bài kiểm tra - Toán</option><option>📝 Bài kiểm tra - Tiếng Việt</option><option>📝 Bài kiểm tra - Khoa học</option><option>📝 Bài kiểm tra - Tiếng Anh</option><option>📝 Bài kiểm tra - Lịch sử Địa lý</option><option>Toán</option><option>Tiếng Việt</option><option>Khoa học</option><option>Lịch sử và Địa lý</option><option>Tiếng Anh</option><option>Kỹ năng sống</option><option>Khác</option>
             </select>
           </div>
           <div>
@@ -752,7 +753,7 @@
         <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">🔗 Link URL (nếu có, để trống nếu upload file):</label>
         <input type="text" id="vsLink" placeholder="https://drive.google.com/... hoặc để trống" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;">
         <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">📎 HOẶC upload file trực tiếp (PDF, DOC, ảnh - tối đa 3MB):</label>
-        <input type="file" id="vsFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;background:white;">
+        <input type="file" id="vsFile" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt" style="width:100%;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;background:white;">
         <div style="font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;">💡 File nhỏ (< 3MB) sẽ được lưu ngay trong app. File lớn nên dùng link Google Drive.</div>
         <label style="font-weight:700;font-size:13px;color:var(--muted);display:block;margin-top:10px;">📝 Mô tả (tuỳ chọn):</label>
         <textarea id="vsDesc" placeholder="Nội dung tài liệu..." style="width:100%;min-height:50px;padding:10px;border:2px solid #e9d5ff;border-radius:10px;font-family:Quicksand;margin-top:4px;"></textarea>
@@ -1420,7 +1421,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1530]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.0930]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1470,7 +1471,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0817.1530]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.0930]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -2332,7 +2333,7 @@ function renderData() {
   html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">';
   html += '<div class="rep-metric" style="background:linear-gradient(135deg,#1e293b,#334155);border-color:#0f172a;"><div class="val" style="color:#f1f5f9;background:none;-webkit-text-fill-color:#f1f5f9;">' + students.length + '</div><div class="lbl" style="color:#cbd5e1;">🧑‍🎓 Học sinh</div></div>';
   html += '<div class="rep-metric" style="background:linear-gradient(135deg,#831843,#9d174d);border-color:#500724;"><div class="val" style="color:#fce7f3;background:none;-webkit-text-fill-color:#fce7f3;">' + teacherReports.length + '</div><div class="lbl" style="color:#fbcfe8;">📋 Báo cáo GV</div></div>';
-  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#78350f,#92400e);border-color:#451a03;"><div class="val" style="color:#fef3c7;background:none;-webkit-text-fill-color:#fef3c7;">' + vinschoolMaterials.length + '</div><div class="lbl" style="color:#fde68a;">🎓 Tài liệu Vinschool</div></div>';
+  html += '<div class="rep-metric" style="background:linear-gradient(135deg,#78350f,#92400e);border-color:#451a03;"><div class="val" style="color:#fef3c7;background:none;-webkit-text-fill-color:#fef3c7;">' + vinschoolMaterials.length + '</div><div class="lbl" style="color:#fde68a;">🎓 Tài liệu & Bài kiểm tra</div></div>';
   html += '<div class="rep-metric" style="background:linear-gradient(135deg,#1e40af,#1d4ed8;border-color:#172554;"><div class="val" style="color:#dbeafe;background:none;-webkit-text-fill-color:#dbeafe;">' + history.length + '</div><div class="lbl" style="color:#bfdbfe;">📝 Lượt tự học</div></div>';
   html += '</div>';
 
@@ -2984,6 +2985,53 @@ function changeTrophyPass() {
 
 // ========== TÀI LIỆU VINSCHOOL ==========
 let vinschoolMaterials = [];
+
+// ===== IndexedDB cho file lớn Vinschool =====
+const VS_DB_NAME = 'hoccungbe_vinschool';
+const VS_STORE = 'files';
+
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(VS_DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(VS_STORE)) db.createObjectStore(VS_STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+async function idbPutFiles(materialId, files) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction([VS_STORE], 'readwrite');
+    tx.objectStore(VS_STORE).put({ id: materialId, files });
+    tx.oncomplete = () => res(true);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+async function idbGetFiles(materialId) {
+  const db = await idbOpen();
+  return new Promise((res) => {
+    const tx = db.transaction([VS_STORE], 'readonly');
+    const req = tx.objectStore(VS_STORE).get(materialId);
+    req.onsuccess = () => res(req.result ? req.result.files : null);
+    req.onerror = () => res(null);
+  });
+}
+
+async function idbDeleteFiles(materialId) {
+  const db = await idbOpen();
+  return new Promise((res) => {
+    const tx = db.transaction([VS_STORE], 'readwrite');
+    tx.objectStore(VS_STORE).delete(materialId);
+    tx.oncomplete = () => res(true);
+    tx.onerror = () => res(false);
+  });
+}
+
 function loadVinschool() {
   const s = localStorage.getItem('hoccungbe_vinschool');
   vinschoolMaterials = s ? JSON.parse(s) : [];
@@ -3018,11 +3066,14 @@ function renderVinschool() {
       if (m.desc) html += '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + escapeHtml(m.desc) + '</div>';
       // Buttons for file (upload) và link
       let btnHtml = '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">';
-      if (m.file && m.file.data) {
-        const fileSize = m.file.size ? (m.file.size / 1024).toFixed(0) + ' KB' : '';
-        btnHtml += '<button onclick="viewVinschoolFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">👁️ Xem trực tiếp</button>';
-        btnHtml += '<button onclick="downloadVinschoolFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">💾 Tải về máy</button>';
-        btnHtml += '<span style="align-self:center;font-size:12px;color:var(--muted);font-weight:600;">📎 ' + escapeHtml(m.file.name) + ' (' + fileSize + ')</span>';
+      // Đọc từ metadata (không load file lớn ra render)
+      const fCount = m.fileCount || (m.files && m.files.length) || (m.file && m.file.data ? 1 : 0);
+      const totalSize = m.totalSize || (m.files ? m.files.reduce((s,f)=>s+(f.size||0),0) : (m.file ? m.file.size||0 : 0));
+      if (fCount > 0) {
+        const sizeStr = totalSize > 1024*1024 ? (totalSize/1024/1024).toFixed(1) + ' MB' : (totalSize/1024).toFixed(0) + ' KB';
+        btnHtml += '<button onclick="viewVinschoolFile(\'' + m.id + '\')" style="background:#3b82f6;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">👁️ Xem ' + (fCount > 1 ? fCount + ' ảnh' : 'trực tiếp') + '</button>';
+        btnHtml += '<button onclick="downloadVinschoolFile(\'' + m.id + '\')" style="background:#10b981;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;">💾 Tải' + (fCount > 1 ? ' tất cả' : ' về máy') + '</button>';
+        btnHtml += '<span style="align-self:center;font-size:12px;color:var(--muted);font-weight:600;">📎 ' + fCount + ' file, ' + sizeStr + '</span>';
       }
       if (m.link) {
         if (m.link.startsWith('http')) btnHtml += '<a href="' + escapeHtml(m.link) + '" target="_blank" style="display:inline-block;background:#8b5cf6;color:white;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;">🔗 Mở link</a>';
@@ -3040,22 +3091,55 @@ function renderVinschool() {
   body.innerHTML = html;
 }
 
-function addVinschoolMaterial() {
+async function addVinschoolMaterial() {
   const subject = document.getElementById('vsSubject').value;
   const title = document.getElementById('vsTitle').value.trim();
   const link = document.getElementById('vsLink').value.trim();
   const desc = document.getElementById('vsDesc').value.trim();
   const fileInput = document.getElementById('vsFile');
-  const file = fileInput.files[0];
+  const files = Array.from(fileInput.files || []);
   if (!title) { alert('Nhập tiêu đề!'); return; }
-  if (!link && !file) { alert('Nhập link hoặc chọn file!'); return; }
+  if (!link && files.length === 0) { alert('Nhập link hoặc chọn file!'); return; }
 
-  function saveEntry(fileData) {
+  // Check size mỗi file và tổng
+  const MAX_FILE = 20 * 1024 * 1024; // 20MB/file
+  const MAX_TOTAL = 50 * 1024 * 1024; // 50MB tổng
+  for (const f of files) {
+    if (f.size > MAX_FILE) {
+      alert('❌ File "' + f.name + '" nặng ' + (f.size/1024/1024).toFixed(1) + 'MB, vượt 20MB!'); return;
+    }
+  }
+  const totalSize = files.reduce((s, f) => s + f.size, 0);
+  if (totalSize > MAX_TOTAL) {
+    alert('❌ Tổng ' + (totalSize/1024/1024).toFixed(1) + 'MB vượt 50MB!\nGiảm số ảnh hoặc dùng link Google Drive.');
+    return;
+  }
+
+  // Đọc tất cả file thành base64
+  const readFile = f => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res({ name: f.name, type: f.type, size: f.size, data: e.target.result });
+    r.onerror = () => rej(new Error('Lỗi đọc ' + f.name));
+    r.readAsDataURL(f);
+  });
+
+  try {
+    const btn = document.querySelector('[onclick*="addVinschoolMaterial"]');
+    if (btn) { btn.textContent = '⏳ Đang xử lý ' + files.length + ' file...'; btn.disabled = true; }
+    const fileArr = files.length > 0 ? await Promise.all(files.map(readFile)) : [];
+    const materialId = 'vs_' + Date.now() + Math.random().toString(36).slice(2,6);
+    // Lưu file lớn vào IndexedDB
+    if (fileArr.length > 0) {
+      try { await idbPutFiles(materialId, fileArr); }
+      catch(e) { alert('❌ Lỗi lưu file lớn: ' + e.message); return; }
+    }
     loadVinschool();
     vinschoolMaterials.push({
-      id: 'vs_' + Date.now() + Math.random().toString(36).slice(2,6),
+      id: materialId,
       subject, title, link, desc,
-      file: fileData,
+      fileMeta: fileArr.map(f => ({ name: f.name, type: f.type, size: f.size })), // metadata nhẹ
+      fileCount: fileArr.length,
+      totalSize: fileArr.reduce((s,f)=>s+f.size,0),
       addedBy: (teacherInfo && teacherInfo.name) || 'Admin',
       createdAt: new Date().toISOString()
     });
@@ -3064,57 +3148,61 @@ function addVinschoolMaterial() {
     document.getElementById('vsLink').value = '';
     document.getElementById('vsDesc').value = '';
     fileInput.value = '';
-    alert('✅ Đã thêm tài liệu!');
+    if (btn) { btn.textContent = '💾 Thêm tài liệu'; btn.disabled = false; }
+    alert('✅ Đã thêm tài liệu (' + fileArr.length + ' file)!');
     renderVinschool();
-  }
-
-  if (file) {
-    if (file.size > 3 * 1024 * 1024) {
-      alert('❌ File > 3MB! Vui lòng dùng file nhỏ hơn hoặc dán link Google Drive.'); return;
-    }
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      saveEntry({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        data: e.target.result // base64 data URL
-      });
-    };
-    reader.onerror = function() { alert('❌ Lỗi đọc file!'); };
-    reader.readAsDataURL(file);
-  } else {
-    saveEntry(null);
+  } catch(e) {
+    alert('❌ ' + e.message);
+    const btn = document.querySelector('[onclick*="addVinschoolMaterial"]');
+    if (btn) { btn.textContent = '💾 Thêm tài liệu'; btn.disabled = false; }
   }
 }
 
-function viewVinschoolFile(id) {
+async function viewVinschoolFile(id) {
   loadVinschool();
   const m = vinschoolMaterials.find(x => x.id === id);
-  if (!m || !m.file || !m.file.data) { alert('Không có file để xem!'); return; }
-  // Open in new tab
+  if (!m) { alert('Không tìm thấy!'); return; }
+  // Load file từ IndexedDB (mới) hoặc từ material (cũ)
+  let fileList = await idbGetFiles(id);
+  if (!fileList || fileList.length === 0) {
+    fileList = (m.files && m.files.length > 0) ? m.files : (m.file && m.file.data ? [m.file] : []);
+  }
+  if (fileList.length === 0) { alert('Không có file để xem!'); return; }
   const w = window.open('', '_blank');
-  if (m.file.type.startsWith('image/')) {
-    w.document.write('<html><head><title>' + escapeHtml(m.title) + '</title></head><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="' + m.file.data + '" style="max-width:100%;max-height:100vh;"></body></html>');
-  } else if (m.file.type === 'application/pdf') {
-    w.document.write('<html><head><title>' + escapeHtml(m.title) + '</title></head><body style="margin:0;"><embed src="' + m.file.data + '" type="application/pdf" style="width:100%;height:100vh;"></body></html>');
-  } else {
-    // Non-viewable → auto download
-    downloadVinschoolFile(id);
-    w.close();
-  }
+  const title = escapeHtml(m.title);
+  let body = '';
+  fileList.forEach((f, idx) => {
+    body += '<div style="margin:20px 0;padding:0;">';
+    if (fileList.length > 1) body += '<div style="color:#fbbf24;font-size:16px;font-weight:800;text-align:center;padding:8px;font-family:sans-serif;">📄 Trang ' + (idx+1) + '/' + fileList.length + ' — ' + escapeHtml(f.name) + '</div>';
+    if (f.type && f.type.startsWith('image/')) {
+      body += '<img src="' + f.data + '" style="max-width:100%;display:block;margin:0 auto;">';
+    } else if (f.type === 'application/pdf') {
+      body += '<embed src="' + f.data + '" type="application/pdf" style="width:100%;height:90vh;">';
+    } else {
+      body += '<div style="color:#fff;text-align:center;padding:20px;">File không xem được. <a href="' + f.data + '" download="' + escapeHtml(f.name) + '" style="color:#fbbf24;">Tải về</a></div>';
+    }
+    body += '</div>';
+  });
+  w.document.write('<html><head><title>' + title + '</title></head><body style="margin:0;background:#111;">' + body + '</body></html>');
 }
 
-function downloadVinschoolFile(id) {
+async function downloadVinschoolFile(id) {
   loadVinschool();
   const m = vinschoolMaterials.find(x => x.id === id);
-  if (!m || !m.file || !m.file.data) { alert('Không có file để tải!'); return; }
-  const a = document.createElement('a');
-  a.href = m.file.data;
-  a.download = m.file.name || (m.title + '.dat');
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  if (!m) { alert('Không tìm thấy!'); return; }
+  let fileList = await idbGetFiles(id);
+  if (!fileList || fileList.length === 0) {
+    fileList = (m.files && m.files.length > 0) ? m.files : (m.file && m.file.data ? [m.file] : []);
+  }
+  if (fileList.length === 0) { alert('Không có file!'); return; }
+  fileList.forEach((f, idx) => {
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = f.data;
+      a.download = f.name || ('file_' + (idx+1));
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }, idx * 200);
+  });
 }
 
 function deleteVinschoolMaterial(id) {
@@ -3122,6 +3210,7 @@ function deleteVinschoolMaterial(id) {
   loadVinschool();
   vinschoolMaterials = vinschoolMaterials.filter(m => m.id !== id);
   saveVinschool();
+  idbDeleteFiles(id).catch(()=>{});
   renderVinschool();
 }
 
@@ -4959,6 +5048,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0817.1530</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0818.0930</div>
 </body>
 </html>
