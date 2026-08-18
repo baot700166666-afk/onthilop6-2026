@@ -18,5 +18,5 @@ const APP_CONFIG = {
   // URL Google Sheet TÀI LIỆU / ĐỀ KIỂM TRA
   // Format cột: Ngày | Môn | Tiêu đề | Link Drive | Mô tả (optional)
   // Cô tạo Sheet mới, share công khai, dán URL vào đây
-  materialsUrl: "",
+  materialsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSpdqpmIEss40H8roPnOw75NuqB947E6PeHHubUl7llufXlcjUKXj-GtZ34VyWifJJPdfcQUTXvRgk9/pub?output=csv",
 };
