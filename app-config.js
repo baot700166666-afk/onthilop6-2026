@@ -14,4 +14,9 @@ const APP_CONFIG = {
   // URL Google Sheet DANH SÁCH GIÁO VIÊN (tài khoản login)
   // Format cột: Tên GV | Mật khẩu | Môn (optional) | Ghi chú (optional)
   teachersUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZIAxdFezBoj7QkzqTBi0wP67RkOEZLvUnqDHqFneSJ4N44IkKFWp8CMZjyWSHF-SaRv-8W9RyuIiI/pub?output=csv",
+
+  // URL Google Sheet TÀI LIỆU / ĐỀ KIỂM TRA
+  // Format cột: Ngày | Môn | Tiêu đề | Link Drive | Mô tả (optional)
+  // Cô tạo Sheet mới, share công khai, dán URL vào đây
+  materialsUrl: "",
 };

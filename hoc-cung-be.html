@@ -737,7 +737,7 @@
       <div id="vinschoolBody"></div>
       <div id="vinschoolAdmin" style="display:none;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);padding:16px 20px;border-radius:14px;border:3px solid #7dd3fc;margin-top:16px;">
         <h3 style="font-size:16px;margin-bottom:10px;color:#075985;">➕ Thêm tài liệu / Đề kiểm tra (chỉ Admin/GV)</h3>
-        <div style="font-size:12px;color:#0369a1;background:#e0f2fe;padding:8px 12px;border-radius:8px;margin-bottom:10px;">💡 Có thể upload ảnh chụp đề bài (PNG/JPG) hoặc file PDF. PH/HS bấm "Xem trực tiếp" để đọc ngay không cần tải về.</div>
+        <div style="font-size:12px;color:#0369a1;background:#e0f2fe;padding:8px 12px;border-radius:8px;margin-bottom:10px;">💡 <strong>2 cách thêm tài liệu:</strong><br>• <strong>Cách nhanh (sync mọi máy):</strong> Nhập vào Google Sheet "Tài liệu" — cột: Ngày | Môn | Tiêu đề | Link Drive | Mô tả<br>• <strong>Upload trực tiếp:</strong> Chỉ hiện ở máy Admin (không sync PH).</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
             <label style="font-weight:700;font-size:13px;color:var(--muted);">📚 Môn:</label>
@@ -1421,7 +1421,7 @@ async function doParentLogin() {
       if (btn) { btn.textContent = '👨‍👩‍👧 Đăng nhập phụ huynh'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.0930]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.1039]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: pass riêng của con hoặc pass PH chung
   let passOk = false;
   if (student.parentPass && student.parentPass === pw) passOk = true;
@@ -1471,7 +1471,7 @@ async function doStudentLogin() {
       if (btn) { btn.textContent = '🎯 Xem điểm của tôi'; btn.disabled = false; }
     } catch(e) { console.error(e); }
   }
-  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.0930]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
+  if (!student) { alert('❌ Không tìm thấy mã HS "' + input + '" trong Sheet Danh sách!\n\n[App vv0818.1039]\nKiểm tra:\n1. Mã HS có đúng chưa\n2. Sheet 1 đã share công khai chưa\n3. Cột Mã HS ở cột đầu tiên\n\nSố HS đọc được: ' + students.length); return; }
   // Kiểm tra pass: chấp nhận pass PH riêng, hoặc pass chung
   let passOk = false;
   if (student.parentPass && pw === student.parentPass) passOk = true;
@@ -3033,14 +3033,68 @@ async function idbDeleteFiles(materialId) {
 }
 
 function loadVinschool() {
-  const s = localStorage.getItem('hoccungbe_vinschool');
-  vinschoolMaterials = s ? JSON.parse(s) : [];
+  try { vinschoolMaterials = JSON.parse(localStorage.getItem('hoccungbe_vinschool') || '[]'); }
+  catch(e) { vinschoolMaterials = []; }
+  // Merge với tài liệu từ Sheet (sync cross-device)
+  try {
+    const sheetMats = JSON.parse(localStorage.getItem('hoccungbe_materials_sheet') || '[]');
+    // Bỏ tài liệu Sheet cũ trong vinschoolMaterials, add lại từ cache mới
+    vinschoolMaterials = vinschoolMaterials.filter(m => !m.fromSheet);
+    vinschoolMaterials = [...sheetMats, ...vinschoolMaterials];
+  } catch(e) {}
 }
 function saveVinschool() {
   localStorage.setItem('hoccungbe_vinschool', JSON.stringify(vinschoolMaterials));
 }
 
-function renderVinschool() {
+
+async function syncMaterialsFromSheet() {
+  let url = (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.materialsUrl : '');
+  if (!url) return 0;
+  url = normalizeGsheetUrl(url);
+  console.log('🔗 Fetching materials URL:', url);
+  let rows;
+  try { rows = await fetchCSV(url); } catch(e) { console.error('Lỗi tải Sheet tài liệu:', e); return 0; }
+  if (!rows || rows.length < 2) return 0;
+  const stripVi = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();
+  const header = rows[0].map(h => stripVi(h));
+  const findCol = (...kws) => {
+    for (let i = 0; i < header.length; i++) for (const k of kws) if (header[i].includes(stripVi(k))) return i;
+    return -1;
+  };
+  const dateIdx = findCol('ngay', 'date');
+  const subjIdx = findCol('mon');
+  const titleIdx = findCol('tieu de', 'title', 'ten');
+  const linkIdx = findCol('link', 'url', 'drive');
+  const descIdx = findCol('mo ta', 'ghi chu', 'note');
+  if (titleIdx < 0 || linkIdx < 0) { console.warn('Sheet tài liệu thiếu cột Tiêu đề hoặc Link'); return 0; }
+  const sheetMats = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const title = String(r[titleIdx]||'').trim();
+    const link = String(r[linkIdx]||'').trim();
+    if (!title || !link) continue;
+    const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() || 'Khác' : 'Khác';
+    const dateStr = dateIdx >= 0 ? String(r[dateIdx]||'').trim() : '';
+    const desc = descIdx >= 0 ? String(r[descIdx]||'').trim() : '';
+    sheetMats.push({
+      id: 'sheet_' + i,
+      subject, title, link, 
+      desc: desc || (dateStr ? '📅 ' + dateStr : ''),
+      dateStr,
+      fromSheet: true,
+      addedBy: 'Sheet',
+      createdAt: new Date().toISOString()
+    });
+  }
+  console.log('✓ Loaded ' + sheetMats.length + ' tài liệu từ Sheet');
+  localStorage.setItem('hoccungbe_materials_sheet', JSON.stringify(sheetMats));
+  return sheetMats.length;
+}
+
+async function renderVinschool() {
+  // Trigger sync tài liệu từ Sheet trước khi render
+  try { await syncMaterialsFromSheet(); } catch(e) {}
   loadVinschool();
   const body = document.getElementById('vinschoolBody');
   const adminEl = document.getElementById('vinschoolAdmin');
@@ -3082,8 +3136,11 @@ function renderVinschool() {
       btnHtml += '</div>';
       html += btnHtml;
       html += '</div>';
-      if (currentRole === 'teacher' || currentRole === 'admin') {
+      if ((currentRole === 'teacher' || currentRole === 'admin') && !m.fromSheet) {
         html += '<button onclick="deleteVinschoolMaterial(\'' + m.id + '\')" style="background:#fee2e2;color:#991b1b;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;">🗑️</button>';
+      }
+      if (m.fromSheet) {
+        html += '<span style="font-size:11px;color:#059669;background:#d1fae5;padding:3px 8px;border-radius:6px;font-weight:700;">☁️ Từ Sheet</span>';
       }
       html += '</div></div>';
     });
@@ -5048,6 +5105,6 @@ document.querySelectorAll('.subject-card[data-subject]').forEach(c => {
   c.addEventListener('click', () => showSubjects(c.dataset.subject));
 });
 </script>
-<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0818.0930</div>
+<div id="app-version" style="position:fixed;bottom:5px;right:10px;font-size:10px;color:#999;z-index:9999;">v0818.1039</div>
 </body>
 </html>
