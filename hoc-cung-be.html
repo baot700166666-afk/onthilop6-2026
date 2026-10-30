@@ -543,6 +543,7 @@
         <h3 style="margin-bottom:10px;font-size:18px;color:#3730a3;">📊 Báo cáo tổng hợp theo tuần / tháng</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
           <button class="btn" onclick="showStarRanking()" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;box-shadow:0 3px 0 #d97706;padding:10px 14px;font-size:14px;">🌟 Bảng xếp hạng sao tuần</button>
+          <button class="btn" onclick="showMonthAvgTeacher()" style="background:linear-gradient(135deg,#ec4899,#db2777);color:white;box-shadow:0 3px 0 #be185d;padding:10px 14px;font-size:14px;">🗓️ Điểm TB tuần / tháng (chọn tháng)</button>
           <button class="btn" onclick="showPeriodReport('week')" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;box-shadow:0 3px 0 #4338ca;padding:10px 14px;font-size:14px;">📅 Báo cáo tuần (7 ngày)</button>
           <button class="btn" onclick="showPeriodReport('month')" style="background:linear-gradient(135deg,#a855f7,#9333ea);color:white;box-shadow:0 3px 0 #7e22ce;padding:10px 14px;font-size:14px;">📆 Báo cáo tháng (30 ngày)</button>
           <button class="btn" onclick="exportReportsExcel()" style="background:linear-gradient(135deg,#10b981,#059669);color:white;box-shadow:0 3px 0 #047857;padding:10px 14px;font-size:14px;">💾 Xuất Excel tất cả báo cáo</button>
@@ -2537,13 +2538,13 @@ function renderMyScores() {
   const bySubject = {};
   let totalStars = 0;
   myReports.forEach(r => {
-    if (r.subject && r.score) {
+    if (r.subject && hasScore(r)) {
       if (!bySubject[r.subject]) bySubject[r.subject] = [];
-      bySubject[r.subject].push(r.score);
+      bySubject[r.subject].push(scoreNum(r));
     }
     totalStars += scoreToStars(r.score);
   });
-  const overall = myReports.filter(r=>r.score).reduce((a,r)=>a+r.score,0) / Math.max(1, myReports.filter(r=>r.score).length);
+  const overall = myReports.filter(hasScore).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(hasScore).length);
 
   let html = '';
   html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">';
@@ -2568,6 +2569,7 @@ function renderMyScores() {
   html += '</div>';
 
   // Chi tiết các điểm
+  html += monthAvgBlock(myReports, 'child');
   html += '<h3 style="font-size:18px;margin:14px 0 10px;">📬 Chi tiết các điểm cô giáo chấm</h3>';
   myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0, 30).forEach(r => {
     const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
@@ -2576,7 +2578,7 @@ function renderMyScores() {
     html += '<div style="background:white;padding:12px 14px;border-radius:10px;border:2px solid #e9d5ff;margin-bottom:8px;border-left:4px solid #ec4899;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">';
     html += '<div><strong>' + (SUBJECT_ICONS[r.subject]||'') + ' ' + escapeHtml(r.subject||'') + '</strong>' + (stars>0 ? ' <span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:800;">' + starsText(stars) + '</span>' : '') + '<br><small style="color:var(--muted);font-weight:600;">👩‍🏫 ' + escapeHtml(r.teacher||'') + ' • 📅 ' + dt + '</small></div>';
-    if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
+    if (typeof r.score === 'number' && !isNaN(r.score)) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
     html += '</div>';
     if (r.eval) html += '<div style="font-size:13px;margin-top:8px;background:#dbeafe;padding:6px 10px;border-radius:6px;"><strong>💬 Cô nhận xét:</strong> ' + escapeHtml(r.eval) + '</div>';
     html += '</div>';
@@ -3475,7 +3477,7 @@ async function syncGradesFromSheet() {
           const bannerText = rows[1].find(c => /Ngày\s*\d/i.test(String(c||''))) || '';
           const m = String(bannerText).match(/(\d{1,2})[\.\/-](\d{1,2})[\.\/-]?(\d{2,4})?/);
           if (m) {
-            const y = m[3] ? (String(m[3]).length === 2 ? '20' + m[3] : m[3]) : new Date().getFullYear();
+            const y = m[3] ? (String(m[3]).length === 2 ? '20' + m[3] : m[3]) : guessSchoolYear(m[2]);
             dateFromBanner = y + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
           }
           dataStartIdx = 2;
@@ -3484,7 +3486,7 @@ async function syncGradesFromSheet() {
         let dateFromName = '';
         const mn = sheetName.match(/^(\d{1,2})[\.\/-](\d{1,2})(?:[\.\/-](\d{2,4}))?$/);
         if (mn) {
-          const y = mn[3] ? (String(mn[3]).length === 2 ? '20' + mn[3] : mn[3]) : new Date().getFullYear();
+          const y = mn[3] ? (String(mn[3]).length === 2 ? '20' + mn[3] : mn[3]) : guessSchoolYear(mn[2]);
           dateFromName = y + '-' + mn[2].padStart(2,'0') + '-' + mn[1].padStart(2,'0');
         }
         const finalDate = dateFromName || dateFromBanner || new Date().toISOString().slice(0,10);
@@ -3532,11 +3534,12 @@ async function syncGradesFromSheet() {
       const name = nameIdx >= 0 ? String(r[nameIdx]||'').trim() : '';
       const dateStr = dateIdx >= 0 ? String(r[dateIdx]||'').trim() : '';
       const subject = subjIdx >= 0 ? String(r[subjIdx]||'').trim() : '';
-      const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx]||'').trim() : '';
+      const scoreStr = scoreIdx >= 0 ? String(r[scoreIdx] ?? '').trim() : '';
       const notes = noteIdx >= 0 ? String(r[noteIdx]||'').trim() : '';
-      if (!scoreStr) continue;
-      const score = parseFloat(scoreStr.replace(',','.'));
-      if (isNaN(score)) continue;
+      if (!scoreStr && !notes) continue;
+      let score = scoreStr ? parseFloat(scoreStr.replace(',','.')) : null;
+      if (scoreStr && isNaN(score) && !notes) continue;
+      if (score !== null && isNaN(score)) score = null;
       const subj = subject || 'Tổng hợp';
       // Match HS
       let student = null;
@@ -3622,7 +3625,7 @@ async function autoPullGsheet() {
       const parentName = String(r[1]||'').trim();
       const dateStr = String(r[2]||'').trim();
       const subject = String(r[3]||'').trim();
-      const scoreStr = String(r[4]||'').trim();
+      const scoreStr = String(r[4] ?? '').trim();
       const notes = String(r[5]||'').trim();
       if (!scoreStr) continue;
       const score = parseFloat(scoreStr.replace(',','.'));
@@ -3867,11 +3870,11 @@ function renderParentReport() {
   // Tổng quan điểm
   const bySubject = {};
   myReports.forEach(r => {
-    if (!r.subject) return;
+    if (!r.subject || !hasScore(r)) return;
     if (!bySubject[r.subject]) bySubject[r.subject] = [];
-    bySubject[r.subject].push(r.score || 0);
+    bySubject[r.subject].push(scoreNum(r));
   });
-  const overall = myReports.filter(r=>r.score).reduce((a,r)=>a+r.score,0) / Math.max(1, myReports.filter(r=>r.score).length);
+  const overall = myReports.filter(hasScore).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(hasScore).length);
 
   let html = '';
   // Tổng quan
@@ -3901,6 +3904,7 @@ function renderParentReport() {
   }
 
   // Danh sách chi tiết các báo cáo
+  html += monthAvgBlock(myReports, 'parent');
   html += '<h3 style="font-size:18px;margin:20px 0 10px;">📬 Chi tiết đánh giá từ cô giáo</h3>';
   myReports.sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(r => {
     const scoreColor = r.score >= 8 ? '#10b981' : r.score >= 6.5 ? '#0ea5e9' : r.score >= 5 ? '#f59e0b' : '#ef4444';
@@ -3908,7 +3912,7 @@ function renderParentReport() {
     html += '<div style="background:white;padding:14px 16px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;border-left:5px solid #a855f7;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:6px;">';
     html += '<div><strong style="color:#6d28d9;font-size:15px;">👩‍🏫 ' + escapeHtml(r.teacher||'GVCN') + '</strong> — <span style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:3px 10px;border-radius:12px;font-weight:800;font-size:13px;margin-left:6px;">📚 ' + escapeHtml(r.subject||'--') + '</span>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">📅 ' + dt + '</small></div>';
-    if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 16px;border-radius:12px;font-family:Baloo 2;font-size:22px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
+    if (typeof r.score === 'number' && !isNaN(r.score)) html += '<div style="background:' + scoreColor + ';color:white;padding:8px 16px;border-radius:12px;font-family:Baloo 2;font-size:22px;font-weight:800;min-width:60px;text-align:center;">' + r.score + '</div>';
     html += '</div>';
     if (r.content) html += '<div style="font-size:14px;margin-top:4px;padding:6px 10px;background:#f5f3ff;border-radius:6px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
     if (r.homework) html += '<div style="font-size:14px;margin-top:4px;background:#fef3c7;padding:6px 10px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
@@ -4356,7 +4360,7 @@ function renderTeacher() {
     return '<div style="background:white;padding:14px 18px;border-radius:12px;border:2px solid #e9d5ff;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;gap:10px;">' +
       '<div><strong style="color:var(--primary-dark);">🧑‍🎓 ' + escapeHtml(r.studentName||'(học sinh cũ)') + '</strong>' + scoreStarsBadge(r.score) + '<br><small style="color:var(--muted);font-weight:600;">👨‍👩‍👧 PH: ' + escapeHtml(r.parentName||'--') + ' • 📅 ' + dt + '</small></div>' +
-      '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + (r.score||'--') + '</div>' +
+      '<div style="background:' + scoreColor + ';color:white;padding:8px 14px;border-radius:12px;font-family:Baloo 2;font-size:20px;font-weight:800;min-width:60px;text-align:center;">' + (typeof r.score === 'number' ? r.score : '--') + '</div>' +
       '</div>' +
       (r.subject ? '<div style="margin-bottom:6px;"><strong>📚 Môn:</strong> ' + escapeHtml(r.subject) + '</div>' : '') +
       (r.content ? '<div style="margin-bottom:6px;font-size:14px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>' : '') +
@@ -4540,6 +4544,158 @@ function scoreStarsBadge(score) {
   return '<span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:800;margin-left:6px;">' + starsText(n) + '</span>';
 }
 
+
+// ========== ĐIỂM TB TUẦN / THÁNG THEO THÁNG CHỌN ==========
+// Điểm 0 được tính; dòng chỉ có nhận xét (không điểm) không tính.
+function hasScore(r) { return !!r && r.score !== null && r.score !== undefined && r.score !== '' && !isNaN(parseFloat(r.score)); }
+function scoreNum(r) { return parseFloat(r.score); }
+function guessSchoolYear(month) {
+  // Tab chỉ ghi "17.8": tháng lớn hơn tháng hiện tại => thuộc năm trước (năm học vắt qua 2 năm)
+  const now = new Date();
+  return (+month > now.getMonth() + 2) ? now.getFullYear() - 1 : now.getFullYear();
+}
+function _utcDate(s) { const p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1]-1, p[2])); }
+function _dm(dt) { return dt.getUTCDate() + '/' + (dt.getUTCMonth()+1); }
+function monthWeeks(ym) {
+  const p = ym.split('-').map(Number);
+  const last = new Date(Date.UTC(p[0], p[1], 0));
+  const weeks = [];
+  let start = new Date(Date.UTC(p[0], p[1]-1, 1));
+  while (start <= last) {
+    const dow = (start.getUTCDay() + 6) % 7; // Thứ 2 = 0
+    const end = new Date(start.getTime()); end.setUTCDate(start.getUTCDate() + (6 - dow));
+    if (end > last) end.setTime(last.getTime());
+    weeks.push({ from: start.toISOString().slice(0,10), to: end.toISOString().slice(0,10), label: 'Tuần ' + (weeks.length+1), range: _dm(start) + '–' + _dm(end) });
+    start = new Date(end.getTime()); start.setUTCDate(end.getUTCDate() + 1);
+  }
+  return weeks;
+}
+function scoredMonths(reports) {
+  return [...new Set(reports.filter(r => r.date && hasScore(r)).map(r => r.date.slice(0,7)))].sort().reverse();
+}
+function monthLabel(ym) { const p = ym.split('-'); return 'Tháng ' + (+p[1]) + '/' + p[0]; }
+function avgScores(list) { return list.length ? list.reduce((a,r)=>a+scoreNum(r),0) / list.length : null; }
+function avgColor(a) { return a >= 8 ? '#10b981' : a >= 6.5 ? '#0ea5e9' : a >= 5 ? '#f59e0b' : '#ef4444'; }
+function avgCellHtml(list, strong) {
+  const a = avgScores(list);
+  if (a === null) return '<td style="padding:8px 6px;text-align:center;color:#cbd5e1;' + (strong ? 'background:#fdf2f8;' : '') + '">--</td>';
+  const zeros = list.filter(r => scoreNum(r) === 0).length;
+  return '<td style="padding:8px 6px;text-align:center;color:' + avgColor(a) + ';font-weight:800;font-size:' + (strong ? '16' : '15') + 'px;' + (strong ? 'background:#fdf2f8;' : '') + '">' + a.toFixed(1) +
+    '<br><small style="font-size:10px;color:var(--muted);font-weight:600;">' + list.length + ' bài' + (zeros ? ', ' + zeros + ' bài 0đ' : '') + '</small></td>';
+}
+function monthSelectHtml(months, ym, onchange) {
+  return '<select onchange="' + onchange + '" style="padding:8px 10px;border:2px solid #f9a8d4;border-radius:8px;font-weight:700;font-size:14px;background:white;">' +
+    months.map(m => '<option value="' + m + '"' + (m === ym ? ' selected' : '') + '>' + monthLabel(m) + '</option>').join('') + '</select>';
+}
+
+// Phụ huynh / bé: bảng môn × (các tuần + cả tháng)
+window._monthAvgData = window._monthAvgData || {};
+function monthAvgBlock(reports, key, ym) {
+  window._monthAvgData[key] = reports;
+  const months = scoredMonths(reports);
+  if (!months.length) return '';
+  if (!ym || !months.includes(ym)) ym = months[0];
+  const inMonth = reports.filter(r => hasScore(r) && r.date && r.date.slice(0,7) === ym);
+  const weeks = monthWeeks(ym);
+  const subjects = [...new Set(inMonth.map(r => r.subject || 'Tổng hợp'))];
+  let h = '<div id="monthAvg_' + key + '">';
+  h += '<h3 style="font-size:18px;margin:20px 0 10px;">🗓️ Điểm trung bình theo tuần / tháng</h3>';
+  h += '<div style="background:white;padding:14px;border-radius:12px;border:2px solid #fbcfe8;">';
+  h += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;"><strong style="font-size:14px;">Chọn tháng:</strong> ' +
+    monthSelectHtml(months, ym, "var b=document.getElementById('monthAvg_" + key + "');b.outerHTML=monthAvgBlock(window._monthAvgData['" + key + "'],'" + key + "',this.value)") + '</div>';
+  h += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  h += '<thead><tr style="background:linear-gradient(135deg,#db2777,#ec4899);color:white;font-weight:700;"><th style="padding:8px 6px;text-align:left;">Môn</th>';
+  weeks.forEach(w => { h += '<th style="padding:8px 6px;text-align:center;min-width:64px;">' + w.label + '<br><small style="font-weight:600;opacity:.9;">' + w.range + '</small></th>'; });
+  h += '<th style="padding:8px 6px;text-align:center;background:#9d174d;min-width:70px;">Cả tháng</th></tr></thead><tbody>';
+  subjects.forEach((subj, i) => {
+    const sr = inMonth.filter(r => (r.subject || 'Tổng hợp') === subj);
+    h += '<tr style="border-bottom:1px solid #fbcfe8;background:' + (i % 2 ? 'white' : '#fdf2f8') + ';"><td style="padding:8px 6px;font-weight:700;">' + (SUBJECT_ICONS[subj]||'') + ' ' + escapeHtml(subj) + '</td>';
+    weeks.forEach(w => { h += avgCellHtml(sr.filter(r => r.date >= w.from && r.date <= w.to), false); });
+    h += avgCellHtml(sr, true) + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 (bài chưa nộp) có tính vào điểm trung bình.</div>';
+  h += '</div></div>';
+  return h;
+}
+
+// Cô giáo: bảng cả lớp, học sinh × môn, chọn tháng và tuần
+function showMonthAvgTeacher(ym, wk) {
+  loadTeacherReports(); loadStudents();
+  const box = document.getElementById('periodReportBox');
+  box.style.display = 'block';
+  const months = scoredMonths(teacherReports);
+  if (!months.length) {
+    box.innerHTML = '<div style="background:white;padding:20px;border-radius:10px;text-align:center;color:var(--muted);font-weight:600;">Chưa có điểm nào. Bấm tải điểm từ Google Sheet trước nhé.</div>';
+    return;
+  }
+  if (!ym || !months.includes(ym)) ym = months[0];
+  const weeks = monthWeeks(ym);
+  wk = (wk === undefined || wk === null || wk === '') ? 'all' : String(wk);
+  const w = wk === 'all' ? null : weeks[+wk];
+  const inMonth = teacherReports.filter(r => hasScore(r) && r.date && r.date.slice(0,7) === ym);
+  const inRange = w ? inMonth.filter(r => r.date >= w.from && r.date <= w.to) : inMonth;
+  const subjects = [...new Set(inMonth.map(r => r.subject || 'Tổng hợp'))];
+  const byStu = {};
+  inMonth.forEach(r => { const sid = r.studentId || r.studentName; if (!byStu[sid]) byStu[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', code: (getStudentById(r.studentId)||{}).code || '' }; });
+
+  let h = '<div style="background:white;padding:20px;border-radius:14px;border:3px solid #ec4899;">';
+  h += '<h3 style="color:#9d174d;font-family:Baloo 2;font-size:20px;margin-bottom:10px;">🗓️ ĐIỂM TRUNG BÌNH TUẦN / THÁNG — CẢ LỚP</h3>';
+  h += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">';
+  h += '<strong>Tháng:</strong> ' + monthSelectHtml(months, ym, "showMonthAvgTeacher(this.value,'all')");
+  h += '<strong>Xem:</strong> <select onchange="showMonthAvgTeacher(\'' + ym + '\',this.value)" style="padding:8px 10px;border:2px solid #f9a8d4;border-radius:8px;font-weight:700;font-size:14px;background:white;">' +
+    '<option value="all"' + (wk === 'all' ? ' selected' : '') + '>Cả tháng</option>' +
+    weeks.map((x, i) => '<option value="' + i + '"' + (wk === String(i) ? ' selected' : '') + '>' + x.label + ' (' + x.range + ')</option>').join('') + '</select>';
+  h += '</div>';
+  h += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  h += '<thead><tr style="background:linear-gradient(135deg,#db2777,#ec4899);color:white;font-weight:700;"><th style="padding:10px 8px;text-align:left;">Học sinh</th>';
+  subjects.forEach(s => { h += '<th style="padding:10px 8px;text-align:center;min-width:80px;">' + (SUBJECT_ICONS[s]||'') + ' ' + escapeHtml(s) + '</th>'; });
+  h += '</tr></thead><tbody>';
+  Object.entries(byStu).sort((a,b) => a[1].name.localeCompare(b[1].name, 'vi')).forEach(([sid, st], i) => {
+    h += '<tr style="border-bottom:1px solid #fbcfe8;background:' + (i % 2 ? 'white' : '#fdf2f8') + ';"><td style="padding:8px;font-weight:700;">' + escapeHtml(st.name) + (st.code ? '<br><small style="color:var(--muted);font-size:11px;">' + escapeHtml(st.code) + '</small>' : '') + '</td>';
+    subjects.forEach(s => { h += avgCellHtml(inRange.filter(r => (r.studentId || r.studentName) === sid && (r.subject || 'Tổng hợp') === s), false); });
+    h += '</tr>';
+  });
+  // dòng TB cả lớp
+  h += '<tr style="background:#fce7f3;border-top:2px solid #ec4899;"><td style="padding:8px;font-weight:800;">TB cả lớp</td>';
+  subjects.forEach(s => { h += avgCellHtml(inRange.filter(r => (r.subject || 'Tổng hợp') === s), true); });
+  h += '</tr></tbody></table></div>';
+  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">' + (w ? w.label + ': ' + w.range + '. ' : monthLabel(ym) + '. ') + 'Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 có tính vào điểm trung bình.</div>';
+  h += '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">';
+  h += '<button class="btn btn-success" onclick="exportMonthAvgExcel(\'' + ym + '\')" style="padding:10px 14px;font-size:14px;">💾 Xuất Excel ' + monthLabel(ym).toLowerCase() + ' (đủ các tuần)</button>';
+  h += '<button class="btn btn-secondary" onclick="document.getElementById(\'periodReportBox\').style.display=\'none\'" style="padding:10px 14px;font-size:14px;">✖ Đóng</button>';
+  h += '</div></div>';
+  box.innerHTML = h;
+  box.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function exportMonthAvgExcel(ym) {
+  if (typeof XLSX === 'undefined') { alert('Chưa tải được thư viện Excel, thử lại sau nhé.'); return; }
+  loadTeacherReports(); loadStudents();
+  const weeks = monthWeeks(ym);
+  const inMonth = teacherReports.filter(r => hasScore(r) && r.date && r.date.slice(0,7) === ym);
+  const subjects = [...new Set(inMonth.map(r => r.subject || 'Tổng hợp'))];
+  const r1 = ['Mã HS', 'Học sinh'], r2 = ['', ''];
+  subjects.forEach(s => { weeks.forEach(w => { r1.push(s); r2.push(w.label + ' (' + w.range + ')'); }); r1.push(s); r2.push('Cả tháng'); });
+  const data = [[monthLabel(ym) + ' — Điểm trung bình (có tính điểm 0)'], r1, r2];
+  const byStu = {};
+  inMonth.forEach(r => { const sid = r.studentId || r.studentName; if (!byStu[sid]) byStu[sid] = { name: r.studentName || '', code: (getStudentById(r.studentId)||{}).code || '' }; });
+  const rnd = a => a === null ? '' : Math.round(a * 100) / 100;
+  Object.entries(byStu).sort((a,b) => a[1].name.localeCompare(b[1].name, 'vi')).forEach(([sid, st]) => {
+    const row = [st.code, st.name];
+    subjects.forEach(s => {
+      const sr = inMonth.filter(r => (r.studentId || r.studentName) === sid && (r.subject || 'Tổng hợp') === s);
+      weeks.forEach(w => row.push(rnd(avgScores(sr.filter(r => r.date >= w.from && r.date <= w.to)))));
+      row.push(rnd(avgScores(sr)));
+    });
+    data.push(row);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'TB ' + ym);
+  XLSX.writeFile(wb, 'diem-trung-binh-' + ym + '.xlsx');
+}
+
 // ========== BÁO CÁO TUẦN / THÁNG ==========
 function showPeriodReport(period) {
   loadTeacherReports();
@@ -4566,9 +4722,9 @@ function showPeriodReport(period) {
     const sid = r.studentId || 'unknown';
     if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', reports: [], subjects: {} };
     byStudent[sid].reports.push(r);
-    if (r.subject && r.score) {
+    if (r.subject && hasScore(r)) {
       if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
-      byStudent[sid].subjects[r.subject].push(r.score);
+      byStudent[sid].subjects[r.subject].push(scoreNum(r));
     }
   });
 
@@ -4609,7 +4765,7 @@ function showPeriodReport(period) {
     });
     const overall = allScores.length ? allScores.reduce((a,b)=>a+b,0)/allScores.length : 0;
     const overallColor = overall >= 8 ? '#10b981' : overall >= 6.5 ? '#0ea5e9' : overall >= 5 ? '#f59e0b' : '#ef4444';
-    html += '<td style="padding:8px;text-align:center;background:#eef2ff;color:' + overallColor + ';font-weight:800;font-size:16px;">' + (overall ? overall.toFixed(1) : '--') + '</td>';
+    html += '<td style="padding:8px;text-align:center;background:#eef2ff;color:' + overallColor + ';font-weight:800;font-size:16px;">' + (allScores.length ? overall.toFixed(1) : '--') + '</td>';
     html += '<td style="padding:8px;text-align:center;background:#eef2ff;font-weight:700;">' + st.reports.length + '</td>';
     // Tổng sao trong kỳ
     let totalStars = 0;
@@ -4759,9 +4915,9 @@ function exportPeriodReport(period) {
     const sid = r.studentId || 'unknown';
     if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', subjects: {}, reports: [] };
     byStudent[sid].reports.push(r);
-    if (r.subject && r.score) {
+    if (r.subject && hasScore(r)) {
       if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
-      byStudent[sid].subjects[r.subject].push(r.score);
+      byStudent[sid].subjects[r.subject].push(scoreNum(r));
     }
   });
 
@@ -4810,7 +4966,7 @@ function exportReportsExcel() {
   const data = [['Ngày', 'Học sinh', 'Phụ huynh', 'Môn học', 'Điểm', 'Giáo viên', 'Nội dung dạy', 'BT về nhà', 'Nhận xét']];
   mine.sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(r => {
     const dt = r.date ? new Date(r.date).toLocaleDateString('vi-VN') : '';
-    data.push([dt, r.studentName||'', r.parentName||'', r.subject||'', r.score||'', r.teacher||'', r.content||'', r.homework||'', r.eval||'']);
+    data.push([dt, r.studentName||'', r.parentName||'', r.subject||'', (r.score ?? ''), r.teacher||'', r.content||'', r.homework||'', r.eval||'']);
   });
   const fileName = 'tat-ca-bao-cao_' + new Date().toISOString().slice(0,10) + '.xlsx';
   if (typeof XLSX === 'undefined') {
@@ -5038,7 +5194,7 @@ function renderDailyReport() {
       html += '<div><strong style="color:#6d28d9;">👩‍🏫 ' + escapeHtml(r.teacher||'GV') + '</strong>';
       if (currentRole !== 'parent' && r.studentName) html += ' — 🧑‍🎓 ' + escapeHtml(r.studentName);
       html += ' — ' + escapeHtml(r.subject||'') + '</div>';
-      if (r.score) html += '<div style="background:' + scoreColor + ';color:white;padding:6px 14px;border-radius:10px;font-family:Baloo 2;font-size:18px;font-weight:800;min-width:50px;text-align:center;">' + r.score + '</div>';
+      if (hasScore(r)) html += '<div style="background:' + scoreColor + ';color:white;padding:6px 14px;border-radius:10px;font-family:Baloo 2;font-size:18px;font-weight:800;min-width:50px;text-align:center;">' + r.score + '</div>';
       html += '</div>';
       if (r.content) html += '<div style="font-size:13px;margin-top:4px;"><strong>📖 Nội dung:</strong> ' + escapeHtml(r.content) + '</div>';
       if (r.homework) html += '<div style="font-size:13px;margin-top:4px;background:#fef3c7;padding:5px 8px;border-radius:6px;"><strong>📝 BT về nhà:</strong> ' + escapeHtml(r.homework) + '</div>';
