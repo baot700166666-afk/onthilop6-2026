@@ -1518,14 +1518,21 @@ function doDataLogin() {
   renderTrophy();
 }
 
-function doAdminLogin() {
+async function doAdminLogin() {
   const user = (document.getElementById('adminUserIn') || {}).value || '';
   const pw = document.getElementById('adminPassIn').value;
-  const ADMIN_USER_LIST = [
-    { user: 'trungnt86', pass: 'trungnt86' }
-  ];
-  const acc = ADMIN_USER_LIST.find(a => a.user.toLowerCase() === user.trim().toLowerCase() && a.pass === pw);
-  if (!acc) { alert('❌ Sai tên đăng nhập hoặc mật khẩu Admin!'); return; }
+  // Chỉ lưu mã băm PBKDF2 của "tên + mật khẩu" — không đọc ngược ra được từ mã nguồn
+  const ADMIN_HASHES = ['9ce0451b19dd12ae5a3f7486de97a4231150ac20e8533ad13e18e27b6f7cc4c6'];
+  const ADMIN_SALT = 'b0722aa29ef4d924d85dcdbd33bcf16c', ADMIN_ITER = 310000;
+  const enc = new TextEncoder();
+  const saltBytes = new Uint8Array(ADMIN_SALT.match(/../g).map(x => parseInt(x, 16)));
+  let hex = '';
+  try {
+    const key = await crypto.subtle.importKey('raw', enc.encode(user.trim().toLowerCase() + '\n' + pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations: ADMIN_ITER }, key, 256);
+    hex = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) { alert('❌ Trình duyệt không hỗ trợ đăng nhập Admin (cần mở app qua https).'); return; }
+  if (!ADMIN_HASHES.includes(hex)) { alert('❌ Sai tên đăng nhập hoặc mật khẩu Admin!'); return; }
   isAdmin = true;
   currentRole = 'admin';
   sessionStorage.setItem('hoccungbe_admin', 'zinzu');
@@ -2538,13 +2545,13 @@ function renderMyScores() {
   const bySubject = {};
   let totalStars = 0;
   myReports.forEach(r => {
-    if (r.subject && hasScore(r)) {
+    if (r.subject && countsInAvg(r)) {
       if (!bySubject[r.subject]) bySubject[r.subject] = [];
       bySubject[r.subject].push(scoreNum(r));
     }
     totalStars += scoreToStars(r.score);
   });
-  const overall = myReports.filter(hasScore).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(hasScore).length);
+  const overall = myReports.filter(countsInAvg).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(countsInAvg).length);
 
   let html = '';
   html += '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">';
@@ -3870,11 +3877,11 @@ function renderParentReport() {
   // Tổng quan điểm
   const bySubject = {};
   myReports.forEach(r => {
-    if (!r.subject || !hasScore(r)) return;
+    if (!r.subject || !countsInAvg(r)) return;
     if (!bySubject[r.subject]) bySubject[r.subject] = [];
     bySubject[r.subject].push(scoreNum(r));
   });
-  const overall = myReports.filter(hasScore).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(hasScore).length);
+  const overall = myReports.filter(countsInAvg).reduce((a,r)=>a+scoreNum(r),0) / Math.max(1, myReports.filter(countsInAvg).length);
 
   let html = '';
   // Tổng quan
@@ -4546,8 +4553,11 @@ function scoreStarsBadge(score) {
 
 
 // ========== ĐIỂM TB TUẦN / THÁNG THEO THÁNG CHỌN ==========
-// Điểm 0 được tính; dòng chỉ có nhận xét (không điểm) không tính.
+// Điểm 0 = bé không làm bài => KHÔNG tính vào điểm TB, chỉ đếm riêng "bài chưa làm".
+// Dòng chỉ có nhận xét (không điểm) cũng không tính.
 function hasScore(r) { return !!r && r.score !== null && r.score !== undefined && r.score !== '' && !isNaN(parseFloat(r.score)); }
+function isMissed(r) { return hasScore(r) && parseFloat(r.score) === 0; }
+function countsInAvg(r) { return hasScore(r) && parseFloat(r.score) > 0; }
 function scoreNum(r) { return parseFloat(r.score); }
 function guessSchoolYear(month) {
   // Tab chỉ ghi "17.8": tháng lớn hơn tháng hiện tại => thuộc năm trước (năm học vắt qua 2 năm)
@@ -4574,14 +4584,17 @@ function scoredMonths(reports) {
   return [...new Set(reports.filter(r => r.date && hasScore(r)).map(r => r.date.slice(0,7)))].sort().reverse();
 }
 function monthLabel(ym) { const p = ym.split('-'); return 'Tháng ' + (+p[1]) + '/' + p[0]; }
-function avgScores(list) { return list.length ? list.reduce((a,r)=>a+scoreNum(r),0) / list.length : null; }
+function avgScores(list) { const g = list.filter(countsInAvg); return g.length ? g.reduce((a,r)=>a+scoreNum(r),0) / g.length : null; }
 function avgColor(a) { return a >= 8 ? '#10b981' : a >= 6.5 ? '#0ea5e9' : a >= 5 ? '#f59e0b' : '#ef4444'; }
 function avgCellHtml(list, strong) {
   const a = avgScores(list);
-  if (a === null) return '<td style="padding:8px 6px;text-align:center;color:#cbd5e1;' + (strong ? 'background:#fdf2f8;' : '') + '">--</td>';
-  const zeros = list.filter(r => scoreNum(r) === 0).length;
-  return '<td style="padding:8px 6px;text-align:center;color:' + avgColor(a) + ';font-weight:800;font-size:' + (strong ? '16' : '15') + 'px;' + (strong ? 'background:#fdf2f8;' : '') + '">' + a.toFixed(1) +
-    '<br><small style="font-size:10px;color:var(--muted);font-weight:600;">' + list.length + ' bài' + (zeros ? ', ' + zeros + ' bài 0đ' : '') + '</small></td>';
+  const done = list.filter(countsInAvg).length;
+  const missed = list.filter(isMissed).length;
+  const bg = strong ? 'background:#fdf2f8;' : '';
+  const missTxt = missed ? '<br><small style="font-size:10px;color:#dc2626;font-weight:700;">' + missed + ' bài chưa làm</small>' : '';
+  if (a === null) return '<td style="padding:8px 6px;text-align:center;color:#cbd5e1;' + bg + '">--' + missTxt + '</td>';
+  return '<td style="padding:8px 6px;text-align:center;color:' + avgColor(a) + ';font-weight:800;font-size:' + (strong ? '16' : '15') + 'px;' + bg + '">' + a.toFixed(1) +
+    '<br><small style="font-size:10px;color:var(--muted);font-weight:600;">' + done + ' bài</small>' + missTxt + '</td>';
 }
 function monthSelectHtml(months, ym, onchange) {
   return '<select onchange="' + onchange + '" style="padding:8px 10px;border:2px solid #f9a8d4;border-radius:8px;font-weight:700;font-size:14px;background:white;">' +
@@ -4614,7 +4627,7 @@ function monthAvgBlock(reports, key, ym) {
     h += avgCellHtml(sr, true) + '</tr>';
   });
   h += '</tbody></table></div>';
-  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 (bài chưa nộp) có tính vào điểm trung bình.</div>';
+  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 (bé không làm bài) không tính vào điểm trung bình, chỉ ghi "bài chưa làm".</div>';
   h += '</div></div>';
   return h;
 }
@@ -4660,7 +4673,7 @@ function showMonthAvgTeacher(ym, wk) {
   h += '<tr style="background:#fce7f3;border-top:2px solid #ec4899;"><td style="padding:8px;font-weight:800;">TB cả lớp</td>';
   subjects.forEach(s => { h += avgCellHtml(inRange.filter(r => (r.subject || 'Tổng hợp') === s), true); });
   h += '</tr></tbody></table></div>';
-  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">' + (w ? w.label + ': ' + w.range + '. ' : monthLabel(ym) + '. ') + 'Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 có tính vào điểm trung bình.</div>';
+  h += '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px;">' + (w ? w.label + ': ' + w.range + '. ' : monthLabel(ym) + '. ') + 'Tuần tính từ Thứ 2 đến Chủ nhật. Điểm 0 (không làm bài) không tính vào điểm trung bình.</div>';
   h += '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">';
   h += '<button class="btn btn-success" onclick="exportMonthAvgExcel(\'' + ym + '\')" style="padding:10px 14px;font-size:14px;">💾 Xuất Excel ' + monthLabel(ym).toLowerCase() + ' (đủ các tuần)</button>';
   h += '<button class="btn btn-secondary" onclick="document.getElementById(\'periodReportBox\').style.display=\'none\'" style="padding:10px 14px;font-size:14px;">✖ Đóng</button>';
@@ -4676,8 +4689,8 @@ function exportMonthAvgExcel(ym) {
   const inMonth = teacherReports.filter(r => hasScore(r) && r.date && r.date.slice(0,7) === ym);
   const subjects = [...new Set(inMonth.map(r => r.subject || 'Tổng hợp'))];
   const r1 = ['Mã HS', 'Học sinh'], r2 = ['', ''];
-  subjects.forEach(s => { weeks.forEach(w => { r1.push(s); r2.push(w.label + ' (' + w.range + ')'); }); r1.push(s); r2.push('Cả tháng'); });
-  const data = [[monthLabel(ym) + ' — Điểm trung bình (có tính điểm 0)'], r1, r2];
+  subjects.forEach(s => { weeks.forEach(w => { r1.push(s); r2.push(w.label + ' (' + w.range + ')'); }); r1.push(s); r2.push('Cả tháng'); r1.push(s); r2.push('Số bài chưa làm'); });
+  const data = [[monthLabel(ym) + ' — Điểm trung bình (không tính điểm 0 = không làm bài)'], r1, r2];
   const byStu = {};
   inMonth.forEach(r => { const sid = r.studentId || r.studentName; if (!byStu[sid]) byStu[sid] = { name: r.studentName || '', code: (getStudentById(r.studentId)||{}).code || '' }; });
   const rnd = a => a === null ? '' : Math.round(a * 100) / 100;
@@ -4687,6 +4700,7 @@ function exportMonthAvgExcel(ym) {
       const sr = inMonth.filter(r => (r.studentId || r.studentName) === sid && (r.subject || 'Tổng hợp') === s);
       weeks.forEach(w => row.push(rnd(avgScores(sr.filter(r => r.date >= w.from && r.date <= w.to)))));
       row.push(rnd(avgScores(sr)));
+      row.push(sr.filter(isMissed).length || '');
     });
     data.push(row);
   });
@@ -4722,7 +4736,7 @@ function showPeriodReport(period) {
     const sid = r.studentId || 'unknown';
     if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', reports: [], subjects: {} };
     byStudent[sid].reports.push(r);
-    if (r.subject && hasScore(r)) {
+    if (r.subject && countsInAvg(r)) {
       if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
       byStudent[sid].subjects[r.subject].push(scoreNum(r));
     }
@@ -4915,7 +4929,7 @@ function exportPeriodReport(period) {
     const sid = r.studentId || 'unknown';
     if (!byStudent[sid]) byStudent[sid] = { name: r.studentName || 'Không rõ', parent: r.parentName || '', subjects: {}, reports: [] };
     byStudent[sid].reports.push(r);
-    if (r.subject && hasScore(r)) {
+    if (r.subject && countsInAvg(r)) {
       if (!byStudent[sid].subjects[r.subject]) byStudent[sid].subjects[r.subject] = [];
       byStudent[sid].subjects[r.subject].push(scoreNum(r));
     }
